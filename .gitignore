@@ -142,3 +142,6 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 build*.tar.gz
+
+# Artefacts de build CRA (regenerables par npm run build)
+/build

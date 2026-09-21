@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Isaac Ahmed — Back-office</title>
+<style>
+  :root {
+    --navy: #1A4D7A;
+    --navy-deep: #0f3355;
+    --blue: #2E7AB5;
+    --light-blue: #7AAFC9;
+    --pale: #C8DCF0;
+    --bg: #0a1420;
+    --panel: #142B42;
+    --panel-2: #0e2237;
+    --panel-border: #24405a;
+    --text: #eef4fa;
+    --text-muted: #91a8bf;
+    --ok: #4fce8e;
+    --warn: #f0c04c;
+    --bad: #ef7a7a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  [hidden] { display: none !important; }
+  button { font-family: inherit; }
+  a { color: var(--light-blue); }
+
+  /* ================= LOGIN ================= */
+  #login { min-height: 100vh; display: grid; grid-template-columns: 1.15fr 1fr; }
+  .login-hero { background: radial-gradient(120% 120% at 20% 20%, var(--navy) 0%, var(--navy-deep) 55%, #081b2e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 56px; position: relative; overflow: hidden; text-align: center; }
+  .login-hero::after { content: ""; position: absolute; right: -100px; bottom: -100px; width: 380px; height: 380px; border-radius: 50%; border: 1px solid rgba(122,175,201,.2); }
+  .login-hero::before { content: ""; position: absolute; left: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%; border: 1px solid rgba(122,175,201,.18); }
+  .hero-logo-wrap { position: relative; padding: 40px; border-radius: 28px; transition: background .25s ease; }
+  .hero-logo-wrap img { height: 240px; display: block; transition: filter .25s ease, transform .25s ease; filter: drop-shadow(0 0 14px rgba(122,175,201,.25)); }
+  .hero-logo-wrap:hover { background: radial-gradient(circle, rgba(122,175,201,.28) 0%, rgba(122,175,201,0) 70%); }
+  .hero-logo-wrap:hover img { filter: drop-shadow(0 0 55px rgba(220,235,250,.9)) brightness(1.25); transform: scale(1.06); }
+  .hero-title { margin-top: 12px; position: relative; }
+  .hero-title h1 { font-size: 2.1rem; margin: 0; line-height: 1.15; letter-spacing: -.01em; }
+  .hero-title h1 span { color: var(--light-blue); }
+  .hero-title p { color: var(--pale); font-size: .95rem; margin: 14px auto 0; max-width: 340px; line-height: 1.5; }
+  .hero-foot { position: relative; color: var(--light-blue); font-size: .76rem; font-weight: 700; letter-spacing: .08em; margin-top: 40px; }
+
+  .login-panel { position: relative; display: flex; align-items: center; justify-content: center; padding: 40px 24px; background: var(--panel-2); }
+  .login-card { width: 100%; max-width: 380px; }
+
+  /* Country picker — top-right corner dropdown */
+  .country-picker { position: absolute; top: 24px; right: 28px; z-index: 5; }
+  .country-picker .cp-label { font-size: .68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; text-align: right; }
+  .country-picker .cp-btn { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 8px 12px; cursor: pointer; color: var(--text); font-size: .86rem; font-weight: 700; }
+  .country-picker .cp-btn:hover { border-color: var(--light-blue); }
+  .country-picker .cp-btn .flag { font-size: 1.05rem; }
+  .country-picker .cp-btn .chev { color: var(--text-muted); font-size: .7rem; margin-left: 2px; }
+  .country-picker .cp-menu { position: absolute; top: calc(100% + 6px); right: 0; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 6px; min-width: 190px; box-shadow: 0 12px 30px rgba(0,0,0,.4); display: none; }
+  .country-picker .cp-menu.open { display: block; }
+  .country-picker .cp-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; cursor: pointer; font-size: .85rem; }
+  .country-picker .cp-item:hover { background: var(--panel-2); }
+  .country-picker .cp-item.selected { background: rgba(46,122,181,.28); color: var(--light-blue); }
+  .country-picker .cp-item .flag { font-size: 1.1rem; }
+  .country-picker .cp-item .cname { font-weight: 700; }
+  .country-picker .cp-item .cdc { color: var(--text-muted); font-size: .72rem; display: block; }
+  .login-card .lock { width: 46px; height: 46px; border-radius: 12px; background: rgba(46,122,181,.18); border: 1px solid var(--panel-border); display: grid; place-items: center; margin: 0 auto 18px; color: var(--light-blue); }
+  .login-card h2 { text-align: center; margin: 0 0 4px; font-size: 1.4rem; }
+  .login-card .lead { text-align: center; color: var(--text-muted); font-size: .88rem; margin: 0 0 28px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: .76rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+  .select-wrap, .input-wrap { position: relative; }
+  .select-wrap select { width: 100%; appearance: none; padding: 12px 40px 12px 14px; border-radius: 9px; border: 1px solid var(--panel-border); background: var(--panel); color: var(--text); font-size: .95rem; cursor: pointer; }
+  .select-wrap::after { content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+  .input-wrap input { width: 100%; padding: 12px 42px 12px 14px; border-radius: 9px; border: 1px solid var(--panel-border); background: var(--panel); color: var(--text); font-size: .95rem; }
+  .input-wrap input:focus, .select-wrap select:focus { outline: none; border-color: var(--blue); }
+  .toggle-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; color: var(--text-muted); cursor: pointer; padding: 6px; }
+  .toggle-eye:hover { color: var(--light-blue); }
+  .login-error { color: var(--bad); font-size: .84rem; margin: -6px 0 14px; display: none; }
+  .btn-primary { width: 100%; background: linear-gradient(135deg, var(--blue), var(--navy)); color: #fff; border: 0; border-radius: 9px; padding: 14px; font-weight: 700; font-size: .95rem; cursor: pointer; letter-spacing: .01em; box-shadow: 0 8px 20px rgba(46,122,181,.35); }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-primary:disabled { opacity: .6; cursor: default; }
+  .login-foot { text-align: center; color: var(--text-muted); font-size: .74rem; margin-top: 28px; }
+
+  @media (max-width: 860px) {
+    #login { grid-template-columns: 1fr; }
+    .login-hero { display: none; }
+  }
+
+  /* ================= APP SHELL ================= */
+  #app { display: none; min-height: 100vh; }
+  .shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  aside.sidebar { background: var(--panel-2); border-right: 1px solid var(--panel-border); padding: 20px 14px; display: flex; flex-direction: column; }
+  .side-brand { display: flex; align-items: center; gap: 10px; padding: 6px 10px 22px; }
+  .side-brand img { height: 34px; }
+  .side-brand span { font-weight: 800; font-size: .95rem; }
+  nav.side-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; }
+  nav.side-nav button { display: flex; align-items: center; gap: 11px; text-align: left; background: transparent; border: 0; color: var(--text-muted); padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: .85rem; }
+  nav.side-nav button:hover { background: var(--panel); color: var(--text); }
+  nav.side-nav button.active { background: linear-gradient(135deg, var(--blue), var(--navy)); color: #fff; }
+  nav.side-nav button svg { flex-shrink: 0; opacity: .9; }
+  .side-foot { border-top: 1px solid var(--panel-border); padding-top: 14px; margin-top: 10px; }
+  .side-foot .country-pill { display: block; text-align: center; margin-bottom: 10px; }
+  #lockBtn { width: 100%; background: transparent; border: 1px solid var(--panel-border); color: var(--text-muted); border-radius: 8px; padding: 9px 12px; cursor: pointer; font-size: .82rem; }
+  #lockBtn:hover { color: var(--text); border-color: var(--light-blue); }
+
+  main.content { padding: 26px 32px 60px; overflow-x: hidden; }
+  .content-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; flex-wrap: wrap; gap: 10px; }
+  .content-header h2 { margin: 0; font-size: 1.3rem; }
+  .content-header p { margin: 4px 0 0; color: var(--text-muted); font-size: .85rem; }
+  .country-pill { background: rgba(255,255,255,.08); border: 1px solid var(--panel-border); color: var(--pale); border-radius: 999px; padding: 6px 14px; font-size: .76rem; font-weight: 700; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 22px; }
+  .stat-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 18px; }
+  .stat-card .label { color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+  .stat-card .value { font-size: 1.7rem; font-weight: 800; margin-top: 6px; }
+  .stat-card.total .value { color: var(--text); }
+  .stat-card.attente .value { color: var(--warn); }
+  .stat-card.attente-equipe .value { color: #6fc3ec; }
+  .stat-card.confirme .value { color: var(--ok); }
+  .stat-card.refuse .value, .stat-card.annule .value { color: var(--bad); }
+
+  .panels-row { display: grid; grid-template-columns: 300px 1fr; gap: 16px; margin-bottom: 22px; }
+  .panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 20px; }
+  .panel h3 { margin: 0 0 16px; font-size: .92rem; color: var(--pale); }
+  .donut-wrap { display: flex; align-items: center; gap: 18px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; font-size: .8rem; }
+  .donut-legend .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 7px; }
+  .breakdown-list { display: flex; flex-direction: column; gap: 12px; justify-content: center; height: 100%; }
+  .breakdown-row { display: flex; align-items: center; gap: 12px; font-size: .84rem; }
+  .breakdown-row .name { width: 130px; color: var(--text-muted); }
+  .breakdown-row .bar-track { flex: 1; height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+  .breakdown-row .bar-fill { height: 100%; border-radius: 999px; }
+  .breakdown-row .n { width: 30px; text-align: right; font-weight: 700; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+  .toolbar .count { color: var(--text-muted); font-size: .88rem; }
+  .toolbar button.ghost { background: transparent; border: 1px solid var(--panel-border); color: var(--text-muted); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: .82rem; }
+  .toolbar button.ghost:hover { color: var(--light-blue); border-color: var(--light-blue); }
+  .table-scroll { overflow-x: auto; border-radius: 12px; border: 1px solid var(--panel-border); }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); }
+  th, td { padding: 11px 13px; text-align: left; font-size: .84rem; border-bottom: 1px solid var(--panel-border); white-space: nowrap; }
+  th { background: var(--panel-2); color: var(--pale); font-weight: 700; text-transform: uppercase; font-size: .68rem; letter-spacing: .04em; }
+  tr:last-child td { border-bottom: none; }
+  .badge { padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+  .badge.attente { background: #4a3b12; color: var(--warn); }
+  .badge.attente-equipe { background: #123a4a; color: #6fc3ec; }
+  .badge.confirme { background: #14432b; color: var(--ok); }
+  .badge.refuse, .badge.annule { background: #4a1414; color: var(--bad); }
+  .row-actions button { margin-right: 6px; padding: 5px 10px; font-size: .74rem; border-radius: 6px; border: 1px solid var(--panel-border); background: var(--panel-2); color: var(--text); cursor: pointer; }
+  .row-actions button:hover { border-color: var(--blue); color: var(--light-blue); }
+  .empty, .error { text-align: center; color: var(--text-muted); padding: 40px; }
+  .error { color: var(--bad); }
+  .note-box { background: rgba(122,175,201,.08); border: 1px dashed var(--panel-border); border-radius: 10px; padding: 12px 16px; font-size: .8rem; color: var(--text-muted); margin-bottom: 18px; }
+
+  /* Calendar */
+  .calendar-layout { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .cal-header strong { font-size: 1.05rem; }
+  .cal-header .cal-nav { display: flex; gap: 8px; }
+  .cal-header button { background: var(--panel-2); border: 1px solid var(--panel-border); color: var(--text); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; font-size: 1rem; }
+  .cal-header button:hover { border-color: var(--light-blue); color: var(--light-blue); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .cal-dow { text-align: center; color: var(--text-muted); font-size: .72rem; font-weight: 700; text-transform: uppercase; padding-bottom: 8px; }
+  .cal-day { min-height: 86px; background: var(--panel-2); border: 1px solid var(--panel-border); border-radius: 10px; padding: 8px; font-size: .78rem; cursor: pointer; transition: border-color .15s, transform .1s, background .15s; display: flex; flex-direction: column; }
+  .cal-day:hover { border-color: var(--light-blue); transform: translateY(-1px); }
+  .cal-day.empty { background: transparent; border: none; cursor: default; }
+  .cal-day.empty:hover { transform: none; }
+  .cal-day .num { color: var(--text-muted); font-weight: 700; }
+  .cal-day.has-events { background: rgba(46,122,181,.12); }
+  .cal-day.selected { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue) inset; }
+  .cal-day .dots { display: flex; gap: 3px; margin-top: auto; flex-wrap: wrap; }
+  .cal-day .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .cal-day .more { font-size: .65rem; color: var(--text-muted); margin-top: 2px; }
+  .cal-day.today .num { color: var(--light-blue); }
+  .cal-day.today { border-color: var(--light-blue); }
+  .cal-detail { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 18px; position: sticky; top: 20px; }
+  .cal-detail h4 { margin: 0 0 14px; font-size: .95rem; }
+  .cal-detail-item { border-bottom: 1px solid var(--panel-border); padding: 10px 0; }
+  .cal-detail-item:last-child { border-bottom: none; }
+  .cal-detail-item .time { color: var(--light-blue); font-weight: 800; font-size: .82rem; }
+  .cal-detail-item .visitor { font-weight: 700; margin-top: 2px; }
+  .cal-detail-item .purpose { color: var(--text-muted); font-size: .78rem; margin-top: 2px; }
+  @media (max-width: 900px) { .calendar-layout { grid-template-columns: 1fr; } .cal-detail { position: static; } }
+
+  /* Cards grid (data centers, users) */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .dc-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 20px; }
+  .dc-card.current { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue) inset; }
+  .dc-card h4 { margin: 0 0 4px; font-size: 1.05rem; }
+  .dc-card .loc { color: var(--text-muted); font-size: .8rem; margin-bottom: 12px; }
+  .dc-card ul { margin: 0; padding-left: 18px; font-size: .82rem; color: var(--text-muted); line-height: 1.7; }
+  .dc-card .tag { display: inline-block; background: rgba(46,122,181,.2); color: var(--light-blue); font-size: .68rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; margin-top: 10px; }
+
+  .team-toggle { background: var(--panel-2); border: 1px solid var(--panel-border); color: var(--text); border-radius: 999px; padding: 5px 11px; font-size: .74rem; cursor: pointer; white-space: nowrap; }
+  .team-toggle:hover { border-color: var(--light-blue); }
+  .muted-note { color: var(--text-muted); font-size: .74rem; }
+  .team-detail-row td { background: var(--panel-2); }
+  .team-detail-box { display: flex; flex-direction: column; gap: 8px; padding: 6px 0; }
+  .team-member-row { display: flex; align-items: center; gap: 10px; font-size: .82rem; white-space: normal; }
+  .team-member-row .tm-name { font-weight: 700; min-width: 140px; }
+
+  .cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .cat-tabs button { background: var(--panel); border: 1px solid var(--panel-border); color: var(--text-muted); border-radius: 999px; padding: 7px 15px; font-size: .8rem; cursor: pointer; }
+  .cat-tabs button:hover { border-color: var(--light-blue); color: var(--text); }
+  .cat-tabs button.active { background: linear-gradient(135deg, var(--blue), var(--navy)); color: #fff; border-color: transparent; }
+
+  .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 140px; padding-top: 10px; }
+  .bar-chart .col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .bar-chart .col .val { font-size: .72rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 700; }
+  .bar-chart .col .bar { width: 60%; background: linear-gradient(180deg, var(--light-blue), var(--blue)); border-radius: 5px 5px 0 0; min-height: 2px; }
+  .bar-chart .col .day { margin-top: 6px; font-size: .68rem; color: var(--text-muted); text-transform: uppercase; }
+
+  .kb-box { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 22px; white-space: pre-wrap; font-size: .82rem; line-height: 1.6; color: var(--text-muted); max-height: 70vh; overflow-y: auto; font-family: ui-monospace, Consolas, monospace; }
+
+  @media (max-width: 980px) {
+    .shell { grid-template-columns: 1fr; }
+    aside.sidebar { display: none; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .panels-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="login-hero">
+    <div class="hero-logo-wrap"><img src="/logo-st-digital.png" alt="ST Digital" /></div>
+    <div class="hero-title">
+      <h1>Back <span>Office</span></h1>
+      <p>Gérez les demandes de rendez-vous et l'accueil de vos visiteurs, site par site, en toute sécurité.</p>
+    </div>
+    <div class="hero-foot">SÉCURISÉ · AUTO-HÉBERGÉ · SOUVERAIN</div>
+  </div>
+  <div class="login-panel">
+    <div class="country-picker" id="countryPicker">
+      <div class="cp-label">Data center / Pays</div>
+      <button type="button" class="cp-btn" id="cpBtn"><span class="flag" id="cpFlagInit"></span><span id="cpCurrentName">Gabon</span><span class="chev">▾</span></button>
+      <div class="cp-menu" id="cpMenu">
+        <div class="cp-item selected" data-country="gabon"><span class="flag flag-gabon"></span><span><span class="cname">Gabon</span><span class="cdc">Libreville</span></span></div>
+        <div class="cp-item" data-country="cameroun"><span class="flag flag-cameroun"></span><span><span class="cname">Cameroun</span><span class="cdc">Douala</span></span></div>
+        <div class="cp-item" data-country="cote_ivoire"><span class="flag flag-cote_ivoire"></span><span><span class="cname">Côte d'Ivoire</span><span class="cdc">Abidjan</span></span></div>
+      </div>
+      <input type="hidden" id="countrySelect" value="gabon" />
+    </div>
+    <div class="login-card">
+      <div class="lock">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </div>
+      <h2>Bienvenue</h2>
+      <p class="lead">Connectez-vous à votre espace back-office</p>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="emailInput">Adresse e-mail</label>
+          <div class="input-wrap">
+            <input id="emailInput" type="email" placeholder="admin@stdigital.com" autocomplete="off" required />
+          </div>
+        </div>
+        <div class="field">
+          <label for="passwordInput">Mot de passe</label>
+          <div class="input-wrap">
+            <input id="passwordInput" type="password" autocomplete="off" required />
+            <button type="button" class="toggle-eye" id="toggleEye" aria-label="Afficher le mot de passe">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="login-error" id="loginError"></p>
+        <button type="submit" class="btn-primary" id="loginBtn">Se connecter</button>
+      </form>
+      <p class="login-foot">© 2026 ST Digital. Tous droits réservés.</p>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="side-brand"><img src="/logo-st-digital.png" alt="ST Digital" /><span>Back-office</span></div>
+      <nav class="side-nav" id="sideNav">
+        <button data-section="dashboard" class="active">📊 Tableau de bord</button>
+        <button data-section="appointments">📅 Demandes de rendez-vous</button>
+        <button data-section="calendar">🗓️ Calendrier</button>
+        <button data-section="visitors">👥 Clients &amp; Visiteurs</button>
+        <button data-section="datacenters">🏢 Data Centers</button>
+        <button data-section="ai">🤖 IA Conversationnelle</button>
+        <button data-section="conversations">💬 Conversations</button>
+        <button data-section="content">📚 Contenus &amp; FAQ</button>
+        <button data-section="notifications">🔔 Notifications</button>
+        <button data-section="team">🧑‍🤝‍🧑 Équipe</button>
+        <button data-section="users">🔑 Utilisateurs</button>
+        <button data-section="settings">⚙️ Paramètres</button>
+      </nav>
+      <div class="side-foot">
+        <span class="country-pill" id="countryLabel"></span>
+        <button id="lockBtn">Déconnexion</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <!-- Dashboard -->
+      <section id="section-dashboard" class="section">
+        <div class="content-header"><div><h2>Tableau de bord</h2><p>Aperçu de l'activité de votre site.</p></div><button class="ghost" id="refreshDashboard">Actualiser</button></div>
+        <div class="stat-grid" id="statGrid"></div>
+        <div class="panels-row">
+          <div class="panel"><h3>Répartition par statut</h3><div class="donut-wrap" id="donutWrap"></div></div>
+          <div class="panel"><h3>Détail des statuts</h3><div class="breakdown-list" id="breakdownList"></div></div>
+        </div>
+        <div class="panels-row">
+          <div class="panel"><h3>Par type d'accès</h3><div class="breakdown-list" id="reportAccessType"></div></div>
+          <div class="panel"><h3>Par hôte demandé</h3><div class="breakdown-list" id="reportHost"></div></div>
+        </div>
+      </section>
+
+      <!-- Appointments -->
+      <section id="section-appointments" class="section" hidden>
+        <div class="content-header"><div><h2>Demandes de rendez-vous</h2><p>Toutes les demandes pour ce site.</p></div><button class="ghost" id="refreshAppointments">Actualiser</button></div>
+        <div class="toolbar"><span class="count" id="count"></span></div>
+        <div class="table-scroll" id="tableWrap"></div>
+      </section>
+
+      <!-- Calendar -->
+      <section id="section-calendar" class="section" hidden>
+        <div class="content-header"><div><h2>Calendrier</h2><p>Cliquez un jour pour voir l'heure et l'objet des rendez-vous.</p></div></div>
+        <div class="calendar-layout">
+          <div class="panel">
+            <div class="cal-header">
+              <strong id="calLabel"></strong>
+              <div class="cal-nav"><button id="calPrev">←</button><button id="calToday">•</button><button id="calNext">→</button></div>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+          </div>
+          <div class="cal-detail" id="calDetail"></div>
+        </div>
+      </section>
+
+      <!-- Visitors -->
+      <section id="section-visitors" class="section" hidden>
+        <div class="content-header"><div><h2>Clients &amp; Visiteurs</h2><p>Historique des visiteurs par catégorie, avec répartition mensuelle.</p></div></div>
+        <div class="panel" style="margin-bottom:16px;">
+          <h3>Nouveaux enregistrements par mois</h3>
+          <div id="visitorsMonthly"></div>
+        </div>
+        <div class="cat-tabs" id="visitorCatTabs"></div>
+        <div class="table-scroll" id="visitorsWrap"></div>
+      </section>
+
+      <!-- Data centers -->
+      <section id="section-datacenters" class="section" hidden>
+        <div class="content-header"><div><h2>Data Centers</h2><p>Infrastructures ST Digital (source : site officiel st.digital).</p></div></div>
+        <div class="card-grid" id="dcGrid"></div>
+      </section>
+
+      <!-- AI stats -->
+      <section id="section-ai" class="section" hidden>
+        <div class="content-header"><div><h2>IA Conversationnelle</h2><p>Statistiques d'usage d'Isaac (assistant de chat).</p></div><button class="ghost" id="refreshAi">Actualiser</button></div>
+        <div class="note-box">Historique disponible à partir du 04/09/2026 (mise en place du suivi) — pas de données rétroactives.</div>
+        <div class="stat-grid" id="aiStatGrid" style="grid-template-columns:repeat(3,1fr);"></div>
+        <div class="panel" style="margin-top:16px;"><h3>Conversations des 7 derniers jours</h3><div id="aiActivityChart"></div></div>
+      </section>
+
+      <!-- Conversations -->
+      <section id="section-conversations" class="section" hidden>
+        <div class="content-header"><div><h2>Conversations</h2><p>Historique des échanges avec Isaac (200 plus récents).</p></div><button class="ghost" id="refreshConv">Actualiser</button></div>
+        <div class="table-scroll" id="convWrap"></div>
+      </section>
+
+      <!-- Content / FAQ -->
+      <section id="section-content" class="section" hidden>
+        <div class="content-header"><div><h2>Contenus &amp; FAQ</h2><p>Base de connaissances utilisée par Isaac (lecture seule).</p></div><button class="ghost" id="refreshKb">Actualiser</button></div>
+        <div class="note-box">Modification non disponible depuis cette interface — la base est gérée par l'équipe technique et ré-indexée automatiquement.</div>
+        <div class="kb-box" id="kbBox">Chargement…</div>
+      </section>
+
+      <!-- Notifications -->
+      <section id="section-notifications" class="section" hidden>
+        <div class="content-header"><div><h2>Notifications</h2><p>Preuve des notifications envoyées au personnel (accueil et hôtes) — pas les emails visiteurs.</p></div><button class="ghost" id="refreshNotif">Actualiser</button></div>
+        <div class="note-box">N'inclut pas les emails envoyés aux visiteurs (accusés de réception, codes de vérification, invitations) — uniquement ce qui a été communiqué à un membre du personnel.</div>
+        <div class="table-scroll" id="notifWrap"></div>
+      </section>
+
+      <!-- Team -->
+      <section id="section-team" class="section" hidden>
+        <div class="content-header"><div><h2>Équipe</h2><p>Membres par service — sollicités automatiquement pour leur disponibilité à chaque demande.</p></div></div>
+        <div class="panel" style="margin-bottom:18px;">
+          <h3>Ajouter un membre</h3>
+          <form id="addStaffForm" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;">
+            <div class="field" style="margin-bottom:0;"><label>Nom</label><div class="input-wrap"><input id="staffName" required /></div></div>
+            <div class="field" style="margin-bottom:0;"><label>Email</label><div class="input-wrap"><input id="staffEmail" type="email" required /></div></div>
+            <div class="field" style="margin-bottom:0;"><label>Service</label><div class="select-wrap"><select id="staffService">
+              <option value="commercial">Commercial</option>
+              <option value="technique">Technique</option>
+              <option value="securite">Sécurité</option>
+              <option value="rh">RH</option>
+              <option value="site_manager">Site Manager</option>
+            </select></div></div>
+            <button type="submit" class="btn-primary" style="width:auto;padding:12px 20px;">Ajouter</button>
+          </form>
+        </div>
+        <div class="table-scroll" id="staffWrap"></div>
+      </section>
+
+      <!-- Users -->
+      <section id="section-users" class="section" hidden>
+        <div class="content-header"><div><h2>Utilisateurs</h2><p>Comptes ayant accès à ce back-office.</p></div></div>
+        <div class="note-box">Chaque site dispose d'un compte administrateur partagé — pas encore de comptes individuels nominatifs.</div>
+        <div class="card-grid" id="usersGrid"></div>
+      </section>
+
+      <!-- Settings -->
+      <section id="section-settings" class="section" hidden>
+        <div class="content-header"><div><h2>Paramètres</h2><p>Informations de votre session.</p></div></div>
+        <div class="card-grid" id="settingsGrid"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  const WEBHOOK = "http://100.71.79.97:5678/webhook/isaac-rdv";
+  const STORAGE_KEY = "isaac_admin_session";
+
+  const loginEl = document.getElementById("login");
+  const appEl = document.getElementById("app");
+  const countrySelect = document.getElementById("countrySelect");
+  const emailInput = document.getElementById("emailInput");
+  const loginForm = document.getElementById("loginForm");
+  const passwordInput = document.getElementById("passwordInput");
+  const toggleEye = document.getElementById("toggleEye");
+  const loginError = document.getElementById("loginError");
+  const loginBtn = document.getElementById("loginBtn");
+  const countryLabel = document.getElementById("countryLabel");
+  const lockBtn = document.getElementById("lockBtn");
+  const sideNav = document.getElementById("sideNav");
+
+  const DC_INFO = {
+    gabon: { name: "Gabon", city: "Nkok (Libreville)", key: "libreville", facts: ["Datacenter souverain, zone économique spéciale de Nkok", "Connexion directe aux câbles sous-marins ACE et SAT-3/WASC", "Plus faible latence de la zone CEMAC"] },
+    cameroun: { name: "Cameroun", city: "Douala", key: "douala", facts: ["Siège régional ST Digital pour l'Afrique Centrale", "Certifié Tier III", "Hub d'innovation et d'expertise"] },
+    cote_ivoire: { name: "Côte d'Ivoire", city: "Grand-Bassam (Abidjan)", key: "abidjan", facts: ["Premier datacenter Tier III d'Afrique de l'Ouest", "Inauguré en 2023", "Certifié ISO 27001, TIA-942, HDS"] },
+  };
+  function flagSvg(code, size) {
+    size = size || 20;
+    const h = Math.round(size * 0.68);
+    const common = `width="${size}" height="${h}" style="border-radius:2px;vertical-align:middle;box-shadow:0 0 0 1px rgba(255,255,255,.15);"`;
+    if (code === "gabon") {
+      return `<svg ${common} viewBox="0 0 30 21" xmlns="http://www.w3.org/2000/svg"><rect width="30" height="7" y="0" fill="#009E60"/><rect width="30" height="7" y="7" fill="#FCD116"/><rect width="30" height="7" y="14" fill="#3A75C4"/></svg>`;
+    }
+    if (code === "cameroun") {
+      return `<svg ${common} viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="20" x="0" fill="#007A5E"/><rect width="10" height="20" x="10" fill="#CE1126"/><rect width="10" height="20" x="20" fill="#FCD116"/><text x="15" y="13.5" font-size="7" text-anchor="middle" fill="#FCD116">★</text></svg>`;
+    }
+    return `<svg ${common} viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="20" x="0" fill="#F77F00"/><rect width="10" height="20" x="10" fill="#FFFFFF"/><rect width="10" height="20" x="20" fill="#009A44"/></svg>`;
+  }
+  const COUNTRY_FLAGS = { gabon: flagSvg("gabon"), cameroun: flagSvg("cameroun"), cote_ivoire: flagSvg("cote_ivoire") };
+  document.querySelectorAll(".flag-gabon").forEach((el) => (el.innerHTML = COUNTRY_FLAGS.gabon));
+  document.querySelectorAll(".flag-cameroun").forEach((el) => (el.innerHTML = COUNTRY_FLAGS.cameroun));
+  document.querySelectorAll(".flag-cote_ivoire").forEach((el) => (el.innerHTML = COUNTRY_FLAGS.cote_ivoire));
+  const cpFlagInit = document.getElementById("cpFlagInit");
+  if (cpFlagInit) cpFlagInit.innerHTML = COUNTRY_FLAGS.gabon;
+
+  let session = null;
+  let appointmentsCache = [];
+  let conversationsLoaded = false;
+  let notificationsLoaded = false;
+  let kbLoaded = false;
+
+  function getStoredSession() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (e) { return null; }
+  }
+  function setStoredSession(s) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
+  }
+  function clearStoredSession() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  }
+
+  async function callRdv(payload) {
+    const res = await fetch(WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+    return data;
+  }
+  function authedCall(extra) {
+    return callRdv({ adminCountry: session.country, adminPassword: session.password, ...extra });
+  }
+
+  const cpBtn = document.getElementById("cpBtn");
+  const cpMenu = document.getElementById("cpMenu");
+  const cpCurrentName = document.getElementById("cpCurrentName");
+  const cpFlag = cpBtn.querySelector(".flag");
+  const COUNTRY_NAMES = { gabon: "Gabon", cameroun: "Cameroun", cote_ivoire: "Côte d'Ivoire" };
+  cpBtn.addEventListener("click", (e) => { e.stopPropagation(); cpMenu.classList.toggle("open"); });
+  document.addEventListener("click", () => cpMenu.classList.remove("open"));
+  cpMenu.querySelectorAll(".cp-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const code = item.getAttribute("data-country");
+      countrySelect.value = code;
+      cpCurrentName.textContent = COUNTRY_NAMES[code];
+      cpFlag.innerHTML = COUNTRY_FLAGS[code];
+      cpMenu.querySelectorAll(".cp-item").forEach((i) => i.classList.remove("selected"));
+      item.classList.add("selected");
+      cpMenu.classList.remove("open");
+    });
+  });
+  function setCountryPicker(code) {
+    countrySelect.value = code;
+    cpCurrentName.textContent = COUNTRY_NAMES[code] || code;
+    cpFlag.innerHTML = COUNTRY_FLAGS[code] || "";
+    cpMenu.querySelectorAll(".cp-item").forEach((i) => i.classList.toggle("selected", i.getAttribute("data-country") === code));
+  }
+
+  toggleEye.addEventListener("click", () => {
+    passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+  });
+
+  async function attemptLogin(country, password, email) {
+    loginError.style.display = "none";
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Connexion…";
+    try {
+      const data = await callRdv({ event: "admin_list_appointments", adminCountry: country, adminPassword: password });
+      session = { country, password, email: email || "" };
+      setStoredSession(session);
+      appointmentsCache = data.appointments || [];
+      showDashboard(data.country || "");
+    } catch (e) {
+      loginError.textContent = "Identifiants invalides.";
+      loginError.style.display = "block";
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Se connecter";
+    }
+  }
+
+  loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    attemptLogin(countrySelect.value, passwordInput.value, emailInput.value);
+  });
+
+  function showDashboard(countryLbl) {
+    loginEl.style.display = "none";
+    appEl.style.display = "block";
+    countryLabel.textContent = countryLbl;
+    renderDashboard();
+    renderAppointmentsTable();
+    renderCalendar();
+    renderVisitors();
+    renderDataCenters();
+    renderReports();
+    renderUsers();
+    renderSettings();
+  }
+
+  /* ---------- Navigation ---------- */
+  sideNav.querySelectorAll("button[data-section]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      sideNav.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll(".section").forEach((s) => (s.hidden = true));
+      const target = document.getElementById("section-" + btn.dataset.section);
+      if (target) target.hidden = false;
+      if (btn.dataset.section === "conversations" && !conversationsLoaded) loadConversations();
+      if (btn.dataset.section === "ai" && !conversationsLoaded) loadConversations();
+      if (btn.dataset.section === "notifications" && !notificationsLoaded) loadNotifications();
+      if (btn.dataset.section === "content" && !kbLoaded) loadKb();
+      if (btn.dataset.section === "team") loadStaff();
+    });
+  });
+
+  /* ---------- Dashboard (stats + donut) ---------- */
+  const STATUS_META = {
+    "en attente": { key: "attente", label: "En attente", color: "#f0c04c" },
+    "en attente equipe": { key: "attente-equipe", label: "Attente équipe", color: "#4aa3d8" },
+    "confirme": { key: "confirme", label: "Confirmés", color: "#4fce8e" },
+    "refuse": { key: "refuse", label: "Refusés", color: "#ef7a7a" },
+    "annule": { key: "annule", label: "Annulés", color: "#8a5cf6" },
+  };
+  function statusMeta(s) { return STATUS_META[s] || STATUS_META["en attente"]; }
+  const HOST_LABELS = { site_manager: "Site Manager", commercial: "Hôte commercial", technique: "Hôte technique", securite: "Hôte sécurité", rh: "Hôte RH" };
+  function hostLabel(h) { return HOST_LABELS[h] || h || "Non renseigné"; }
+
+  function computeCounts(appointments) {
+    const counts = { total: appointments.length, "en attente": 0, "en attente equipe": 0, confirme: 0, refuse: 0, annule: 0 };
+    appointments.forEach((a) => { counts[a.status] = (counts[a.status] || 0) + 1; });
+    return counts;
+  }
+
+  function renderDashboard() {
+    const counts = computeCounts(appointmentsCache);
+    const cards = [
+      { key: "total", label: "Total demandes", value: counts.total },
+      { key: "attente-equipe", label: "Attente équipe", value: counts["en attente equipe"] },
+      { key: "confirme", label: "Confirmés", value: counts.confirme },
+      { key: "refuse", label: "Refusés", value: counts.refuse },
+      { key: "annule", label: "Annulés", value: counts.annule },
+    ];
+    document.getElementById("statGrid").innerHTML = cards.map((c) => `<div class="stat-card ${c.key}"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`).join("");
+    renderDonut(counts);
+  }
+
+  function renderDonut(counts) {
+    const donutWrap = document.getElementById("donutWrap");
+    const breakdownList = document.getElementById("breakdownList");
+    const segments = ["en attente equipe", "confirme", "refuse", "annule"].map((s) => ({ status: s, meta: statusMeta(s), n: counts[s] || 0 }));
+    const total = counts.total || 0;
+    if (!total) {
+      donutWrap.innerHTML = '<div class="empty" style="padding:20px 0;">Aucune donnée</div>';
+      breakdownList.innerHTML = "";
+      return;
+    }
+    const R = 46, C = 2 * Math.PI * R;
+    let offset = 0;
+    const circles = segments.map((seg) => {
+      const frac = seg.n / total;
+      const len = frac * C;
+      const el = `<circle cx="60" cy="60" r="${R}" fill="none" stroke="${seg.meta.color}" stroke-width="14" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 60 60)" />`;
+      offset += len;
+      return el;
+    }).join("");
+    donutWrap.innerHTML = `
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        ${circles}
+        <text x="60" y="56" text-anchor="middle" font-size="20" font-weight="800" fill="var(--text)">${total}</text>
+        <text x="60" y="72" text-anchor="middle" font-size="9" fill="var(--text-muted)">au total</text>
+      </svg>
+      <div class="donut-legend">${segments.map((s) => `<span><span class="dot" style="background:${s.meta.color}"></span>${s.meta.label} (${s.n})</span>`).join("")}</div>`;
+    breakdownList.innerHTML = segments.map((s) => {
+      const pct = total ? Math.round((s.n / total) * 100) : 0;
+      return `<div class="breakdown-row"><span class="name">${s.meta.label}</span><span class="bar-track"><span class="bar-fill" style="width:${pct}%;background:${s.meta.color}"></span></span><span class="n">${s.n}</span></div>`;
+    }).join("");
+  }
+
+  function renderTeamDetail(team) {
+    if (!team.length) return '<div class="muted-note" style="padding:8px 0;">Aucun membre d\'équipe assigné à ce service pour ce site.</div>';
+    const rows = team.map((t) => {
+      let icon = "⏳", label = "En attente de réponse", color = "var(--text-muted)";
+      if (t.available === true) { icon = "✅"; label = "Disponible"; color = "var(--ok)"; }
+      else if (t.available === false) { icon = "❌"; label = "Indisponible" + (t.reason ? " — " + t.reason : ""); color = "var(--bad)"; }
+      return `<div class="team-member-row"><span>${icon}</span><span class="tm-name">${t.name}</span><span style="color:${color};">${label}</span></div>`;
+    }).join("");
+    return `<div class="team-detail-box">${rows}</div>`;
+  }
+
+  /* ---------- Appointments table ---------- */
+  function renderAppointmentsTable() {
+    const tableWrap = document.getElementById("tableWrap");
+    const countEl = document.getElementById("count");
+    const appointments = appointmentsCache;
+    if (!appointments.length) {
+      tableWrap.innerHTML = '<div class="empty">Aucune demande de rendez-vous pour ce site.</div>';
+      countEl.textContent = "";
+      return;
+    }
+    countEl.textContent = `${appointments.length} demande(s)`;
+    const rows = appointments.map((a) => {
+      const team = a.teamResponses || [];
+      const yes = team.filter((t) => t.available === true).length;
+      const no = team.filter((t) => t.available === false).length;
+      const pending = team.filter((t) => t.available === null).length;
+      const teamSummary = team.length
+        ? `<button class="team-toggle" data-id="${a.id}">✅ ${yes} · ❌ ${no} · ⏳ ${pending}</button>`
+        : `<span class="muted-note">Aucune équipe</span>`;
+      const canDecide = a.status === "en attente" || a.status === "en attente equipe";
+      return `
+      <tr data-id="${a.id}">
+        <td>${a.visitor || ""}<div style="color:var(--text-muted);font-size:.75rem;">${a.company || ""}${a.jobTitle ? " — " + a.jobTitle : ""}</div></td>
+        <td>${hostLabel(a.host)}</td>
+        <td>${a.date || "-"} ${a.time || ""}</td>
+        <td>${a.purpose || ""}</td>
+        <td>${a.accessType || ""}</td>
+        <td><code>${a.validation_code || ""}</code></td>
+        <td>${teamSummary}</td>
+        <td>
+          <span class="badge ${statusMeta(a.status).key}">${statusMeta(a.status).label}</span>
+          ${a.status === "refuse" && a.refusalReason ? `<div style="color:var(--text-muted);font-size:.72rem;margin-top:4px;max-width:180px;white-space:normal;">${a.refusalReason}</div>` : ""}
+        </td>
+        <td class="row-actions">
+          ${canDecide ? `<button data-action="confirme">Confirmer</button><button data-action="refuse">Refuser</button>` : ""}
+          ${a.status !== "annule" ? `<button data-action="annule">Annuler</button>` : ""}
+        </td>
+      </tr>
+      <tr class="team-detail-row" id="team-detail-${a.id}" hidden><td colspan="9">${renderTeamDetail(team)}</td></tr>`;
+    }).join("");
+    tableWrap.innerHTML = `<table><thead><tr><th>Visiteur</th><th>Hôte</th><th>Date</th><th>Motif</th><th>Type</th><th>Code</th><th>Équipe</th><th>Statut</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+    tableWrap.querySelectorAll(".team-toggle").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const row = document.getElementById("team-detail-" + btn.getAttribute("data-id"));
+        if (row) row.hidden = !row.hidden;
+      });
+    });
+    tableWrap.querySelectorAll("button[data-action]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const tr = btn.closest("tr");
+        const id = tr.getAttribute("data-id");
+        const status = btn.getAttribute("data-action");
+        let reason = "";
+        if (status === "refuse") {
+          reason = window.prompt("Motif du refus (visible par le visiteur dans l'email, laisser vide si aucun) :", "");
+          if (reason === null) return;
+        }
+        btn.disabled = true;
+        try {
+          await authedCall({ event: "admin_update_status", id, status, reason });
+          await reloadAppointments();
+        } catch (e) {
+          alert("Erreur : " + e.message);
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  async function reloadAppointments() {
+    const data = await authedCall({ event: "admin_list_appointments" });
+    appointmentsCache = data.appointments || [];
+    renderDashboard();
+    renderAppointmentsTable();
+    renderCalendar();
+    renderVisitors();
+    renderReports();
+  }
+  document.getElementById("refreshDashboard").addEventListener("click", reloadAppointments);
+  document.getElementById("refreshAppointments").addEventListener("click", reloadAppointments);
+
+  /* ---------- Calendar ---------- */
+  let calYear, calMonth, calSelectedDate = null;
+  function renderCalendar() {
+    const now = new Date();
+    if (calYear === undefined) { calYear = now.getFullYear(); calMonth = now.getMonth(); }
+    const calGrid = document.getElementById("calGrid");
+    const calLabel = document.getElementById("calLabel");
+    const monthNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    calLabel.textContent = `${monthNames[calMonth]} ${calYear}`;
+
+    const byDate = {};
+    appointmentsCache.forEach((a) => { if (a.date) { (byDate[a.date] = byDate[a.date] || []).push(a); } });
+
+    const first = new Date(calYear, calMonth, 1);
+    const startDow = (first.getDay() + 6) % 7; // Monday=0
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const todayStr = now.toISOString().slice(0, 10);
+
+    let html = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map((d) => `<div class="cal-dow">${d}</div>`).join("");
+    for (let i = 0; i < startDow; i++) html += `<div class="cal-day empty"></div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const evts = byDate[dateStr] || [];
+      const isToday = dateStr === todayStr;
+      const isSelected = dateStr === calSelectedDate;
+      const dots = evts.slice(0, 4).map((e) => `<span class="dot" style="background:${statusMeta(e.status).color}"></span>`).join("");
+      html += `<div class="cal-day${isToday ? " today" : ""}${evts.length ? " has-events" : ""}${isSelected ? " selected" : ""}" data-date="${dateStr}"><div class="num">${d}</div><div class="dots">${dots}</div>${evts.length > 4 ? `<div class="more">+${evts.length - 4}</div>` : ""}</div>`;
+    }
+    calGrid.innerHTML = html;
+    calGrid.querySelectorAll(".cal-day[data-date]").forEach((el) => {
+      el.addEventListener("click", () => { calSelectedDate = el.getAttribute("data-date"); renderCalendar(); renderCalDetail(); });
+    });
+    if (!calSelectedDate) {
+      const withEvents = Object.keys(byDate).find((d) => d.startsWith(`${calYear}-${String(calMonth + 1).padStart(2, "0")}`));
+    }
+    renderCalDetail();
+  }
+  function renderCalDetail() {
+    const box = document.getElementById("calDetail");
+    if (!calSelectedDate) {
+      box.innerHTML = `<h4>Sélectionnez un jour</h4><p style="color:var(--text-muted);font-size:.82rem;">Cliquez une date dans le calendrier pour voir les rendez-vous prévus ce jour-là.</p>`;
+      return;
+    }
+    const evts = appointmentsCache.filter((a) => a.date === calSelectedDate).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+    const dateLabel = new Date(calSelectedDate + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    if (!evts.length) {
+      box.innerHTML = `<h4>${dateLabel}</h4><p style="color:var(--text-muted);font-size:.82rem;">Aucun rendez-vous ce jour.</p>`;
+      return;
+    }
+    box.innerHTML = `<h4>${dateLabel} — ${evts.length} rdv</h4>` + evts.map((e) => `
+      <div class="cal-detail-item">
+        <div class="time">${e.time || "Heure non précisée"}</div>
+        <div class="visitor">${e.visitor}${e.company ? " · " + e.company : ""}</div>
+        <div class="purpose">${e.purpose || ""}</div>
+        <span class="badge ${statusMeta(e.status).key}" style="margin-top:6px;display:inline-block;">${e.status || "en attente"}</span>
+      </div>`).join("");
+  }
+  document.getElementById("calPrev").addEventListener("click", () => { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); });
+  document.getElementById("calNext").addEventListener("click", () => { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); });
+  document.getElementById("calToday").addEventListener("click", () => { const n = new Date(); calYear = n.getFullYear(); calMonth = n.getMonth(); calSelectedDate = n.toISOString().slice(0, 10); renderCalendar(); });
+
+  /* ---------- Visitors (grouped by email, filterable by category, monthly breakdown) ---------- */
+  const ACCESS_TYPE_LABELS = { visite: "Visite", interne: "Interne (staff)", intervention: "Intervention", prestataire: "Prestataire", client: "Client data center", stagiaire: "Étudiant / Stagiaire", livraison: "Livraison" };
+  let visitorCategory = "tous";
+
+  function renderVisitorsMonthly() {
+    const byMonth = {};
+    appointmentsCache.forEach((a) => {
+      if (!a.createdAt) return;
+      const d = new Date(a.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      byMonth[key] = (byMonth[key] || 0) + 1;
+    });
+    const keys = Object.keys(byMonth).sort();
+    const box = document.getElementById("visitorsMonthly");
+    if (!keys.length) { box.innerHTML = '<div class="empty" style="padding:10px 0;">Aucune donnée</div>'; return; }
+    const monthNames = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sep","Oct","Nov","Déc"];
+    const max = Math.max(...keys.map((k) => byMonth[k]));
+    box.innerHTML = `<div class="bar-chart">${keys.map((k) => {
+      const [y, m] = k.split("-");
+      return `<div class="col"><span class="val">${byMonth[k]}</span><div class="bar" style="height:${Math.round((byMonth[k] / max) * 100)}%"></div><span class="day">${monthNames[parseInt(m, 10) - 1]} ${y.slice(2)}</span></div>`;
+    }).join("")}</div>`;
+  }
+
+  function renderVisitorCatTabs() {
+    const present = new Set(appointmentsCache.map((a) => a.accessType).filter(Boolean));
+    const tabs = ["tous", ...Object.keys(ACCESS_TYPE_LABELS).filter((k) => present.has(k))];
+    document.getElementById("visitorCatTabs").innerHTML = tabs.map((t) =>
+      `<button data-cat="${t}" class="${t === visitorCategory ? "active" : ""}">${t === "tous" ? "Toutes catégories" : ACCESS_TYPE_LABELS[t]}</button>`
+    ).join("");
+    document.querySelectorAll("#visitorCatTabs button").forEach((btn) => {
+      btn.addEventListener("click", () => { visitorCategory = btn.getAttribute("data-cat"); renderVisitors(); });
+    });
+  }
+
+  function renderVisitors() {
+    renderVisitorsMonthly();
+    renderVisitorCatTabs();
+    const wrap = document.getElementById("visitorsWrap");
+    const filtered = visitorCategory === "tous" ? appointmentsCache : appointmentsCache.filter((a) => a.accessType === visitorCategory);
+    const byEmail = {};
+    filtered.forEach((a) => {
+      const key = a.email || "—";
+      if (!byEmail[key]) byEmail[key] = { visitor: a.visitor, company: a.company, email: a.email, phone: a.phone, jobTitle: a.jobTitle, visits: [] };
+      byEmail[key].visits.push(a);
+    });
+    const list = Object.values(byEmail).sort((a, b) => {
+      const lastA = Math.max(...a.visits.map((x) => x.createdAt || 0));
+      const lastB = Math.max(...b.visits.map((x) => x.createdAt || 0));
+      return lastB - lastA;
+    });
+    if (!list.length) { wrap.innerHTML = '<div class="empty">Aucun visiteur dans cette catégorie.</div>'; return; }
+    const rows = list.map((v) => {
+      const last = v.visits.reduce((acc, x) => ((x.createdAt || 0) > (acc.createdAt || 0) ? x : acc), {});
+      const lastDate = last.createdAt ? new Date(last.createdAt).toLocaleDateString("fr-FR") : "—";
+      return `<tr><td>${v.visitor}${v.jobTitle ? `<div style="color:var(--text-muted);font-size:.72rem;">${v.jobTitle}</div>` : ""}</td><td>${v.company || ""}</td><td>${v.email || ""}</td><td>${v.phone || ""}</td><td>${ACCESS_TYPE_LABELS[last.accessType] || last.accessType || ""}</td><td>${v.visits.length}</td><td>${lastDate}</td><td><span class="badge ${statusMeta(last.status).key}">${last.status || "en attente"}</span></td></tr>`;
+    }).join("");
+    wrap.innerHTML = `<table><thead><tr><th>Visiteur</th><th>Société</th><th>Email</th><th>Téléphone</th><th>Catégorie</th><th>Nb. demandes</th><th>Dernière visite</th><th>Statut</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  /* ---------- Data centers ---------- */
+  function renderDataCenters() {
+    const grid = document.getElementById("dcGrid");
+    grid.innerHTML = Object.entries(DC_INFO).map(([code, dc]) => `
+      <div class="dc-card ${session.country === code ? "current" : ""}">
+        <h4>${COUNTRY_FLAGS[code]} ${dc.name}</h4>
+        <div class="loc">${dc.city}</div>
+        <ul>${dc.facts.map((f) => `<li>${f}</li>`).join("")}</ul>
+        ${session.country === code ? '<span class="tag">Votre site</span>' : ""}
+      </div>`).join("");
+  }
+
+  /* ---------- Reports ---------- */
+  function renderReports() {
+    function breakdown(field, labelFn) {
+      const counts = {};
+      appointmentsCache.forEach((a) => { const k = a[field] || "non renseigné"; counts[k] = (counts[k] || 0) + 1; });
+      const total = appointmentsCache.length || 1;
+      const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      if (!entries.length) return '<div class="empty" style="padding:10px 0;">Aucune donnée</div>';
+      return entries.map(([k, n]) => {
+        const pct = Math.round((n / total) * 100);
+        return `<div class="breakdown-row"><span class="name">${labelFn ? labelFn(k) : k}</span><span class="bar-track"><span class="bar-fill" style="width:${pct}%;background:var(--blue)"></span></span><span class="n">${n}</span></div>`;
+      }).join("");
+    }
+    document.getElementById("reportAccessType").innerHTML = breakdown("accessType");
+    document.getElementById("reportHost").innerHTML = breakdown("host", hostLabel);
+  }
+
+  /* ---------- Users ---------- */
+  function renderUsers() {
+    document.getElementById("usersGrid").innerHTML = `
+      <div class="dc-card current">
+        <h4>${COUNTRY_FLAGS[session.country]} Administrateur ${DC_INFO[session.country].name}</h4>
+        <div class="loc">Compte partagé du site</div>
+        <ul>
+          <li>Rôle : Administrateur back-office</li>
+          <li>Portée : demandes du site ${DC_INFO[session.country].name} uniquement</li>
+          ${session.email ? `<li>Email de connexion : ${session.email}</li>` : ""}
+        </ul>
+      </div>`;
+  }
+
+  /* ---------- Settings ---------- */
+  function renderSettings() {
+    document.getElementById("settingsGrid").innerHTML = `
+      <div class="dc-card">
+        <h4>Session</h4>
+        <ul>
+          <li>Site : ${DC_INFO[session.country].name} (${DC_INFO[session.country].city})</li>
+          <li>Email : ${session.email || "non renseigné"}</li>
+        </ul>
+      </div>
+      <div class="dc-card">
+        <h4>Application</h4>
+        <ul>
+          <li>Isaac Ahmed — back-office</li>
+          <li>Version 1.0</li>
+        </ul>
+      </div>`;
+  }
+
+  /* ---------- Conversations / AI stats (lazy) ---------- */
+  async function loadConversations() {
+    conversationsLoaded = true;
+    try {
+      const data = await authedCall({ event: "admin_list_conversations" });
+      renderConversations(data.conversations || [], data.total || 0);
+      renderAiStats(data.conversations || [], data.total || 0);
+    } catch (e) {
+      document.getElementById("convWrap").innerHTML = `<div class="error">Erreur : ${e.message}</div>`;
+    }
+  }
+  function renderConversations(list, total) {
+    const wrap = document.getElementById("convWrap");
+    if (!list.length) { wrap.innerHTML = '<div class="empty">Aucune conversation enregistrée pour le moment.</div>'; return; }
+    const rows = list.map((c) => `<tr><td>${new Date(c.timestamp).toLocaleString("fr-FR")}</td><td><code>${(c.sessionId || "").slice(0, 10)}</code></td><td style="white-space:normal;max-width:260px;">${c.message}</td><td style="white-space:normal;max-width:340px;">${c.answer}</td></tr>`).join("");
+    wrap.innerHTML = `<table><thead><tr><th>Date</th><th>Session</th><th>Question</th><th>Réponse d'Isaac</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  function renderAiStats(list, total) {
+    const uniqueSessions = new Set(list.map((c) => c.sessionId)).size;
+    const cards = [
+      { label: "Conversations enregistrées", value: total },
+      { label: "Sessions uniques (échantillon)", value: uniqueSessions },
+      { label: "Affichées ci-dessous", value: list.length },
+    ];
+    document.getElementById("aiStatGrid").innerHTML = cards.map((c) => `<div class="stat-card total"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`).join("");
+    renderAiActivityChart(list);
+  }
+  function renderAiActivityChart(list) {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d);
+    }
+    const counts = days.map((d) => {
+      const key = d.toISOString().slice(0, 10);
+      return list.filter((c) => new Date(c.timestamp).toISOString().slice(0, 10) === key).length;
+    });
+    const max = Math.max(1, ...counts);
+    const dayNames = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+    document.getElementById("aiActivityChart").innerHTML = `<div class="bar-chart">${days.map((d, i) => `
+      <div class="col">
+        <span class="val">${counts[i]}</span>
+        <div class="bar" style="height:${Math.round((counts[i] / max) * 100)}%"></div>
+        <span class="day">${dayNames[d.getDay()]}</span>
+      </div>`).join("")}</div>`;
+  }
+  document.getElementById("refreshConv").addEventListener("click", loadConversations);
+  document.getElementById("refreshAi").addEventListener("click", loadConversations);
+
+  /* ---------- Notifications (lazy) ---------- */
+  async function loadNotifications() {
+    notificationsLoaded = true;
+    const wrap = document.getElementById("notifWrap");
+    try {
+      const data = await authedCall({ event: "admin_list_notifications" });
+      const list = data.notifications || [];
+      if (!list.length) { wrap.innerHTML = '<div class="empty">Aucune notification envoyée pour le moment.</div>'; return; }
+      const rows = list.map((n) => `<tr><td>${new Date(n.timestamp).toLocaleString("fr-FR")}</td><td>${n.to}</td><td style="white-space:normal;">${n.subject}</td><td>${n.event || ""}</td></tr>`).join("");
+      wrap.innerHTML = `<table><thead><tr><th>Date</th><th>Destinataire</th><th>Sujet</th><th>Type</th></tr></thead><tbody>${rows}</tbody></table>`;
+    } catch (e) {
+      wrap.innerHTML = `<div class="error">Erreur : ${e.message}</div>`;
+    }
+  }
+  document.getElementById("refreshNotif").addEventListener("click", loadNotifications);
+
+  /* ---------- Knowledge base (lazy) ---------- */
+  async function loadKb() {
+    kbLoaded = true;
+    const box = document.getElementById("kbBox");
+    try {
+      const data = await authedCall({ event: "admin_get_kb" });
+      box.textContent = data.content || "Contenu indisponible.";
+    } catch (e) {
+      box.textContent = "Erreur : " + e.message;
+    }
+  }
+  document.getElementById("refreshKb").addEventListener("click", loadKb);
+
+  /* ---------- Team / staff directory (lazy) ---------- */
+  async function loadStaff() {
+    const wrap = document.getElementById("staffWrap");
+    wrap.innerHTML = '<div class="empty">Chargement…</div>';
+    try {
+      const data = await authedCall({ event: "admin_list_staff" });
+      renderStaff(data.staff || []);
+    } catch (e) {
+      wrap.innerHTML = `<div class="error">Erreur : ${e.message}</div>`;
+    }
+  }
+  function renderStaff(list) {
+    const wrap = document.getElementById("staffWrap");
+    if (!list.length) { wrap.innerHTML = '<div class="empty">Aucun membre enregistré pour ce site.</div>'; return; }
+    const bySvc = {};
+    list.forEach((s) => { (bySvc[s.service] = bySvc[s.service] || []).push(s); });
+    const order = ["site_manager", "commercial", "technique", "securite", "rh"];
+    const rows = order.filter((s) => bySvc[s]).flatMap((svc) => bySvc[svc].map((s) => `
+      <tr data-id="${s.id}"><td>${hostLabel(svc)}</td><td>${s.name}</td><td>${s.email}</td><td><button style="padding:5px 10px;font-size:.74rem;border-radius:6px;border:1px solid var(--panel-border);background:var(--panel-2);color:var(--bad);cursor:pointer;" data-remove="${s.id}">Retirer</button></td></tr>`)).join("");
+    wrap.innerHTML = `<table><thead><tr><th>Service</th><th>Nom</th><th>Email</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+    wrap.querySelectorAll("[data-remove]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!window.confirm("Retirer ce membre de l'équipe ?")) return;
+        btn.disabled = true;
+        try {
+          await authedCall({ event: "admin_remove_staff", id: btn.getAttribute("data-remove") });
+          await loadStaff();
+        } catch (e) {
+          alert("Erreur : " + e.message);
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+  document.getElementById("addStaffForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("staffName").value.trim();
+    const email = document.getElementById("staffEmail").value.trim();
+    const service = document.getElementById("staffService").value;
+    if (!name || !email) return;
+    try {
+      await authedCall({ event: "admin_add_staff", name, email, service });
+      document.getElementById("staffName").value = "";
+      document.getElementById("staffEmail").value = "";
+      await loadStaff();
+    } catch (err) {
+      alert("Erreur : " + err.message);
+    }
+  });
+
+  /* ---------- Session bootstrap ---------- */
+  lockBtn.addEventListener("click", () => {
+    clearStoredSession();
+    session = null;
+    conversationsLoaded = notificationsLoaded = kbLoaded = false;
+    appEl.style.display = "none";
+    loginEl.style.display = "grid";
+    passwordInput.value = "";
+  });
+
+  const stored = getStoredSession();
+  if (stored) {
+    setCountryPicker(stored.country);
+    emailInput.value = stored.email || "";
+    attemptLogin(stored.country, stored.password, stored.email);
+  }
+})();
+</script>
+</body>
+</html>
