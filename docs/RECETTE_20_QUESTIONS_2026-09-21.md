@@ -50,7 +50,9 @@ Le premier passage a révélé que **deux correctifs validés le 24/08 avaient �
 |---|---|---|---|---|
 | Conforme | 11 | 14 | 16 | **20** |
 | Partiel | 6 | 5 | 3 | 0 |
-| Non conforme | 3 | 1 | 1 | 0 | **Au quatrième passage, les vingt questions sont conformes aux critères de ce document.** Le critère d'acceptation du Module 1, tel qu'énoncé dans la fiche de stage, est donc satisfait.
+| Non conforme | 3 | 1 | 1 | 0 |
+
+**Au quatrième passage, les vingt questions sont conformes aux critères de ce document.** Le critère d'acceptation du Module 1, tel qu'énoncé dans la fiche de stage, est donc satisfait.
 
 Deux réserves, aucune ne portant sur un critère :
 
