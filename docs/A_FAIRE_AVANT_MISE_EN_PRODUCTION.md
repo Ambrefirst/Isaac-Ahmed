@@ -19,9 +19,13 @@ Le back-office reste alors joignable sur le tailnet à `https://100.71.79.97:844
 
 ## 2. Nettoyer les mots de passe de repli
 
-Les comptes admin vivent dans `/home/aminta/isaac-app-data/admin_accounts.json`, relu à chaque exécution. Mais le nœud Code du workflow `Isaac - Rendez-vous` contient aussi une constante `DEFAULT_ADMIN_ACCOUNTS` avec les mêmes trois mots de passe en dur, utilisée si le fichier est absent ou illisible. Une rotation faite uniquement dans le fichier laisse donc les anciens mots de passe actifs en cas de perte du fichier.
+Les comptes admin sont stockés dans **PostgreSQL**, conteneur `isaac-postgres`, base et utilisateur `isaac`, table `app_data`, ligne de clé `admin_accounts`, colonne `value` de type `jsonb`. Le routeur interroge cette table à chaque appel.
 
-À faire : vider `DEFAULT_ADMIN_ACCOUNTS` et faire échouer l'authentification si le fichier est introuvable, plutôt que de retomber sur des valeurs en dur.
+> **Piège vérifié le 21/09/2026.** Les fichiers `/home/aminta/isaac-app-data/*.json` sont des **vestiges de l'ancienne architecture et ne sont plus lus par personne** depuis la migration vers PostgreSQL. Modifier `admin_accounts.json` n'a aucun effet, et ne produit aucune erreur : on croit avoir changé le mot de passe alors qu'il est inchangé. Ces fichiers devraient être archivés ou supprimés pour éviter que quelqu'un ne perde du temps dessus.
+
+Le nœud Code du workflow `Isaac - Rendez-vous` contient par ailleurs une constante `DEFAULT_ADMIN_ACCOUNTS` avec trois mots de passe en dur, utilisée quand la lecture de la base échoue ou que la ligne est absente. Une rotation faite en base laisse donc ces valeurs actives en cas de perte de la ligne.
+
+À faire : vider `DEFAULT_ADMIN_ACCOUNTS` et faire échouer l'authentification si la base est injoignable, plutôt que de retomber sur des valeurs en dur.
 
 ## 3. Passer à de vrais comptes utilisateurs
 
