@@ -1,0 +1,42 @@
+{
+  "clients": [
+    {
+      "email": "jean.dupont@xyz.com",
+      "firstName": "Jean",
+      "lastName": "Dupont",
+      "company": "Entreprise XYZ",
+      "status": "client",
+      "assignedCommercialId": "STAFF-001",
+      "assignedCommercialName": "Paul Nguema",
+      "assignedCommercialEmail": "paul@st.digital",
+      "dataCenter": "libreville",
+      "lastVisit": "2026-08-15",
+      "createdAt": "2025-01-10"
+    },
+    {
+      "email": "alice.martin@techcorp.fr",
+      "firstName": "Alice",
+      "lastName": "Martin",
+      "company": "TechCorp France",
+      "status": "client",
+      "assignedCommercialId": "STAFF-002",
+      "assignedCommercialName": "Sophie Ondoua",
+      "assignedCommercialEmail": "sophie@st.digital",
+      "dataCenter": "douala",
+      "lastVisit": "2026-09-01",
+      "createdAt": "2025-03-15"
+    },
+    {
+      "email": "prospect@newcompany.com",
+      "firstName": "Charlie",
+      "lastName": "Prospect",
+      "company": "New Company Ltd",
+      "status": "prospect",
+      "assignedCommercialId": null,
+      "assignedCommercialName": null,
+      "assignedCommercialEmail": null,
+      "dataCenter": null,
+      "createdAt": "2026-09-05"
+    }
+  ]
+}

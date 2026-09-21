@@ -1,0 +1,19 @@
+:root {
+  --bg-grad-start: #1A4D7A;
+  --bg-grad-end: #0a1420;
+  --accent: #2E7AB5;
+  --accent-strong: #7AAFC9;
+  --text-primary: #ffffff;
+  --text-muted: #91a8bf;
+  --panel-bg: rgba(255, 255, 255, 0.06);
+  --panel-bg-strong: rgba(255, 255, 255, 0.1);
+  --panel-border: rgba(255, 255, 255, 0.16);
+  --input-bg: rgba(255, 255, 255, 0.08);
+}
+
+html, body, #root { min-height: 100%; margin: 0; }
+body {
+  background: radial-gradient(circle at 20% 15%, var(--bg-grad-start), var(--bg-grad-end) 58%) fixed;
+  color: var(--text-primary);
+  font-family: Arial, sans-serif;
+}
