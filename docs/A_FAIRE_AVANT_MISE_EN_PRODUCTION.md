@@ -2,20 +2,20 @@
 
 **Créé le 21/09/2026.** Ces points sont **acceptés tels quels pendant la phase de stage et de démonstration**, parce que l'application ne contient aujourd'hui que des données de test. Ils doivent être traités avant toute exploitation avec de vraies données de visiteurs ou de collaborateurs.
 
-## 1. Refermer la surface publique
+## 1. Refermer la surface publique — FAIT le 21/09/2026
 
-Tailscale Funnel est actif sur `https://aminta-hp-elitedesk-800-g2-twr.tail51ab0e.ts.net` et relaie le port 8444 de la tour. Ce bloc nginx sert aujourd'hui, en plus de ce qui est nécessaire aux liens envoyés à l'équipe :
+La surface publique servait, en plus de ce qui est nécessaire aux liens envoyés à l'équipe, l'interface d'administration et le routeur portant les opérations d'administration. Le seul contrôle d'accès était un mot de passe partagé par pays.
 
-- `/admin/`, la page de connexion du back-office, servie par le `location /` générique ;
-- `/webhook/isaac-rdv`, le routeur qui porte tous les événements `admin_*`.
+**Correctif appliqué et vérifié le 21/09/2026.** Dans le bloc `server { listen 8444; }` :
 
-Le seul contrôle d'accès est un mot de passe statique par pays. Correctif prévu, dans `/home/aminta/isaac-app-conf/default.conf`, bloc `server { listen 8444; }` :
+- `location = /webhook/isaac` en correspondance exacte, au lieu d'une correspondance par préfixe ;
+- `location /webhook/ { return 404; }` pour refuser tout webhook non déclaré explicitement ;
+- `location /admin/ { return 404; }` ;
+- suppression du relais vers le routeur d'administration.
 
-- supprimer le bloc `location /webhook/isaac-rdv` ;
-- ajouter `location /admin/ { return 404; }` avant le `location /` générique ;
-- recharger avec `docker exec isaac-app nginx -s reload`.
+Restent ouverts sur la surface publique : l'application visiteur, la conversation, la page de réponse d'équipe et son webhook. L'interface d'administration reste joignable sur le réseau privé.
 
-Le back-office reste alors joignable sur le tailnet à `https://100.71.79.97:8443/admin/`. Les liens accepter ou refuser envoyés aux membres de l'équipe continuent de fonctionner, puisqu'ils n'utilisent que `/respond/` et `/webhook/isaac-respond`.
+> **Piège nginx à retenir.** Une première tentative s'était contentée de supprimer le bloc `location /webhook/isaac-rdv`. Elle a été inefficace : nginx applique une correspondance par préfixe, et la règle `location /webhook/isaac` capturait donc aussi `/webhook/isaac-rdv` et `/webhook/isaac-index-kb`, en les relayant correctement vers le serveur d'orchestration. Une vérification par requête réelle, et non par simple lecture de la configuration, est indispensable après ce type de changement.
 
 ## 2. Nettoyer les mots de passe de repli
 
