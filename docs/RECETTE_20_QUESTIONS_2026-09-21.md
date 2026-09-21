@@ -63,6 +63,31 @@ Deux réserves, aucune ne portant sur un critère :
 
 **Réserve principale, de nature formelle :** les critères de validation employés ici restent une proposition de la stagiaire. Tant qu'ils ne sont pas validés par la tutrice, ce résultat ne constitue pas une recette formelle du Module 1.
 
+## Passage 5 : une optimisation de performance qui a échoué
+
+Le passage 4 ayant atteint vingt conformes sur vingt, une tentative d'optimisation du temps de réponse a été conduite, puis mesurée par un cinquième passage complet.
+
+**Constat de départ.** Les correctifs successifs avaient porté la consigne système de 1 919 à 5 101 caractères et le nombre de fragments récupérés de 5 à 8. L'entrée soumise au modèle était passée d'environ 2 000 à environ 3 800 jetons, pour une fenêtre de contexte dimensionnée à 4 096. Le temps de réponse était monté de 60-70 secondes à 90-120 secondes, la phase de lecture du prompt dominant le temps total sur un processeur sans accélérateur graphique.
+
+**Modifications testées.** Condensation des dix-sept règles en neuf formulations équivalentes, ramenant la consigne à 3 279 caractères. Réduction du nombre de fragments de 8 à 6. Élargissement de la fenêtre de contexte de 4 096 à 8 192 jetons.
+
+**Résultat.** Le temps moyen est tombé à 87 secondes, soit environ vingt pour cent de gain. Mais six questions ont régressé.
+
+| Question | Régression observée |
+|---|---|
+| Q4, intelligence artificielle | Répond de nouveau sur la nature de l'assistant au lieu de l'offre de l'entreprise. |
+| Q11, journée portes ouvertes | L'information n'est plus retrouvée du tout avec six fragments au lieu de huit, et l'assistant renvoie vers le site web. |
+| Q17, clients hébergés | Dit simplement ne pas avoir l'information, sans invoquer la confidentialité. |
+| Q9, accueil d'un visiteur | Ne demande plus la personne à rencontrer. |
+| Q15, panne technique | N'annonce plus explicitement l'impossibilité de diagnostiquer. |
+| Q18, hors sujet | Renvoie toujours vers une ressource externe. |
+
+Verdict : 14 conformes, 3 partiels, 3 non conformes.
+
+**Deux enseignements.** D'abord, la réduction du nombre de fragments récupérés est directement responsable de la perte d'une information factuelle, ce qui confirme que ce paramètre gouverne le rappel et non la seule verbosité. Ensuite, et de façon moins intuitive, une consigne condensée mais sémantiquement équivalente ne produit pas le même comportement : un modèle de sept milliards de paramètres suit moins bien une règle dense qu'une règle développée. La concision d'une consigne n'est donc pas neutre.
+
+**Décision.** La configuration du passage 4 a été rétablie, consigne complète et huit fragments, en conservant la seule fenêtre de contexte élargie, qui supprime le risque de troncature silencieuse sans effet mesurable sur le comportement. Le temps de réponse d'environ cent dix secondes est assumé : sur un critère d'acceptation portant sur l'exactitude, la justesse prime sur la vitesse.
+
 ## Enseignement méthodologique
 
 Le passage 3 illustre un effet à documenter dans le mémoire : **une règle ajoutée au prompt système pour corriger un écart peut en créer un autre ailleurs.** La règle anti-dépannage, écrite pour la question 15, s'est appliquée à tort à l'alerte de sécurité de la question 16. La règle de fidélité factuelle, elle, a fait reproduire fidèlement une information mal récupérée en question 6, l'adresse du bureau ayant été donnée pour celle du Datacenter.
