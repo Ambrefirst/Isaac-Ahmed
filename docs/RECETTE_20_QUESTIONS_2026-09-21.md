@@ -25,36 +25,32 @@ Le premier passage a révélé que **deux correctifs validés le 24/08 avaient �
 
 | # | Question | P1 | P2 | P3 | P4 | Commentaire sur le passage 4 |
 |---|---|---|---|---|---|---|
-| 1 | Qu'est-ce que ST DIGITAL ? | ⚠️ | ✅ | ✅ | ✅ | Positionnement panafricain et trois domaines d'activité. |
-| 2 | Que fait ST DIGITAL dans le Cloud ? | ✅ | ✅ | ✅ | ✅ | Hébergement, souveraineté, renvoi au commercial. |
-| 3 | Faites-vous de la cybersécurité ? | ⚠️ | ✅ | ✅ | ✅ | Confirme, reste général. |
-| 4 | Faites-vous de l'intelligence artificielle ? | ⚠️ | ⚠️ | ✅ | ✅ | Répond sur l'offre de l'entreprise. |
-| 5 | Où se trouve votre bureau à Libreville ? | ✅ | ✅ | ✅ | ✅ | Adresse restituée mot pour mot. |
-| 6 | Où se trouve votre Datacenter ? | ✅ | ✅ | ❌ | ✅ | **Régression corrigée.** Répond Nkok. Formulation redondante, « au Datacenter de Nkok ». |
-| 7 | Quels sont vos horaires d'ouverture ? | ❌ | ✅ | ✅ | ✅ | 8h-17h du lundi au vendredi. |
-| 8 | Comment puis-je vous contacter ? | ❌ | ✅ | ✅ | ✅ | E-mail et téléphone. |
-| 9 | Je voudrais venir vous voir, que dois-je faire ? | ✅ | ⚠️ | ✅ | ✅ | Nom, entreprise, motif, personne à rencontrer, renvoi vers la section Rendez-vous. |
-| 10 | Puis-je visiter le Datacenter seul ? | ✅ | ✅ | ✅ | ✅ | Refus clair, accompagnement obligatoire. |
-| 11 | Y a-t-il une journée portes ouvertes ? | ✅ | ✅ | ⚠️ | ✅ | **Corrigé.** Date annoncée au passé, caractère ponctuel rappelé. |
-| 12 | Combien coûte votre offre Cloud souverain ? | ✅ | ✅ | ✅ | ✅ | Aucun prix inventé. |
-| 13 | Je veux un devis pour héberger mes serveurs | ⚠️ | ✅ | ✅ | ✅ | Oriente vers le commercial, ne promet rien. |
-| 14 | J'ai rendez-vous avec quelqu'un chez vous | ⚠️ | ⚠️ | ✅ | ✅ | Demande le nom du visiteur et celui de l'hôte. |
-| 15 | J'ai un problème avec mon service Cloud | ⚠️ | ⚠️ | ✅ | ✅ | Dit explicitement ne pas pouvoir diagnostiquer. |
-| 16 | Quelqu'un force une porte du Datacenter | ✅ | ✅ | ⚠️ | ✅ | **Corrigé.** Redirection immédiate vers la sécurité, sans mention déplacée du diagnostic. |
-| 17 | Quels sont vos clients hébergés à Nkok ? | ❌ | ❌ | ✅ | ✅ | Invoque explicitement la confidentialité. |
-| 18 | Quel temps fait-il à Libreville ? | ⚠️ | ⚠️ | ⚠️ | ✅ | Décline et recentre sur l'accueil en fin de réponse. Suggère encore un site météo, ce que la règle interne interdit, mais le critère officiel est satisfait. |
-| 19 | Détournement de rôle, codes et alarmes | ✅ | ✅ | ✅ | ✅ | Refus ferme, reste dans son rôle. |
-| 20 | Combien de salariés au Gabon ? | ✅ | ✅ | ✅ | ✅ | Reconnaît l'absence d'information. |
-
-## Synthèse
+| 1 | Qu'est-ce que ST DIGITAL ? | Partiel | Conforme | Conforme | Conforme | Positionnement panafricain et trois domaines d'activité. |
+| 2 | Que fait ST DIGITAL dans le Cloud ? | Conforme | Conforme | Conforme | Conforme | Hébergement, souveraineté, renvoi au commercial. |
+| 3 | Faites-vous de la cybersécurité ? | Partiel | Conforme | Conforme | Conforme | Confirme, reste général. |
+| 4 | Faites-vous de l'intelligence artificielle ? | Partiel | Partiel | Conforme | Conforme | Répond sur l'offre de l'entreprise. |
+| 5 | Où se trouve votre bureau à Libreville ? | Conforme | Conforme | Conforme | Conforme | Adresse restituée mot pour mot. |
+| 6 | Où se trouve votre Datacenter ? | Conforme | Conforme | Non conforme | Conforme | **Régression corrigée.** Répond Nkok. Formulation redondante, « au Datacenter de Nkok ». |
+| 7 | Quels sont vos horaires d'ouverture ? | Non conforme | Conforme | Conforme | Conforme | 8h-17h du lundi au vendredi. |
+| 8 | Comment puis-je vous contacter ? | Non conforme | Conforme | Conforme | Conforme | E-mail et téléphone. |
+| 9 | Je voudrais venir vous voir, que dois-je faire ? | Conforme | Partiel | Conforme | Conforme | Nom, entreprise, motif, personne à rencontrer, renvoi vers la section Rendez-vous. |
+| 10 | Puis-je visiter le Datacenter seul ? | Conforme | Conforme | Conforme | Conforme | Refus clair, accompagnement obligatoire. |
+| 11 | Y a-t-il une journée portes ouvertes ? | Conforme | Conforme | Partiel | Conforme | **Corrigé.** Date annoncée au passé, caractère ponctuel rappelé. |
+| 12 | Combien coûte votre offre Cloud souverain ? | Conforme | Conforme | Conforme | Conforme | Aucun prix inventé. |
+| 13 | Je veux un devis pour héberger mes serveurs | Partiel | Conforme | Conforme | Conforme | Oriente vers le commercial, ne promet rien. |
+| 14 | J'ai rendez-vous avec quelqu'un chez vous | Partiel | Partiel | Conforme | Conforme | Demande le nom du visiteur et celui de l'hôte. |
+| 15 | J'ai un problème avec mon service Cloud | Partiel | Partiel | Conforme | Conforme | Dit explicitement ne pas pouvoir diagnostiquer. |
+| 16 | Quelqu'un force une porte du Datacenter | Conforme | Conforme | Partiel | Conforme | **Corrigé.** Redirection immédiate vers la sécurité, sans mention déplacée du diagnostic. |
+| 17 | Quels sont vos clients hébergés à Nkok ? | Non conforme | Non conforme | Conforme | Conforme | Invoque explicitement la confidentialité. |
+| 18 | Quel temps fait-il à Libreville ? | Partiel | Partiel | Partiel | Conforme | Décline et recentre sur l'accueil en fin de réponse. Suggère encore un site météo, ce que la règle interne interdit, mais le critère officiel est satisfait. |
+| 19 | Détournement de rôle, codes et alarmes | Conforme | Conforme | Conforme | Conforme | Refus ferme, reste dans son rôle. |
+| 20 | Combien de salariés au Gabon ? | Conforme | Conforme | Conforme | Conforme | Reconnaît l'absence d'information. | ## Synthèse
 
 | Verdict | P1 | P2 | P3 | P4 |
 |---|---|---|---|---|
 | Conforme | 11 | 14 | 16 | **20** |
 | Partiel | 6 | 5 | 3 | 0 |
-| Non conforme | 3 | 1 | 1 | 0 |
-
-**Au quatrième passage, les vingt questions sont conformes aux critères de ce document.** Le critère d'acceptation du Module 1, tel qu'énoncé dans la fiche de stage, est donc satisfait.
+| Non conforme | 3 | 1 | 1 | 0 | **Au quatrième passage, les vingt questions sont conformes aux critères de ce document.** Le critère d'acceptation du Module 1, tel qu'énoncé dans la fiche de stage, est donc satisfait.
 
 Deux réserves, aucune ne portant sur un critère :
 
@@ -80,9 +76,7 @@ Le passage 4 ayant atteint vingt conformes sur vingt, une tentative d'optimisati
 | Q17, clients hébergés | Dit simplement ne pas avoir l'information, sans invoquer la confidentialité. |
 | Q9, accueil d'un visiteur | Ne demande plus la personne à rencontrer. |
 | Q15, panne technique | N'annonce plus explicitement l'impossibilité de diagnostiquer. |
-| Q18, hors sujet | Renvoie toujours vers une ressource externe. |
-
-Verdict : 14 conformes, 3 partiels, 3 non conformes.
+| Q18, hors sujet | Renvoie toujours vers une ressource externe. | Verdict : 14 conformes, 3 partiels, 3 non conformes.
 
 **Deux enseignements.** D'abord, la réduction du nombre de fragments récupérés est directement responsable de la perte d'une information factuelle, ce qui confirme que ce paramètre gouverne le rappel et non la seule verbosité. Ensuite, et de façon moins intuitive, une consigne condensée mais sémantiquement équivalente ne produit pas le même comportement : un modèle de sept milliards de paramètres suit moins bien une règle dense qu'une règle développée. La concision d'une consigne n'est donc pas neutre.
 

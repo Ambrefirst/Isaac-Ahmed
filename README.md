@@ -7,102 +7,102 @@ Assistant IA multimodal pour automation de gestion des rendez-vous visiteurs : c
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ VISITOR KIOSK (Visitor App + Admin Panel)                       │
-│ ├─ React + i18n (FR/EN)                                         │
-│ ├─ Screens: Welcome, Home, Chat, RDV, MyAppointments, Admin    │
-│ └─ HTTPS on tower:8443 (nginx reverse proxy)                    │
-└────────────────┬────────────────────────────────────────────────┘
-                 │ Tailscale (100.71.79.97:5678)
-                 │
-┌─────────────────────────────────────────────────────────────────┐
-│ BACKEND TOWER (Self-Hosted, Docker)                             │
-│                                                                 │
-│ n8n (workflow orchestration)                                    │
-│ ├─ /webhook/isaac          → Chat + RAG                         │
-│ ├─ /webhook/isaac-rdv      → RDV + QR + Notifications          │
-│ └─ /webhook/isaac-respond  → Team availability poll             │
-│                                                                 │
-│ Ollama (local LLM inference)                                    │
-│ └─ qwen2.5:7b-instruct (8-12s per query, grounded RAG)         │
-│                                                                 │
-│ Data persistence                                                │
-│ ├─ JSON files (appointments, conversations, staff, notifications) │
-│ └─ Vector DB (in-memory, survives ~48h restart)                │
-└─────────────────────────────────────────────────────────────────┘
+
+ VISITOR KIOSK (Visitor App + Admin Panel) 
+ React + i18n (FR/EN) 
+ Screens: Welcome, Home, Chat, RDV, MyAppointments, Admin 
+ HTTPS on tower:8443 (nginx reverse proxy) 
+
+ Tailscale (100.71.79.97:5678)
+ 
+
+ BACKEND TOWER (Self-Hosted, Docker) 
+ 
+ n8n (workflow orchestration) 
+ /webhook/isaac → Chat + RAG 
+ /webhook/isaac-rdv → RDV + QR + Notifications 
+ /webhook/isaac-respond → Team availability poll 
+ 
+ Ollama (local LLM inference) 
+ qwen2.5:7b-instruct (8-12s per query, grounded RAG) 
+ 
+ Data persistence 
+ JSON files (appointments, conversations, staff, notifications) 
+ Vector DB (in-memory, survives ~48h restart) 
+
 ```
 
 ## Structure du Projet
 
 ```
 accueil-app/
-│
-├── src/                           # React frontend
-│   ├── App.js                     # Root component + routing
-│   ├── App.test.js                # Component tests
-│   ├── i18n.js                    # Internationalization (FR/EN)
-│   │
-│   ├── WelcomeScreen.js           # Landing page: Choose visitor or chat
-│   ├── HomeScreen.js              # Main menu after welcome
-│   ├── ChatScreen.js              # Isaac conversational chat
-│   ├── RendezVousScreen.js        # Book appointment form
-│   ├── MyAppointmentsScreen.js    # Lookup existing appointments (OTP)
-│   ├── PhotoCapture.js            # Camera UI (identity docs)
-│   ├── QrScanner.js               # QR code scanner
-│   │
-│   ├── services/                  # Backend integration layer
-│   │   ├── aiService.js           # Chat → n8n webhook (RAG)
-│   │   ├── appointmentService.js  # RDV requests, lookups, cancellations
-│   │   ├── notificationService.js # Escalate to staff
-│   │   └── *.test.js              # Service unit tests (10 tests passing)
-│   │
-│   ├── *.css                      # Component styling (ST Digital brand)
-│   ├── index.js                   # React DOM mount
-│   └── setupTests.js              # Jest configuration
-│
-├── public/                        # Static assets
-│   ├── index.html                 # HTML entry point
-│   ├── favicon.ico                # Tab icon
-│   ├── manifest.json              # PWA manifest
-│   ├── logo-st-digital.png        # ST Digital branding
-│   └── logo*.png                  # App icons
-│
-├── docs/                          # Project documentation
-│   ├── SPECIFICATIONS_ISAAC_AHMED.md              # Full functional specs (Partie A-J)
-│   ├── 01_Note_de_cadrage.docx                    # Stage kickoff (tutrice validation)
-│   ├── 02_Architecture_technique.docx             # Tech choices + diagrams
-│   ├── 03_Registre_des_risques.docx               # Risk register (R1-R15)
-│   ├── 04_Note_protection_donnees.docx            # GDPR/compliance (Gabon)
-│   ├── 05_Documentation_deploiement.docx          # Setup guide (Ollama + Docker + n8n)
-│   ├── 06_Backlog.docx                            # Feature backlog (M0-M3)
-│   ├── 07_Gabarit_journal_de_bord.docx            # Work journal (13/08 → 21/09)
-│   ├── 08_Dossier_tests_recette.docx              # Test plan + results
-│   ├── 09_Dossier_Isaac_Ahmed_consolide.docx     # All-in-one deliverable
-│   │
-│   ├── BASE_CONNAISSANCES_ST_DIGITAL.md           # RAG knowledge base (ST Digital facts)
-│   ├── JEU_20_QUESTIONS_REFERENCE.md              # M1 acceptance test (20 Q&A)
-│   │
-│   ├── N8N_CHAT_CONTRACT.md                       # Webhook spec: chat → RAG
-│   ├── N8N_APPOINTMENTS_CONTRACT.md               # Webhook spec: RDV workflow
-│   ├── N8N_NOTIFICATION_CONTRACT.md               # Webhook spec: email notifications
-│   └── N8N_ROUTER_LOGIC_V2.md                     # Workflow routing rules
-│
-├── _archive_dead_code/            # Old/removed code (kept for reference)
-│   ├── QrPreview.js               # Deprecated QR preview
-│   └── knowledgeBase.js           # Old static KB (migrated to RAG)
-│
-├── .env.example                   # Environment variables template
-├── .env.local                     # (Git-ignored) Local config pointing to tower
-├── .gitignore                     # Standard Node/React ignore rules
-│
-├── package.json                   # Node dependencies + scripts
-├── package-lock.json              # Locked dependency versions
-│
-├── .claude/launch.json            # Claude Code dev server config
-├── certs/                         # Self-signed HTTPS certs (dev)
-│
-└── build/                         # Production bundle (npm run build)
-    └── [compiled React + assets]
+
+ src/ # React frontend
+ App.js # Root component + routing
+ App.test.js # Component tests
+ i18n.js # Internationalization (FR/EN)
+ 
+ WelcomeScreen.js # Landing page: Choose visitor or chat
+ HomeScreen.js # Main menu after welcome
+ ChatScreen.js # Isaac conversational chat
+ RendezVousScreen.js # Book appointment form
+ MyAppointmentsScreen.js # Lookup existing appointments (OTP)
+ PhotoCapture.js # Camera UI (identity docs)
+ QrScanner.js # QR code scanner
+ 
+ services/ # Backend integration layer
+ aiService.js # Chat → n8n webhook (RAG)
+ appointmentService.js # RDV requests, lookups, cancellations
+ notificationService.js # Escalate to staff
+ *.test.js # Service unit tests (10 tests passing)
+ 
+ *.css # Component styling (ST Digital brand)
+ index.js # React DOM mount
+ setupTests.js # Jest configuration
+
+ public/ # Static assets
+ index.html # HTML entry point
+ favicon.ico # Tab icon
+ manifest.json # PWA manifest
+ logo-st-digital.png # ST Digital branding
+ logo*.png # App icons
+
+ docs/ # Project documentation
+ SPECIFICATIONS_ISAAC_AHMED.md # Full functional specs (Partie A-J)
+ 01_Note_de_cadrage.docx # Stage kickoff (tutrice validation)
+ 02_Architecture_technique.docx # Tech choices + diagrams
+ 03_Registre_des_risques.docx # Risk register (R1-R15)
+ 04_Note_protection_donnees.docx # GDPR/compliance (Gabon)
+ 05_Documentation_deploiement.docx # Setup guide (Ollama + Docker + n8n)
+ 06_Backlog.docx # Feature backlog (M0-M3)
+ 07_Gabarit_journal_de_bord.docx # Work journal (13/08 → 21/09)
+ 08_Dossier_tests_recette.docx # Test plan + results
+ 09_Dossier_Isaac_Ahmed_consolide.docx # All-in-one deliverable
+ 
+ BASE_CONNAISSANCES_ST_DIGITAL.md # RAG knowledge base (ST Digital facts)
+ JEU_20_QUESTIONS_REFERENCE.md # M1 acceptance test (20 Q&A)
+ 
+ N8N_CHAT_CONTRACT.md # Webhook spec: chat → RAG
+ N8N_APPOINTMENTS_CONTRACT.md # Webhook spec: RDV workflow
+ N8N_NOTIFICATION_CONTRACT.md # Webhook spec: email notifications
+ N8N_ROUTER_LOGIC_V2.md # Workflow routing rules
+
+ _archive_dead_code/ # Old/removed code (kept for reference)
+ QrPreview.js # Deprecated QR preview
+ knowledgeBase.js # Old static KB (migrated to RAG)
+
+ .env.example # Environment variables template
+ .env.local # (Git-ignored) Local config pointing to tower
+ .gitignore # Standard Node/React ignore rules
+
+ package.json # Node dependencies + scripts
+ package-lock.json # Locked dependency versions
+
+ .claude/launch.json # Claude Code dev server config
+ certs/ # Self-signed HTTPS certs (dev)
+
+ build/ # Production bundle (npm run build)
+ [compiled React + assets]
 
 (Exclude: node_modules/ 630MB, .git/)
 ```
@@ -111,12 +111,10 @@ accueil-app/
 
 | Module | Scope | Status | Deadline |
 |--------|-------|--------|----------|
-| **M0** | RDV, QR code, host notification, back-office minimal | ✅ **DELIVERED** (2026-09-09) | fin S4 |
-| **M1** | Isaac text chat, RAG, 20-question acceptance test | ✅ **DELIVERED** (2026-09-23) | fin S6 |
-| **M2** | Audio: speech recognition + synthesis (French) | 🔄 Prototype | fin S7 |
-| **M3** | Avatar: real-time video rendering | 📋 Architecture study only | fin S8 |
-
-## Technology Stack
+| **M0** | RDV, QR code, host notification, back-office minimal | **DELIVERED** (2026-09-09) | fin S4 |
+| **M1** | Isaac text chat, RAG, 20-question acceptance test | **DELIVERED** (2026-09-23) | fin S6 |
+| **M2** | Audio: speech recognition + synthesis (French) | Prototype | fin S7 |
+| **M3** | Avatar: real-time video rendering | Architecture study only | fin S8 | ## Technology Stack
 
 ### Frontend
 - **React 19** — Component framework (CRA)
@@ -126,19 +124,19 @@ accueil-app/
 
 ### Backend (Self-Hosted)
 - **n8n 2.36** — Workflow orchestration (Docker)
-  - 3 main workflows: Chat (RAG), RDV (QR+notifications), Team responses
-  - JSON file storage (no cloud DB)
-  - SMTP notifications (Gmail + fallback)
+ - 3 main workflows: Chat (RAG), RDV (QR+notifications), Team responses
+ - JSON file storage (no cloud DB)
+ - SMTP notifications (Gmail + fallback)
 
 - **Ollama** — Local LLM inference (Docker)
-  - Model: `qwen2.5:7b-instruct` (7B parameters, French-capable)
-  - Response time: 8-12 seconds per query
-  - Vector DB: in-memory (ephemeral, survives 2 days idle max)
+ - Model: `qwen2.5:7b-instruct` (7B parameters, French-capable)
+ - Response time: 8-12 seconds per query
+ - Vector DB: in-memory (ephemeral, survives 2 days idle max)
 
 - **Nginx** — Reverse proxy + static file serving
-  - Port 8443 (visitor app + admin panel)
-  - Port 8444 (public team-response links, minimal surface)
-  - Cache headers: no-cache on index.html, max-age on /static/
+ - Port 8443 (visitor app + admin panel)
+ - Port 8444 (public team-response links, minimal surface)
+ - Cache headers: no-cache on index.html, max-age on /static/
 
 ### Network
 - **Tailscale** — VPN mesh for secure backend access (100.71.79.97:5678)
@@ -193,9 +191,7 @@ See `docs/05_Documentation_deploiement.docx` for:
 | `docs/SPECIFICATIONS_ISAAC_AHMED.md` | Complete functional requirements (Fiche de stage) |
 | `docs/BASE_CONNAISSANCES_ST_DIGITAL.md` | RAG knowledge base (indexed in n8n) |
 | `docs/JEU_20_QUESTIONS_REFERENCE.md` | M1 acceptance test set (20 Q&A verified) |
-| `.env.local` | Backend webhook URLs (Git-ignored, user-configured) |
-
-## Testing
+| `.env.local` | Backend webhook URLs (Git-ignored, user-configured) | ## Testing
 
 ```bash
 # Unit tests (services + components)
@@ -238,7 +234,7 @@ All stage deliverables in `docs/`:
 
 ---
 
-**Stage Timeline:** 13/08 → 30/09/2026 (8 weeks)  
-**Tutrice:** MEBANG MBOUROUNOU Aminta  
-**Stagiaire:** MENGUE ME NANG Tatille Ambre  
+**Stage Timeline:** 13/08 → 30/09/2026 (8 weeks) 
+**Tutrice:** MEBANG MBOUROUNOU Aminta 
+**Stagiaire:** MENGUE ME NANG Tatille Ambre 
 **Last updated:** 2026-09-21
