@@ -216,6 +216,147 @@
     .stat-grid { grid-template-columns: repeat(2, 1fr); }
     .panels-row { grid-template-columns: 1fr; }
   }
+
+
+/* ============================================================
+   Refonte visuelle, direction A. Surcharge posee en fin de
+   feuille : les regles ci-dessous reprennent la grammaire de
+   l'application visiteur, sans toucher a la logique ni aux
+   douze sections.
+   ============================================================ */
+:root{
+  --navy:#1A4D7A; --navy-deep:#0f3355; --blue:#2E7AB5; --light-blue:#7AAFC9;
+  --pale:#C8DCF0; --bg:#061923; --panel:rgba(200,220,240,.055);
+  --panel-2:rgba(6,25,35,.72); --panel-border:rgba(122,175,201,.22);
+  --text:#E8F1F8; --text-muted:#93AFC4;
+  --ok:#49D18B; --warn:#E8B44A; --bad:#E07A7A;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --font:"Century Gothic","Questrial","Futura","Trebuchet MS",sans-serif;
+  --font-title:"Cambria","Georgia",serif;
+}
+
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+/* photo du Data Center, tres attenuee : c'est un outil de travail,
+   pas une vitrine, donc moitie moins presente que sur la borne */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:url("/fond-datacenter.jpg");background-size:cover;background-position:center;
+  opacity:.07;filter:saturate(.8);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 12% -10%, rgba(46,122,181,.22), transparent 60%),
+    linear-gradient(170deg, rgba(10,34,51,.80) 0%, rgba(6,25,35,.88) 60%, rgba(4,18,27,.94) 100%);
+}
+#app,#login{position:relative;z-index:1}
+
+h1,h2,h3,.content-header h2,.login-card h2,.hero-title h1{font-family:var(--font-title)}
+
+/* ---------------- barre laterale ---------------- */
+aside.sidebar{
+  background:rgba(4,18,27,.66);
+  border-right:1px solid var(--panel-border);
+  backdrop-filter:blur(10px);
+}
+nav.side-nav button{
+  position:relative;border-radius:10px;padding:11px 13px;margin-bottom:3px;
+  font-family:var(--font);font-size:.83rem;letter-spacing:.02em;
+  transition:background .24s var(--ease),color .24s var(--ease);
+}
+nav.side-nav button svg{width:18px;height:18px;flex:0 0 18px;opacity:.85}
+nav.side-nav button:hover{background:rgba(122,175,201,.10);color:var(--pale)}
+nav.side-nav button.active{
+  background:linear-gradient(90deg, rgba(46,122,181,.22), rgba(46,122,181,.04));
+  color:#fff;
+}
+nav.side-nav button.active::before{
+  content:"";position:absolute;left:0;top:7px;bottom:7px;width:2px;border-radius:2px;
+  background:linear-gradient(180deg,var(--light-blue),transparent);
+}
+nav.side-nav button.active svg{opacity:1}
+
+/* ---------------- entete de contenu ---------------- */
+.content-header h2{font-size:1.45rem;letter-spacing:.01em;color:var(--text)}
+.content-header p{color:var(--text-muted);font-size:.85rem}
+
+/* ---------------- panneaux et cartes ---------------- */
+.stat-card,.panel,.card,table{
+  background:linear-gradient(135deg, rgba(200,220,240,.065), rgba(200,220,240,.02));
+  border:1px solid var(--panel-border);
+  border-radius:14px;
+  backdrop-filter:blur(8px);
+}
+.stat-card{position:relative;overflow:hidden;padding:20px;
+  transition:transform .26s var(--ease),border-color .26s var(--ease),box-shadow .26s var(--ease)}
+.stat-card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,var(--light-blue),transparent);opacity:.7;
+}
+.stat-card:hover{transform:translateY(-2px);border-color:rgba(122,175,201,.5);
+  box-shadow:0 14px 34px rgba(0,0,0,.34)}
+.stat-card .label{color:var(--text-muted);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase}
+.stat-card .value,.stat-card strong{font-family:var(--font-title);font-size:1.9rem;color:var(--pale)}
+
+/* ---------------- tableaux ---------------- */
+table{border-collapse:separate;border-spacing:0;overflow:hidden}
+table thead th{
+  background:rgba(26,77,122,.35);color:var(--pale);
+  font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+  padding:12px 14px;border-bottom:1px solid var(--panel-border);text-align:left;
+}
+table tbody td{padding:12px 14px;border-bottom:1px solid rgba(122,175,201,.10);font-size:.85rem}
+table tbody tr:nth-child(even){background:rgba(200,220,240,.025)}
+table tbody tr:hover{background:rgba(122,175,201,.09)}
+table tbody tr:last-child td{border-bottom:0}
+
+/* ---------------- pastilles d'etat ---------------- */
+.badge{
+  padding:4px 11px;border-radius:999px;font-size:.68rem;font-weight:700;
+  letter-spacing:.06em;border:1px solid transparent;
+}
+.badge.ok,.badge.confirme{background:rgba(73,209,139,.14);color:var(--ok);border-color:rgba(73,209,139,.35)}
+.badge.warn,.badge.attente{background:rgba(232,180,74,.14);color:var(--warn);border-color:rgba(232,180,74,.35)}
+.badge.bad,.badge.refuse{background:rgba(224,122,122,.14);color:var(--bad);border-color:rgba(224,122,122,.35)}
+
+/* ---------------- champs et boutons ---------------- */
+.input-wrap input,.select-wrap select,input,select,textarea{
+  font-family:var(--font);
+  background:rgba(6,25,35,.55);
+  border:1px solid var(--panel-border);
+  border-radius:11px;color:var(--text);
+}
+.input-wrap input:focus,.select-wrap select:focus,input:focus,select:focus,textarea:focus{
+  outline:none;border-color:rgba(122,175,201,.7);
+  box-shadow:0 0 0 3px rgba(46,122,181,.16);
+}
+.btn-primary,button.primary{
+  font-family:var(--font);border:0;border-radius:999px;
+  background:linear-gradient(140deg,var(--blue),var(--navy));
+  box-shadow:0 6px 18px rgba(46,122,181,.34);
+  transition:transform .22s var(--ease),filter .22s var(--ease);
+}
+.btn-primary:hover,button.primary:hover{transform:translateY(-2px);filter:brightness(1.1)}
+
+/* ---------------- page de connexion ---------------- */
+.login-hero{background:transparent}
+.login-card{
+  background:linear-gradient(135deg, rgba(200,220,240,.075), rgba(200,220,240,.02));
+  border:1px solid var(--panel-border);border-radius:18px;backdrop-filter:blur(10px);
+}
+.hero-title h1{font-family:var(--font-title)}
+
+/* ---------------- densite : c'est un outil, pas une vitrine ---------------- */
+main.content{padding:24px 30px 56px}
+.stat-grid{gap:14px}
+
+
+.pastille-etat{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.team-toggle{font-family:var(--font);letter-spacing:.02em}
 </style>
 </head>
 <body>
@@ -276,18 +417,18 @@
     <aside class="sidebar">
       <div class="side-brand"><img src="/logo-st-digital.png" alt="ST Digital" /><span>Back-office</span></div>
       <nav class="side-nav" id="sideNav">
-        <button data-section="dashboard" class="active">📊 Tableau de bord</button>
-        <button data-section="appointments">📅 Demandes de rendez-vous</button>
-        <button data-section="calendar">🗓️ Calendrier</button>
-        <button data-section="visitors">👥 Clients &amp; Visiteurs</button>
-        <button data-section="datacenters">🏢 Data Centers</button>
-        <button data-section="ai">🤖 IA Conversationnelle</button>
-        <button data-section="conversations">💬 Conversations</button>
-        <button data-section="content">📚 Contenus &amp; FAQ</button>
-        <button data-section="notifications">🔔 Notifications</button>
-        <button data-section="team">🧑‍🤝‍🧑 Équipe</button>
-        <button data-section="users">🔑 Utilisateurs</button>
-        <button data-section="settings">⚙️ Paramètres</button>
+        <button data-section="dashboard" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="9" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg> <span>Tableau de bord</span></button>
+        <button data-section="appointments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/><path d="m9 16 2 2 4-4"/></svg> <span>Demandes de rendez-vous</span></button>
+        <button data-section="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/><circle cx="8.5" cy="15.5" r="1"/><circle cx="12" cy="15.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/></svg> <span>Calendrier</span></button>
+        <button data-section="visitors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-2-4.3"/></svg> <span>Clients &amp; Visiteurs</span></button>
+        <button data-section="datacenters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01M11 7h5M11 17h5"/></svg> <span>Data Centers</span></button>
+        <button data-section="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="7" width="14" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 16h5"/><path d="M2.5 12h1.5M20 12h1.5"/></svg> <span>IA Conversationnelle</span></button>
+        <button data-section="conversations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a7 7 0 0 1-7 7H8l-4 3v-5.5A7 7 0 0 1 8 4h5a7 7 0 0 1 7 7Z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg> <span>Conversations</span></button>
+        <button data-section="content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5Z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5Z"/></svg> <span>Contenus &amp; FAQ</span></button>
+        <button data-section="notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6Z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg> <span>Notifications</span></button>
+        <button data-section="team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="3"/><path d="M6 20a6 6 0 0 1 12 0"/><circle cx="4.5" cy="10.5" r="2"/><circle cx="19.5" cy="10.5" r="2"/></svg> <span>Équipe</span></button>
+        <button data-section="users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="m16 11 5 5M19 14l1.5 1.5"/><circle cx="14.5" cy="9.5" r="2"/></svg> <span>Utilisateurs</span></button>
+        <button data-section="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 7.2l1.9 1.1M17.9 15.7l1.9 1.1M4.2 16.8l1.9-1.1M17.9 8.3l1.9-1.1"/></svg> <span>Paramètres</span></button>
       </nav>
       <div class="side-foot">
         <span class="country-pill" id="countryLabel"></span>
@@ -445,7 +586,7 @@
       return `<svg ${common} viewBox="0 0 30 21" xmlns="http://www.w3.org/2000/svg"><rect width="30" height="7" y="0" fill="#009E60"/><rect width="30" height="7" y="7" fill="#FCD116"/><rect width="30" height="7" y="14" fill="#3A75C4"/></svg>`;
     }
     if (code === "cameroun") {
-      return `<svg ${common} viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="20" x="0" fill="#007A5E"/><rect width="10" height="20" x="10" fill="#CE1126"/><rect width="10" height="20" x="20" fill="#FCD116"/><text x="15" y="13.5" font-size="7" text-anchor="middle" fill="#FCD116">★</text></svg>`;
+      return `<svg ${common} viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="20" x="0" fill="#007A5E"/><rect width="10" height="20" x="10" fill="#CE1126"/><rect width="10" height="20" x="20" fill="#FCD116"/><polygon fill="#FCD116" points="15,7 16.1,10.1 19.4,10.1 16.7,12 17.8,15.1 15,13.2 12.2,15.1 13.3,12 10.6,10.1 13.9,10.1"/></svg>`;
     }
     return `<svg ${common} viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="20" x="0" fill="#F77F00"/><rect width="10" height="20" x="10" fill="#FFFFFF"/><rect width="10" height="20" x="20" fill="#009A44"/></svg>`;
   }
@@ -635,9 +776,9 @@
   function renderTeamDetail(team) {
     if (!team.length) return '<div class="muted-note" style="padding:8px 0;">Aucun membre d\'équipe assigné à ce service pour ce site.</div>';
     const rows = team.map((t) => {
-      let icon = "⏳", label = "En attente de réponse", color = "var(--text-muted)";
-      if (t.available === true) { icon = "✅"; label = "Disponible"; color = "var(--ok)"; }
-      else if (t.available === false) { icon = "❌"; label = "Indisponible" + (t.reason ? " — " + t.reason : ""); color = "var(--bad)"; }
+      let icon = PASTILLE("attente"), label = "En attente de réponse", color = "var(--text-muted)";
+      if (t.available === true) { icon = PASTILLE("ok"); label = "Disponible"; color = "var(--ok)"; }
+      else if (t.available === false) { icon = PASTILLE("non"); label = "Indisponible" + (t.reason ? " — " + t.reason : ""); color = "var(--bad)"; }
       return `<div class="team-member-row"><span>${icon}</span><span class="tm-name">${t.name}</span><span style="color:${color};">${label}</span></div>`;
     }).join("");
     return `<div class="team-detail-box">${rows}</div>`;
@@ -660,7 +801,7 @@
       const no = team.filter((t) => t.available === false).length;
       const pending = team.filter((t) => t.available === null).length;
       const teamSummary = team.length
-        ? `<button class="team-toggle" data-id="${a.id}">✅ ${yes} · ❌ ${no} · ⏳ ${pending}</button>`
+        ? `<button class="team-toggle" data-id="${a.id}">${yes} pour · ${no} contre · ${pending} sans réponse</button>`
         : `<span class="muted-note">Aucune équipe</span>`;
       const canDecide = a.status === "en attente" || a.status === "en attente equipe";
       return `
@@ -1052,6 +1193,15 @@
     attemptLogin(stored.country, stored.password, stored.email);
   }
 })();
+</script>
+<script>
+/* Pastille d'etat d'un membre d'equipe. Remplace les anciens symboles :
+   ils ne s'affichaient pas de facon fiable et n'ont pas leur place dans un
+   outil professionnel. */
+function PASTILLE(etat){
+  var c = etat === "ok" ? "var(--ok)" : etat === "non" ? "var(--bad)" : "var(--text-muted)";
+  return '<span class="pastille-etat" style="background:' + c + '"></span>';
+}
 </script>
 </body>
 </html>
