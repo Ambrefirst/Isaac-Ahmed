@@ -73,9 +73,18 @@ La réduction du nombre de fragments ferait gagner du temps mais dégraderait le
 
 **Décision retenue : réduire la taille des fragments plutôt que leur nombre.** Le découpage passe de mille à cinq cents caractères, avec un recouvrement ramené de deux cents à cent. Huit points d'ancrage sont conservés dans la base, donc le même rappel, pour un volume de prompt divisé par deux.
 
-**Résultat après application, mesuré sur deux questions nouvelles :** 70 s et 59 s, contre environ 110 s auparavant. Le gain est conforme à la prévision.
+**Gain de vitesse, mesuré :** moyenne de 64 s sur les vingt questions, contre environ 110 s auparavant. Le gain est conforme à la prévision.
 
-Conformément à la règle établie lors des passages précédents, toute modification du découpage impose de rejouer l'intégralité du jeu des vingt questions, et non la seule question visée.
+**Mais l'essai a été abandonné.** Conformément à la règle établie lors des passages précédents, le jeu complet des vingt questions a été rejoué. Deux questions ont régressé.
+
+| Question | Comportement avec des fragments de 500 caractères |
+|---|---|
+| Horaires d'ouverture | Répond « 8h00 à 18h00 » alors que la base validée indique 8h00 à 17h00. Fait validé déformé. |
+| Journée portes ouvertes | L'information n'est plus retrouvée du tout. |
+
+Le raisonnement qui a conduit à cet essai était faux sur un point. Conserver huit fragments ne conserve pas le rappel si chaque fragment est deux fois plus court : le volume total de base consulté est divisé par deux, et la probabilité qu'un fait tienne entièrement dans un fragment diminue. Le découpage a donc été ramené à mille caractères avec un recouvrement de deux cents, et la réponse sur les horaires est redevenue exacte.
+
+**Le compromis est donc mesuré et documenté :** sur ce matériel, la vitesse s'achète en exactitude. Un critère d'acceptation portant sur l'exactitude, la vitesse cède.
 
 ## Leviers restants, par ordre d'efficacité
 
@@ -86,7 +95,7 @@ Conformément à la règle établie lors des passages précédents, toute modifi
 | Reclassement des fragments récupérés | Récupérer large puis ne transmettre que les meilleurs | Développement moyen |
 | Modèle plus petit pour le parcours vocal uniquement | Proportionnel à la taille du modèle | Perte de qualité à évaluer |
 
-**Un levier a été écarté après mesure :** la diffusion de la réponse au fil de l'eau. Elle ne supprime que la phase de génération, soit onze pour cent du temps, puisque le premier mot ne peut sortir qu'une fois le prompt entièrement lu. Elle reste utile pour le confort, mais ne résout pas le problème.
+**Deux leviers ont été écartés après mesure.** La réduction de la taille des fragments, qui coûte deux questions sur vingt, comme montré ci-dessus. Et la diffusion de la réponse au fil de l'eau : Elle ne supprime que la phase de génération, soit onze pour cent du temps, puisque le premier mot ne peut sortir qu'une fois le prompt entièrement lu. Elle reste utile pour le confort, mais ne résout pas le problème.
 
 ## Portée pour la suite du projet
 
