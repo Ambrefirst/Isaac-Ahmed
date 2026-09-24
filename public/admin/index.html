@@ -557,7 +557,7 @@ main.content{padding:24px 30px 56px}
 
 <script>
 (function () {
-  const WEBHOOK = "http://100.71.79.97:5678/webhook/isaac-rdv";
+  const WEBHOOK = "/webhook/isaac-rdv"  /* chemin relatif : la page est servie en HTTPS, un appel en HTTP vers une autre origine est bloque par le navigateur (contenu mixte). nginx relaie ce chemin vers le serveur d orchestration. */;
   const STORAGE_KEY = "isaac_admin_session";
 
   const loginEl = document.getElementById("login");
