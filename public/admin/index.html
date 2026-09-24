@@ -366,6 +366,11 @@ main.content{padding:24px 30px 56px}
 .pwd-msg.erreur{display:block;color:var(--bad)}
 .pwd-msg.succes{display:block;color:var(--ok)}
 .muted-note{color:var(--text-muted);font-size:.78rem;line-height:1.5;margin:6px 0 0}
+
+.dc-card .rdv-secondary{margin-top:14px;padding:9px 16px;font-size:.8rem;width:100%}
+.dc-card code{font-family:ui-monospace,Consolas,monospace;font-size:.76rem;color:var(--light-blue)}
+.etat-ok{color:var(--ok);font-weight:700}
+.etat-ko{color:var(--bad);font-weight:700}
 </style>
 </head>
 <body>
@@ -671,7 +676,7 @@ main.content{padding:24px 30px 56px}
     loginBtn.textContent = "Connexion…";
     try {
       const data = await callRdv({ event: "admin_list_appointments", adminCountry: country, adminPassword: password });
-      session = { country, password, email: email || "" };
+      session = { country, password, email: email || "", since: new Date().toISOString() };
       setStoredSession(session);
       appointmentsCache = data.appointments || [];
       showDashboard(data.country || "");
@@ -1048,36 +1053,79 @@ main.content{padding:24px 30px 56px}
 
   /* ---------- Settings ---------- */
   function renderSettings() {
+    const dc = DC_INFO[session.country] || { name: session.country, city: "", facts: [] };
+    const depuis = session.since ? new Date(session.since) : null;
     document.getElementById("settingsGrid").innerHTML = `
-      <div class="dc-card">
-        <h4>Session</h4>
-        <ul>
-          <li>Site : ${DC_INFO[session.country].name} (${DC_INFO[session.country].city})</li>
-          <li>Email : ${session.email || "non renseigné"}</li>
-        </ul>
+      <div class="dc-card pwd-card">
+        <h4>Compte et securite</h4>
+        <p class="muted-note">Ce mot de passe est partage par tout le personnel du site ${dc.name}.
+        Changez-le des qu'une personne quitte l'equipe. Il n'est affiche nulle part, notez-le.</p>
+        <form id="pwdForm" autocomplete="off">
+          <label for="pwdCurrent">Mot de passe actuel</label>
+          <input type="password" id="pwdCurrent" required autocomplete="current-password" />
+          <label for="pwdNew">Nouveau mot de passe</label>
+          <input type="password" id="pwdNew" required minlength="8" autocomplete="new-password" />
+          <label for="pwdConfirm">Confirmer</label>
+          <input type="password" id="pwdConfirm" required minlength="8" autocomplete="new-password" />
+          <p class="pwd-msg" id="pwdMsg"></p>
+          <button type="submit" class="btn-primary" id="pwdBtn">Enregistrer</button>
+        </form>
       </div>
+
       <div class="dc-card">
-        <h4>Application</h4>
+        <h4>Session en cours</h4>
         <ul>
-          <li>Isaac Ahmed — back-office</li>
-          <li>Version 1.0</li>
+          <li>Site : <b>${dc.name}</b> &mdash; ${dc.city}</li>
+          <li>Identifiant saisi : ${session.email || "non renseigne"}</li>
+          <li>Connecte depuis : ${depuis ? depuis.toLocaleString("fr-FR") : "cette session"}</li>
+          <li>Portee : les rendez-vous du site ${dc.name} uniquement</li>
         </ul>
+        <button type="button" class="rdv-secondary" id="setLogout">Fermer la session</button>
       </div>
-    <div class="dc-card pwd-card">
-      <h4>Changer le mot de passe</h4>
-      <p class="muted-note">Ce mot de passe est partagé par tout le personnel du site. Changez-le dès qu'une personne quitte l'équipe.</p>
-      <form id="pwdForm" autocomplete="off">
-        <label for="pwdCurrent">Mot de passe actuel</label>
-        <input type="password" id="pwdCurrent" required autocomplete="current-password" />
-        <label for="pwdNew">Nouveau mot de passe</label>
-        <input type="password" id="pwdNew" required minlength="8" autocomplete="new-password" />
-        <label for="pwdConfirm">Confirmer le nouveau mot de passe</label>
-        <input type="password" id="pwdConfirm" required minlength="8" autocomplete="new-password" />
-        <p class="pwd-msg" id="pwdMsg"></p>
-        <button type="submit" class="btn-primary" id="pwdBtn">Enregistrer</button>
-      </form>
-    </div>`;
-  branchePwd();
+
+      <div class="dc-card">
+        <h4>Etat du systeme</h4>
+        <ul>
+          <li>Serveur : <span id="setPing">verification...</span></li>
+          <li>Point d'entree : <code>${WEBHOOK}</code></li>
+          <li>Rendez-vous charges : ${appointmentsCache.length}</li>
+          <li>Page servie depuis : ${location.origin}</li>
+        </ul>
+        <button type="button" class="rdv-secondary" id="setPingBtn">Tester la connexion</button>
+      </div>`;
+    branchePwd();
+    brancheReglages();
+  }
+
+  /* Actions de la section Parametres : fermeture de session et test de liaison
+     avec le serveur. Le test envoie un evenement volontairement inconnu : le
+     routeur le rejette, ce qui prouve qu'il repond sans rien modifier. */
+  function brancheReglages() {
+    const btnOut = document.getElementById("setLogout");
+    if (btnOut) btnOut.addEventListener("click", () => { clearStoredSession(); location.reload(); });
+    const cible = document.getElementById("setPing");
+    const btn = document.getElementById("setPingBtn");
+    async function teste() {
+      if (!cible) return;
+      cible.textContent = "verification...";
+      cible.className = "";
+      const t0 = performance.now();
+      try {
+        await fetch(WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event: "__ping__" }),
+        });
+        const ms = Math.round(performance.now() - t0);
+        cible.textContent = "joignable (" + ms + " ms)";
+        cible.className = "etat-ok";
+      } catch (e) {
+        cible.textContent = "injoignable";
+        cible.className = "etat-ko";
+      }
+    }
+    if (btn) btn.addEventListener("click", teste);
+    teste();
   }
 
   
