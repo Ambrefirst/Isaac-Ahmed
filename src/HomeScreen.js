@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./HomeScreen.css";
 import { useLanguage } from "./i18n";
+import Orb from "./Orb";
 
 function ChevronDownIcon() {
   return (
@@ -17,25 +18,28 @@ function UserIcon() {
     </svg>
   );
 }
-function ShieldIcon() {
+function CalendarIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M8 3v4M16 3v4M3 11h18" />
+      <path d="m9 16 2 2 4-4" />
     </svg>
   );
 }
-function ClockIcon() {
+function AssistantIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 3" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12a8 8 0 1 1-3.2-6.4" />
+      <path d="M12 8v4l3 2" />
+      <circle cx="19" cy="5" r="2" />
     </svg>
   );
 }
-function StarIcon() {
+function ArrowIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m12 2 2.9 6.3 6.9.7-5.1 4.7 1.4 6.8L12 17l-6.1 3.5 1.4-6.8-5.1-4.7 6.9-.7Z" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14M13 6l6 6-6 6" />
     </svg>
   );
 }
@@ -71,11 +75,24 @@ function LanguageSwitcher() {
   );
 }
 
+// Heure locale du site, rafraichie chaque minute. Ancre la borne dans un lieu et un instant.
+function useLocalTime(language) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(id);
+  }, []);
+  return now.toLocaleTimeString(language === "en" ? "en-GB" : "fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+
 function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const heure = useLocalTime(language);
+
   function openBackOffice() {
     window.location.href = "/admin/";
   }
+
   return (
     <main className="home-page">
       <section className="home-container">
@@ -89,55 +106,54 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
           </div>
         </header>
 
+        {/* Bandeau d'ancrage : ou l'on est, quelle heure il est, et si Isaac repond */}
+        <div className="home-ancrage">
+          <span className="ancrage-item">
+            <span className="ancrage-pastille" aria-hidden="true" />
+            {t("home.available")}
+          </span>
+          <span className="ancrage-item">{t("home.site")} · {heure}</span>
+        </div>
+
         <section className="home-hero">
           <div className="home-hero-text">
             <span className="eyebrow">{t("home.eyebrow")}</span>
-            <span className="accent-dash" />
-            <h1>{t("home.title1")}<br />{t("home.title2")}</h1>
+            <h1>{t("home.title1")}<br /><em>{t("home.title2")}</em></h1>
             <p className="home-subtitle">{t("home.subtitle")}</p>
             <span className="home-badge">{t("home.badge1")} <i>•</i> {t("home.badge2")} <i>•</i> {t("home.badge3")}</span>
           </div>
-          <div className="home-orb-col">
-            <div className="home-orb">
-              <div className="home-orb-ring ring-outer" />
-              <div className="home-orb-ring ring-inner" />
-              <div className="home-orb-mark">
-                <img src="/logo-mark.png" alt="ST Digital" />
-              </div>
-            </div>
-            <div className="home-orb-base" />
-          </div>
         </section>
+
+        {/* La sphere est l'interface, pas un decor : elle ouvre la conversation.
+            Les etats "ecoute" et "parole" du composant Orb attendent le module vocal (M2)
+            et ne sont volontairement pas exposes ici tant qu'aucun microphone n'existe. */}
+        <div className="home-orb-zone">
+          <button className="home-orb-button" onClick={onAssistant} aria-label={t("home.orbAria")}>
+            <Orb state="repos" size={190} />
+          </button>
+        </div>
 
         <div className="home-parcours-label"><span className="accent-dash" />{t("home.parcours")}</div>
 
         <section className="home-options">
           <button className="home-option" onClick={onAppointment}>
-            <div className="option-icon">RDV</div>
-            <div className="option-text">
-              <h2>{t("home.rdv.title")}</h2>
-              <p>{t("home.rdv.desc")}</p>
-            </div>
-            <span className="option-arrow">→</span>
+            <span className="option-icon" aria-hidden="true"><CalendarIcon /></span>
+            <span className="option-text">
+              <strong>{t("home.rdv.title")}</strong>
+              <span>{t("home.rdv.desc")}</span>
+            </span>
+            <span className="option-arrow" aria-hidden="true"><ArrowIcon /></span>
           </button>
 
-          <button className="home-option home-option-highlight" onClick={onAssistant}>
-            <div className="option-icon option-icon-dark">IA</div>
-            <div className="option-text">
-              <h2>{t("home.ia.title")}</h2>
-              <p>{t("home.ia.desc")}</p>
-            </div>
-            <span className="option-arrow">→</span>
+          <button className="home-option" onClick={onAssistant}>
+            <span className="option-icon" aria-hidden="true"><AssistantIcon /></span>
+            <span className="option-text">
+              <strong>{t("home.ia.title")}</strong>
+              <span>{t("home.ia.desc")}</span>
+            </span>
+            <span className="option-arrow" aria-hidden="true"><ArrowIcon /></span>
           </button>
         </section>
-
-        <footer className="home-trust-bar">
-          <span><ShieldIcon />{t("home.trust.secure")}</span>
-          <span className="dot" aria-hidden="true">•</span>
-          <span><ClockIcon />{t("home.trust.available")}</span>
-          <span className="dot" aria-hidden="true">•</span>
-          <span><StarIcon />{t("home.trust.tech")}</span>
-        </footer>
       </section>
     </main>
   );

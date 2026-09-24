@@ -1,0 +1,110 @@
+.orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.orb-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 46%, rgba(46, 122, 181, 0.55), rgba(26, 77, 122, 0.16) 48%, transparent 70%);
+  filter: blur(4px);
+  animation: orb-respire 5.5s infinite var(--ease);
+}
+@keyframes orb-respire {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.07); opacity: 1; }
+}
+
+.orb-anneau {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(122, 175, 201, 0.3);
+}
+.orb-anneau-1 { inset: 10%; }
+.orb-anneau-2 { inset: 21%; border-color: rgba(122, 175, 201, 0.18); }
+
+.orb-noyau {
+  position: relative;
+  width: 36%;
+  height: 36%;
+  border-radius: 18%;
+  background: linear-gradient(145deg, rgba(122, 175, 201, 0.95), rgba(46, 122, 181, 0.85));
+  box-shadow: 0 0 34px rgba(46, 122, 181, 0.65), inset 0 0 18px rgba(232, 241, 248, 0.35);
+}
+.orb-noyau::after {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border-radius: 14%;
+  background: radial-gradient(circle at 34% 30%, #EAF4FB, rgba(200, 220, 240, 0.25) 62%, transparent);
+}
+
+/* ecoute : ondes concentriques, temoin visible que le micro est ouvert */
+.orb-onde {
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  border: 1px solid rgba(122, 175, 201, 0.45);
+  opacity: 0;
+  animation: orb-onde 2.1s infinite var(--ease);
+}
+.orb-onde-2 { animation-delay: 0.7s; }
+.orb-onde-3 { animation-delay: 1.4s; }
+@keyframes orb-onde {
+  0% { transform: scale(0.72); opacity: 0.55; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+
+/* reflexion : orbites croisees */
+.orb-orbite {
+  position: absolute;
+  inset: 3%;
+  border-radius: 50%;
+  animation: orb-tourne 3.4s linear infinite;
+}
+.orb-orbite-2 {
+  inset: 14%;
+  animation-duration: 5.2s;
+  animation-direction: reverse;
+}
+.orb-orbite i {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pale);
+  box-shadow: 0 0 10px var(--sky);
+}
+@keyframes orb-tourne { to { transform: rotate(360deg); } }
+
+/* parole : onde sonore */
+.orb-barres {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.orb-barres i {
+  position: absolute;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--pale);
+  opacity: 0.92;
+}
+.orb-barres i:nth-child(1) { height: 10%; transform: translateX(-26px); animation: orb-vu 0.9s infinite var(--ease); }
+.orb-barres i:nth-child(2) { height: 19%; transform: translateX(-13px); animation: orb-vu 0.9s 0.12s infinite var(--ease); }
+.orb-barres i:nth-child(3) { height: 26%; animation: orb-vu 0.9s 0.24s infinite var(--ease); }
+.orb-barres i:nth-child(4) { height: 17%; transform: translateX(13px); animation: orb-vu 0.9s 0.36s infinite var(--ease); }
+.orb-barres i:nth-child(5) { height: 9%; transform: translateX(26px); animation: orb-vu 0.9s 0.48s infinite var(--ease); }
+@keyframes orb-vu {
+  0%, 100% { scale: 1 0.45; }
+  50% { scale: 1 1; }
+}
+
+/* au repos, la respiration est plus lente : la borne attend sans solliciter */
+.orb-repos .orb-halo { animation-duration: 6.5s; }

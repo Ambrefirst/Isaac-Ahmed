@@ -143,3 +143,60 @@
   .chat-page, .rdv-page { padding: 16px; }
   .message { max-width: 90%; }
 }
+
+/* ---------------- identite d'Isaac ---------------- */
+.message-avatar svg { width: 18px; height: 18px; fill: rgba(232, 241, 248, 0.92); }
+
+.chat-portrait {
+  position: relative; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(150deg, var(--navy), var(--blue));
+  border: 1px solid rgba(122, 175, 201, 0.45);
+  color: rgba(232, 241, 248, 0.92);
+}
+.chat-portrait svg { width: 26px; height: 26px; }
+.chat-dispo {
+  position: absolute; right: 0; bottom: 0; width: 10px; height: 10px; border-radius: 50%;
+  background: #49D18B; border: 2px solid var(--ink);
+}
+.chat-orb { margin-left: auto; }
+
+/* ---------------- sequence d'attente ---------------- */
+.attente {
+  align-self: flex-start; max-width: 78%; margin: 0 0 18px;
+  padding: 13px 16px; border-radius: 14px; border-bottom-left-radius: 5px;
+  background: rgba(200, 220, 240, 0.05); border: 1px solid var(--panel-border);
+}
+.attente-simple { display: flex; align-items: center; gap: 10px; font-size: .8rem; color: var(--pale); }
+.attente-etape {
+  display: flex; align-items: center; gap: 10px; padding: 3px 0;
+  font-size: .8rem; color: var(--text-muted); opacity: .35;
+  transition: opacity .5s var(--ease), color .5s var(--ease);
+}
+.attente-etape.on { opacity: 1; color: var(--pale); }
+.attente-etape.fini { opacity: .65; color: var(--sky); }
+.attente-marque { width: 14px; height: 14px; flex: 0 0 14px; display: grid; place-items: center; color: currentColor; }
+.attente-rot {
+  width: 14px; height: 14px; flex: 0 0 14px; border-radius: 50%;
+  border: 1.6px solid rgba(122, 175, 201, 0.3); border-top-color: var(--sky);
+  animation: attente-tourne .9s linear infinite;
+}
+@keyframes attente-tourne { to { transform: rotate(360deg); } }
+.attente-jauge { height: 2px; background: rgba(122, 175, 201, 0.16); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.attente-jauge i {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--blue), var(--sky));
+  animation: attente-progresse 100s linear forwards;
+}
+/* 100 s : duree reellement observee d'une reponse complete sur la tour, sans carte graphique */
+@keyframes attente-progresse { to { width: 100%; } }
+
+/* ---------------- questions proposees ---------------- */
+.chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.chat-suggestion {
+  padding: 10px 14px; border-radius: 18px; border: 1px solid var(--panel-border);
+  background: var(--panel-bg); color: var(--pale); font-family: var(--font-body); font-size: .8rem;
+  cursor: pointer; transition: transform .24s var(--ease), border-color .24s var(--ease), background .24s var(--ease);
+}
+.chat-suggestion:hover { border-color: rgba(122, 175, 201, 0.55); background: rgba(122, 175, 201, 0.14); transform: translateY(-2px); }
+.chat-suggestion:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }

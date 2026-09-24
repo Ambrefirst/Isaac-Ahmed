@@ -35,7 +35,9 @@ function App() {
   const { t, language } = useLanguage();
   const [screen, setScreen] = useState("welcome");
   const [messages, setMessages] = useState([]);
-  const [statusText, setStatusText] = useState(null); // null while idle, rotating phrase text while waiting
+  // Phase de traitement reellement en cours, ou null au repos. Sert a la fois a la sequence
+  // affichee au visiteur et a l'etat de la sphere : aucune etape n'est simulee.
+  const [phase, setPhase] = useState(null); // null | "quick" | "searching" | "writing"
   const [typingText, setTypingText] = useState(null); // null while not typing, string while typing out an answer
   const [escalationOffer, setEscalationOffer] = useState(null); // pending question text once the wait has gone on too long, else null
   const timers = useRef([]);
@@ -43,6 +45,13 @@ function App() {
   const escalatedRef = useRef(false);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  // Photo du Data Center en arriere-plan. Sert uniquement de decor : opacite reglee
+  // dans index.css (--fond-opacite), volontairement basse pour ne pas nuire a la lisibilite.
+  useEffect(() => {
+    const url = `${process.env.PUBLIC_URL || ""}/fond-datacenter.jpg`;
+    document.documentElement.style.setProperty("--fond-image", `url("${url}")`);
+  }, []);
 
   function typeOutAnswer(answer) {
     return new Promise((resolve) => {
@@ -77,11 +86,11 @@ function App() {
     let escalationTimer = null;
     if (looksSimple(cleanMessage, history)) {
       // Single direct model call, no document search -- one honest status, no fake staging.
-      setStatusText(t("chat.status.quick"));
+      setPhase("quick");
     } else {
       // Real two-stage pipeline, in the order it actually executes: retrieval, then generation.
-      setStatusText(t("chat.status.retrieving"));
-      retrievalTimer = setTimeout(() => setStatusText(t("chat.status.generating")), RETRIEVAL_PHASE_MS);
+      setPhase("searching");
+      retrievalTimer = setTimeout(() => setPhase("writing"), RETRIEVAL_PHASE_MS);
       timers.current.push(retrievalTimer);
       // On a kiosk especially, nobody should be left standing with no way out of a long wait.
       escalationTimer = setTimeout(() => setEscalationOffer(cleanMessage), ESCALATION_DELAY_MS);
@@ -98,7 +107,7 @@ function App() {
     if (retrievalTimer) clearTimeout(retrievalTimer);
     if (escalationTimer) clearTimeout(escalationTimer);
     setEscalationOffer(null);
-    setStatusText(null);
+    setPhase(null);
     await typeOutAnswer(answer);
   }
 
@@ -112,7 +121,7 @@ function App() {
     if (abortRef.current) abortRef.current.abort();
     timers.current.forEach(clearTimeout);
     setEscalationOffer(null);
-    setStatusText(null);
+    setPhase(null);
     try {
       await escalateToStaff(question);
       await typeOutAnswer(t("chat.escalated"));
@@ -127,9 +136,9 @@ function App() {
     return (
       <ChatScreen
         messages={messages}
-        statusText={statusText}
+        phase={phase}
         typingText={typingText}
-        busy={statusText !== null || typingText !== null}
+        busy={phase !== null || typingText !== null}
         escalationOffer={escalationOffer}
         onKeepWaiting={keepWaiting}
         onEscalate={escalate}

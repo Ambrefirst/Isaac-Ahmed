@@ -1,19 +1,82 @@
 :root {
+  /* Charte ST DIGITAL */
+  --navy: #1A4D7A;
+  --blue: #2E7AB5;
+  --sky: #7AAFC9;
+  --pale: #C8DCF0;
+  --ink: #061923;
+  --ink-2: #0A2233;
+
+  /* Alias conserves pour les ecrans non encore repris */
   --bg-grad-start: #1A4D7A;
   --bg-grad-end: #0a1420;
   --accent: #2E7AB5;
   --accent-strong: #7AAFC9;
-  --text-primary: #ffffff;
-  --text-muted: #91a8bf;
-  --panel-bg: rgba(255, 255, 255, 0.06);
-  --panel-bg-strong: rgba(255, 255, 255, 0.1);
-  --panel-border: rgba(255, 255, 255, 0.16);
-  --input-bg: rgba(255, 255, 255, 0.08);
+  --text-primary: #E8F1F8;
+  --text-muted: #93AFC4;
+  --panel-bg: rgba(200, 220, 240, 0.06);
+  --panel-bg-strong: rgba(200, 220, 240, 0.1);
+  --panel-border: rgba(122, 175, 201, 0.22);
+  --input-bg: rgba(200, 220, 240, 0.08);
+
+  /* Typographie de la charte : Century Gothic pour le corps, Cambria pour les titres */
+  --font-body: "Century Gothic", "Questrial", "Futura", "Trebuchet MS", sans-serif;
+  --font-title: "Cambria", "Georgia", serif;
+
+  /* Une seule courbe d'acceleration pour toute l'application */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Opacite de la photo du Data Center en arriere-plan */
+  --fond-opacite: 0.15;
 }
 
 html, body, #root { min-height: 100%; margin: 0; }
+
 body {
-  background: radial-gradient(circle at 20% 15%, var(--bg-grad-start), var(--bg-grad-end) 58%) fixed;
+  background: var(--ink);
   color: var(--text-primary);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Photo du Data Center, posee sous toute l'application.
+   L'URL est injectee depuis App.js (--fond-image) : en CRA, une image de public/
+   ne peut pas etre referencee directement depuis une feuille de style.
+   Remplacer public/fond-datacenter.jpg par la vraie photo suffit. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: var(--fond-image, none);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--fond-opacite);
+  filter: saturate(0.85);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Voile lumineux par-dessus la photo, pour garder le texte lisible */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(900px 520px at 18% -8%, rgba(46, 122, 181, 0.30), transparent 62%),
+    radial-gradient(700px 500px at 108% 30%, rgba(26, 77, 122, 0.26), transparent 60%),
+    linear-gradient(170deg, rgba(10, 34, 51, 0.62) 0%, rgba(6, 25, 35, 0.70) 55%, rgba(4, 18, 27, 0.80) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root { position: relative; z-index: 1; }
+
+h1, h2, h3 { font-family: var(--font-title); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

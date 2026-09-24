@@ -50,3 +50,81 @@
   .info-row { grid-template-columns: 1fr; gap: 4px; }
   .full-width { grid-column: auto; }
 }
+
+/* ============================================================
+   Harmonisation avec la direction A (verre et lumiere).
+   Surcharges volontairement placees en fin de fichier : elles
+   reprennent les selecteurs existants sans toucher au balisage.
+   ============================================================ */
+
+/* --- cartes et panneaux --- */
+.action-card, .rdv-panel {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid var(--panel-border);
+  background: linear-gradient(135deg, rgba(200, 220, 240, 0.075), rgba(200, 220, 240, 0.02));
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  transition: transform .28s var(--ease), border-color .28s var(--ease), box-shadow .28s var(--ease);
+}
+.action-card::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, var(--sky), transparent); opacity: .75;
+}
+.action-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(122, 175, 201, 0.55);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(122, 175, 201, 0.22);
+}
+.action-card h2 { font-family: var(--font-title); letter-spacing: .04em; }
+.action-card.strong { border-color: rgba(122, 175, 201, 0.5); }
+
+/* --- champs de formulaire --- */
+.form-field input, .form-field textarea, .form-field select, .manual-code input {
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  background: rgba(6, 25, 35, 0.55);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  transition: border-color .24s var(--ease), background .24s var(--ease);
+}
+.form-field input:focus, .form-field textarea:focus, .form-field select:focus, .manual-code input:focus {
+  outline: none;
+  border-color: rgba(122, 175, 201, 0.7);
+  background: rgba(10, 34, 51, 0.7);
+  box-shadow: 0 0 0 3px rgba(46, 122, 181, 0.18);
+}
+.form-field label { color: var(--text-muted); letter-spacing: .04em; }
+.form-field input[type="checkbox"] { min-height: 0; accent-color: var(--blue); }
+
+/* --- boutons principaux --- */
+.rdv-primary, .manual-code button {
+  min-height: 46px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(140deg, var(--blue), var(--navy));
+  color: #fff;
+  font-family: var(--font-body);
+  letter-spacing: .06em;
+  box-shadow: 0 6px 18px rgba(46, 122, 181, 0.4);
+  cursor: pointer;
+  transition: transform .24s var(--ease), filter .24s var(--ease);
+}
+.rdv-primary:hover, .manual-code button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.rdv-primary:disabled { opacity: .55; transform: none; box-shadow: none; }
+
+.rdv-secondary, .go-home {
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--pale);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: border-color .24s var(--ease), background .24s var(--ease);
+}
+.rdv-secondary:hover, .go-home:hover { border-color: rgba(122, 175, 201, 0.55); background: rgba(122, 175, 201, 0.14); }
+
+/* --- etats d'un rendez-vous --- */
+.status-badge { border-radius: 999px; letter-spacing: .08em; font-size: .68rem; padding: 5px 12px; }
