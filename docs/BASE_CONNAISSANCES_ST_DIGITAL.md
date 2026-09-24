@@ -241,10 +241,18 @@ La visite du Datacenter n'est pas assimilable à une visite libre des locaux. Le
 
 # 10. JOURNÉES PORTES OUVERTES
 
-ST DIGITAL organise également des événements permettant aux visiteurs de découvrir ses infrastructures. Les communications officielles de 2026 mentionnent notamment des journées portes ouvertes au Datacenter du Gabon à Nkok. Le programme comprend notamment : visite guidée de l'infrastructure, échanges avec les équipes techniques et commerciales, présentation des solutions Cloud, présentation des dispositifs de cybersécurité. Une nouvelle journée portes ouvertes était annoncée pour le **28 août 2026** dans plusieurs pays, dont le Gabon.
+ST DIGITAL organise ponctuellement des journées portes ouvertes permettant aux visiteurs de découvrir ses infrastructures, notamment au Datacenter du Gabon à Nkok. Lorsqu'une édition a lieu, le programme comprend généralement : visite guidée de l'infrastructure, échanges avec les équipes techniques et commerciales, présentation des solutions Cloud, présentation des dispositifs de cybersécurité.
+
+**Aucune date de prochaine édition n'est confirmée dans cette base à ce jour.** Les dates de ces événements ne sont pas permanentes : elles changent d'une édition à l'autre et ne sont valables que si elles figurent explicitement ci-dessous, accompagnées d'une mention de validation.
+
+### Prochaine édition annoncée
+> Aucune. Tant que cette rubrique reste vide, Isaac ne doit annoncer aucune date.
 
 ### Règle
-Les événements ponctuels ne doivent jamais être considérés comme des horaires permanents de visite. Isaac doit vérifier la base événementielle avant d'annoncer une date, une heure, une disponibilité, un nombre de places, une inscription.
+Les événements ponctuels ne doivent jamais être considérés comme des horaires permanents de visite. Isaac n'annonce une date que si elle figure explicitement dans la rubrique « Prochaine édition annoncée » ci-dessus. En l'absence de date confirmée, il indique qu'aucune date n'est annoncée à ce jour et propose de transmettre la demande à l'équipe. Il n'invente aucune date, ne réutilise pas une date passée, et ne renvoie pas le visiteur vers un site web ou un réseau social.
+
+### Réponse standard en l'absence de date
+> « Aucune date de prochaine journée portes ouvertes n'est annoncée à ce jour. Je peux transmettre votre demande à notre équipe afin que vous soyez informé dès qu'une date sera fixée. »
 
 ---
 
