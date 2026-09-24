@@ -667,9 +667,18 @@ main.content{padding:24px 30px 56px}
       appointmentsCache = data.appointments || [];
       showDashboard(data.country || "");
     } catch (e) {
-      loginError.textContent = "Identifiants invalides.";
-      loginError.style.display = "block";
-    } finally {
+        /* Distinguer un refus du serveur d une panne d appel : afficher
+           « identifiants invalides » dans les deux cas masque la vraie cause. */
+        var m = String((e && e.message) || e);
+        if (/identifiant|invalide/i.test(m)) {
+          loginError.textContent = "Identifiants invalides.";
+        } else if (/fetch|network|load failed|reseau/i.test(m)) {
+          loginError.textContent = "Serveur injoignable depuis cette page. Rechargez avec Ctrl+Maj+R, ou videz les donnees du site.";
+        } else {
+          loginError.textContent = "Echec de connexion : " + m;
+        }
+        loginError.style.display = "block";
+      } finally {
       loginBtn.disabled = false;
       loginBtn.textContent = "Se connecter";
     }
