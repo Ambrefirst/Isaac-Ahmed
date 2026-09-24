@@ -86,6 +86,27 @@ Le passage 4 ayant atteint vingt conformes sur vingt, une tentative d'optimisati
 
 **Décision.** La configuration du passage 4 a été rétablie, consigne complète et huit fragments, en conservant la seule fenêtre de contexte élargie, qui supprime le risque de troncature silencieuse sans effet mesurable sur le comportement. Le temps de réponse d'environ cent dix secondes est assumé : sur un critère d'acceptation portant sur l'exactitude, la justesse prime sur la vitesse.
 
+## Passage 6 du 24/09 : essai de découpage à 500 caractères, abandonné
+
+Après l'analyse du temps de réponse du 24 septembre, documentée dans `MESURE_PERFORMANCE_2026-09-24.md`, le découpage de la base de connaissances a été ramené de mille à cinq cents caractères, avec un recouvrement de cent. L'objectif était de diviser par deux le volume de prompt sans toucher au nombre de fragments récupérés, donc en principe sans toucher au rappel.
+
+**Gain de vitesse confirmé :** 64 secondes de moyenne sur les vingt questions, contre environ 110 auparavant.
+
+**Mais deux questions ont régressé.**
+
+| Question | Comportement observé |
+|---|---|
+| Q7, horaires | Répond « 8h00 à 18h00 » alors que la base validée indique 8h00 à 17h00. C'est exactement l'erreur découverte le matin du 21 septembre. |
+| Q11, journée portes ouvertes | L'information n'est plus retrouvée. |
+
+Verdict du passage : 18 conformes, 2 non conformes.
+
+**L'hypothèse de départ était fausse.** Conserver huit fragments ne conserve pas le rappel quand chaque fragment est deux fois plus court : le volume total de base effectivement consulté est divisé par deux, et un fait a moins de chances de tenir entièrement dans un fragment.
+
+Le découpage a été ramené à mille caractères et la base réindexée. La question des horaires répond de nouveau 8h à 17h, vérifié.
+
+> **Point ouvert.** Après retour au découpage de mille caractères, la question 11 ne redonne pas la réponse attendue : l'assistant indique qu'aucune journée portes ouvertes n'est prévue et renvoie vers le site et la page Facebook, ce que la règle de recentrage interdit. La date du 28 août 2026 étant désormais passée, le comportement attendu pour cette question doit être redéfini avant de rejouer le jeu complet.
+
 ## Enseignement méthodologique
 
 Le passage 3 illustre un effet à documenter dans le mémoire : **une règle ajoutée au prompt système pour corriger un écart peut en créer un autre ailleurs.** La règle anti-dépannage, écrite pour la question 15, s'est appliquée à tort à l'alerte de sécurité de la question 16. La règle de fidélité factuelle, elle, a fait reproduire fidèlement une information mal récupérée en question 6, l'adresse du bureau ayant été donnée pour celle du Datacenter.
