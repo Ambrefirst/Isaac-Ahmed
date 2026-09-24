@@ -46,3 +46,13 @@ Les notifications passent aujourd'hui par un compte Gmail avec mot de passe d'ap
 ## 7. Rotation des secrets exposés
 
 Les trois mots de passe admin ont été joignables depuis internet entre le 07/09 et la date de fermeture de la surface publique. Ils doivent être considérés comme compromis et remplacés, de même que le mot de passe d'application Gmail si le compte reste utilisé.
+
+## 8. Souveraineté des courriels — corrigé le 24/09/2026
+
+Le code QR envoyé au visiteur avec son invitation était généré par un service tiers : l'adresse de l'image transmettait le code d'accès du Datacenter à `api.qrserver.com`. Une invitation confirmée suffisait donc à exposer un code d'accès valide à un prestataire extérieur, ce qui contredit frontalement le positionnement souverain du projet.
+
+**Corrigé.** Un encodeur QR autonome est désormais embarqué dans le workflow, et le code est rendu en tableau HTML plutôt qu'en image. Aucune requête ne sort de l'infrastructure, et le code reste visible même lorsque le client de messagerie bloque les images.
+
+Copie de référence de l'encodeur : `docs/code/qr_encoder.js`. Vérifié par un décodeur indépendant sur cinq codes de test.
+
+Reste à traiter sur ce point : les adresses d'expédition et de réception des courriels pointent encore vers une boîte personnelle, voir le point 4.
