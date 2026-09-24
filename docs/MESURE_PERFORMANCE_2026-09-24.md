@@ -71,7 +71,7 @@ Le coût par question est entièrement imputable aux fragments documentaires, qu
 
 La réduction du nombre de fragments ferait gagner du temps mais dégraderait le rappel : la recette du 21 septembre a montré qu'en passant de huit à six fragments, l'information sur la journée portes ouvertes n'était plus retrouvée du tout.
 
-**Décision retenue : réduire la taille des fragments plutôt que leur nombre.** Le découpage passe de mille à cinq cents caractères, avec un recouvrement ramené de deux cents à cent. Huit points d'ancrage sont conservés dans la base, donc le même rappel, pour un volume de prompt divisé par deux.
+**Piste testée : réduire la taille des fragments plutôt que leur nombre.** Le découpage est passé de mille à cinq cents caractères, avec un recouvrement ramené de deux cents à cent. L'hypothèse était que huit points d'ancrage conservés dans la base préserveraient le rappel, pour un volume de prompt divisé par deux.
 
 **Gain de vitesse, mesuré :** moyenne de 64 s sur les vingt questions, contre environ 110 s auparavant. Le gain est conforme à la prévision.
 
@@ -95,8 +95,10 @@ Le raisonnement qui a conduit à cet essai était faux sur un point. Conserver h
 | Reclassement des fragments récupérés | Récupérer large puis ne transmettre que les meilleurs | Développement moyen |
 | Modèle plus petit pour le parcours vocal uniquement | Proportionnel à la taille du modèle | Perte de qualité à évaluer |
 
-**Deux leviers ont été écartés après mesure.** La réduction de la taille des fragments, qui coûte deux questions sur vingt, comme montré ci-dessus. Et la diffusion de la réponse au fil de l'eau : Elle ne supprime que la phase de génération, soit onze pour cent du temps, puisque le premier mot ne peut sortir qu'une fois le prompt entièrement lu. Elle reste utile pour le confort, mais ne résout pas le problème.
+**Deux leviers ont été écartés après mesure.** La réduction de la taille des fragments, qui coûte deux questions sur vingt, comme montré ci-dessus. Et la diffusion de la réponse au fil de l'eau, qui ne supprime que la phase de génération, soit onze pour cent du temps, puisque le premier mot ne peut sortir qu'une fois le prompt entièrement lu. Elle reste utile pour le confort, mais ne résout pas le problème.
 
 ## Portée pour la suite du projet
 
-Le module vocal suppose qu'une réponse commence en quelques secondes. Avec les fragments de cinq cents caractères et un cache des questions courantes, une question déjà connue se traite en une quinzaine de secondes et une question nouvelle en une soixantaine. C'est tenable avec un accusé de réception parlé immédiat, mais une conversation orale réellement fluide suppose l'acquisition d'une ressource de calcul dédiée.
+Le module vocal suppose qu'une réponse commence en quelques secondes. Le découpage restant à mille caractères pour préserver l'exactitude, une question nouvelle demande environ cent dix secondes et une question déjà posée une quinzaine.
+
+Le seul chemin qui reste sans matériel supplémentaire est donc le cache applicatif des questions fréquentes, qui rend instantanées les questions courantes sans toucher au rappel. Une conversation orale réellement fluide sur des questions nouvelles suppose l'acquisition d'une ressource de calcul dédiée. C'est désormais une conclusion mesurée, et non une supposition.
