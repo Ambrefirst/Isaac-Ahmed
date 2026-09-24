@@ -357,6 +357,15 @@ main.content{padding:24px 30px 56px}
 
 .pastille-etat{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
 .team-toggle{font-family:var(--font);letter-spacing:.02em}
+
+.pwd-card form{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.pwd-card label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-top:6px}
+.pwd-card input{padding:11px 13px;font-size:.88rem}
+.pwd-card .btn-primary{margin-top:14px;padding:11px 18px;color:#fff;font-size:.85rem}
+.pwd-msg{display:none;margin:10px 0 0;font-size:.8rem;line-height:1.45}
+.pwd-msg.erreur{display:block;color:var(--bad)}
+.pwd-msg.succes{display:block;color:var(--ok)}
+.muted-note{color:var(--text-muted);font-size:.78rem;line-height:1.5;margin:6px 0 0}
 </style>
 </head>
 <body>
@@ -548,7 +557,7 @@ main.content{padding:24px 30px 56px}
 
       <!-- Settings -->
       <section id="section-settings" class="section" hidden>
-        <div class="content-header"><div><h2>Paramètres</h2><p>Informations de votre session.</p></div></div>
+        <div class="content-header"><div><h2>Paramètres</h2><p>Informations de votre session et sécurité du compte.</p></div></div>
         <div class="card-grid" id="settingsGrid"></div>
       </section>
     </main>
@@ -1053,10 +1062,82 @@ main.content{padding:24px 30px 56px}
           <li>Isaac Ahmed — back-office</li>
           <li>Version 1.0</li>
         </ul>
-      </div>`;
+      </div>
+    <div class="dc-card pwd-card">
+      <h4>Changer le mot de passe</h4>
+      <p class="muted-note">Ce mot de passe est partagé par tout le personnel du site. Changez-le dès qu'une personne quitte l'équipe.</p>
+      <form id="pwdForm" autocomplete="off">
+        <label for="pwdCurrent">Mot de passe actuel</label>
+        <input type="password" id="pwdCurrent" required autocomplete="current-password" />
+        <label for="pwdNew">Nouveau mot de passe</label>
+        <input type="password" id="pwdNew" required minlength="8" autocomplete="new-password" />
+        <label for="pwdConfirm">Confirmer le nouveau mot de passe</label>
+        <input type="password" id="pwdConfirm" required minlength="8" autocomplete="new-password" />
+        <p class="pwd-msg" id="pwdMsg"></p>
+        <button type="submit" class="btn-primary" id="pwdBtn">Enregistrer</button>
+      </form>
+    </div>`;
+  branchePwd();
   }
 
-  /* ---------- Conversations / AI stats (lazy) ---------- */
+  
+/* ---------- Changement du mot de passe administrateur ---------- */
+function branchePwd() {
+  const form = document.getElementById("pwdForm");
+  if (!form) return;
+  const msg = document.getElementById("pwdMsg");
+  const btn = document.getElementById("pwdBtn");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const actuel = document.getElementById("pwdCurrent").value;
+    const nouveau = document.getElementById("pwdNew").value;
+    const confirme = document.getElementById("pwdConfirm").value;
+    msg.className = "pwd-msg";
+    if (nouveau !== confirme) {
+      msg.className = "pwd-msg erreur";
+      msg.textContent = "Les deux nouveaux mots de passe ne correspondent pas.";
+      return;
+    }
+    if (nouveau.length < 8) {
+      msg.className = "pwd-msg erreur";
+      msg.textContent = "Le nouveau mot de passe doit contenir au moins 8 caracteres.";
+      return;
+    }
+    if (nouveau === actuel) {
+      msg.className = "pwd-msg erreur";
+      msg.textContent = "Le nouveau mot de passe est identique a l'ancien.";
+      return;
+    }
+    btn.disabled = true; btn.textContent = "Enregistrement...";
+    try {
+      await callRdv({
+        event: "admin_change_password",
+        adminCountry: session.country,
+        adminPassword: actuel,
+        newPassword: nouveau,
+      });
+      /* La session garde le mot de passe pour les appels suivants : sans cette mise a
+         jour, toute action posterieure echouerait avec l'ancien mot de passe. */
+      session.password = nouveau;
+      setStoredSession(session);
+      form.reset();
+      msg.className = "pwd-msg succes";
+      msg.textContent = "Mot de passe modifie. Notez-le, il n'est affiche nulle part.";
+    } catch (err) {
+      const t = String((err && err.message) || err);
+      msg.className = "pwd-msg erreur";
+      msg.textContent = /identifiant|invalide/i.test(t)
+        ? "Le mot de passe actuel est incorrect."
+        : /fetch|network|load failed/i.test(t)
+        ? "Serveur injoignable. Rechargez la page."
+        : t;
+    } finally {
+      btn.disabled = false; btn.textContent = "Enregistrer";
+    }
+  });
+}
+
+/* ---------- Conversations / AI stats (lazy) ---------- */
   async function loadConversations() {
     conversationsLoaded = true;
     try {
