@@ -21,14 +21,6 @@ function SablierIcon() {
     </svg>
   );
 }
-function HautParleurIcon({ actif }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
-      {actif ? <path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" /> : <path d="m16.5 9.5 4 5M20.5 9.5l-4 5" />}
-    </svg>
-  );
-}
 
 function BackIcon() {
   return (
@@ -205,25 +197,24 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
             <h1>{t("chat.title")}</h1>
             <p>{t("chat.subtitle")}</p>
           </div>
-          {/* Un bouton, une intention : ouvrir une conversation parlee. La
-              bascule de lecture a voix haute a ete retiree d'ici, parce qu'elle
-              n'avait de sens qu'associee a la dictee, et que cette association
-              faisait boucler la borne sur sa propre voix. Isaac parle dans le
-              mode vocal, ou le micro se ferme pendant qu'il parle. */}
-          {audioDisponible && (
-            <button
-              type="button"
-              className="chat-lecture"
-              onClick={() => setModeVocal(true)}
-              title={t("voix.ouvrir")}
-            >
-              <HautParleurIcon actif />
-              <span>{t("voix.ouvrir")}</span>
-            </button>
-          )}
-
-          {/* La sphere suit la conversation : au repos, puis en reflexion pendant le traitement. */}
-          <Orb className="chat-orb" state={phase ? "pense" : "repos"} size={54} />
+          {/* La sphere suit la conversation : au repos, puis en reflexion pendant
+              le traitement. Le bouton de conversation parlee se place JUSTE
+              DESSOUS, comme sur la borne : c'est la meme sphere, donc le meme
+              geste, et le visiteur n'a rien de nouveau a apprendre. */}
+          <div className="chat-orb-zone">
+            <Orb className="chat-orb" state={phase ? "pense" : "repos"} size={54} />
+            {audioDisponible && (
+              <button
+                type="button"
+                className="chat-orb-parler"
+                onClick={() => setModeVocal(true)}
+                aria-label={t("voix.ouvrir")}
+                title={t("voix.ouvrir")}
+              >
+                <MicroIcon />
+              </button>
+            )}
+          </div>
         </header>
 
         <section className="chat-messages" aria-live="polite" ref={scrollRef}>

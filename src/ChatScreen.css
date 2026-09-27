@@ -159,7 +159,7 @@
   position: absolute; right: 0; bottom: 0; width: 10px; height: 10px; border-radius: 50%;
   background: #49D18B; border: 2px solid var(--ink);
 }
-.chat-orb { margin-left: auto; }
+
 
 /* ---------------- sequence d'attente ---------------- */
 .attente {
@@ -267,38 +267,35 @@
   background-image: none;
 }
 
-/* --- Bascule de la voix d'Isaac -------------------------------------------
-   Elle etait ronde, muette et coincee entre le titre et la sphere : personne
-   ne pouvait deviner ce qu'elle faisait. Elle devient une pastille portant un
-   mot, et l'etat se lit sans avoir a interpreter un dessin. */
-.screen-header .chat-lecture {
+/* --- Sphere et conversation parlee, dans l'en-tete ------------------------
+   Le bouton se tient sous la sphere, exactement comme sur la borne. C'est la
+   meme sphere : le meme geste doit donc valoir, et le visiteur n'a rien de
+   nouveau a apprendre en passant de l'un a l'autre. */
+.chat-orb-zone {
   margin-left: auto;
-  width: auto; height: auto;
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 9px 16px 9px 13px;
-  border-radius: 999px;
-  border: 1px solid var(--panel-border, rgba(122, 175, 201, .28));
-  background: rgba(200, 220, 240, .05);
-  color: var(--text-muted, #93AFC4);
-  font-family: inherit;
-  font-size: .78rem;
-  letter-spacing: .02em;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color .22s var(--ease), border-color .22s var(--ease), background .22s var(--ease);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
-.screen-header .chat-lecture svg { flex: 0 0 auto; }
-.screen-header .chat-lecture:hover { color: var(--pale, #C8DCF0); border-color: rgba(122, 175, 201, .5); }
+.chat-orb { margin: 0; }
 
-/* Voix active : c'est l'etat normal d'une borne, il se montre sans crier. */
-.screen-header .chat-lecture.active {
+.chat-orb-parler {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(122, 175, 201, .35);
+  background: rgba(46, 122, 181, .14);
   color: var(--pale, #C8DCF0);
-  border-color: rgba(122, 175, 201, .55);
-  background: rgba(46, 122, 181, .16);
+  cursor: pointer;
+  padding: 0;
+  transition: transform .2s var(--ease), background .2s var(--ease), border-color .2s var(--ease);
 }
-
-/* Sur un ecran etroit, le mot cede la place plutot que de pousser le titre. */
-@media (max-width: 620px) {
-  .screen-header .chat-lecture { padding: 10px; gap: 0; }
-  .screen-header .chat-lecture span { display: none; }
+.chat-orb-parler:hover {
+  transform: translateY(-1px);
+  background: rgba(46, 122, 181, .28);
+  border-color: rgba(122, 175, 201, .75);
 }
+.chat-orb-parler svg { width: 16px; height: 16px; }
