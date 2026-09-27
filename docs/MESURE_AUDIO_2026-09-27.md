@@ -81,6 +81,13 @@ Piper lit ce qu'on lui écrit. Sur un texte métier, cela produit trois familles
 | `Tier III` | « Tier trois romain » | `Tier 3` |
 | `8h` | mal découpé | `8 heures` |
 | `info@st.digital` | épelé lettre à lettre | « l'adresse affichée à l'écran » |
+| `l’assistant` (apostrophe courbe) | risque de lire « L assistant » | ramené à `l'assistant` |
+
+> **L'apostrophe mérite son paragraphe.** Un défaut a été signalé à l'écoute : « l'assistant » prononcé « L assistant », la lettre épelée. Vérification faite, il venait d'une **commande d'essai** où j'avais retiré les apostrophes pour contourner les guillemets du shell — la synthèse dure alors 4,2 s au lieu de 3,9 s, la différence étant exactement le temps d'épeler la lettre. Le service n'était pas en cause.
+>
+> Mais l'essai a révélé un risque réel : le modèle de langue produit volontiers l'**apostrophe courbe** `’` plutôt que la droite `'`, ainsi que des guillemets français, des tirets cadratins et des points de suspension. Toute cette ponctuation typographique est désormais ramenée à la ponctuation simple avant la synthèse.
+>
+> En revanche, **aucune tentative de reconstituer une élision absente**. La tentation était grande, mais réécrire « l assistant » en « l'assistant » reviendrait à corriger du texte correct sur la foi d'une heuristique, pour un cas qui ne se produit pas : la base de connaissances et les réponses du modèle portent de vraies apostrophes.
 
 > **ST n'est pas un mot.** C'est le sigle de **Solutions de Transformation**, et les deux lettres doivent s'entendre séparément. C'est une exigence de l'entreprise, pas une préférence de lecture.
 

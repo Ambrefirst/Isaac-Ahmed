@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Dictionnaire de prononciation, applique avant la synthese.
 
-Piper lit ce qu'on lui ecrit. Sur un texte metier, cela produit trois familles
-de fautes, toutes entendues sur les premiers essais du 27/09 :
+Piper lit ce qu'on lui ecrit. Sur un texte metier, cela produit quatre familles
+de fautes, toutes entendues sur les essais du 27/09 :
 
   - les sigles lus comme des mots. « ST Digital » etait prononce « sans
     digital ». Or ST n'est pas un mot : c'est Solutions de Transformation, et
@@ -11,6 +11,10 @@ de fautes, toutes entendues sur les premiers essais du 27/09 :
     point d'etre reentendu « Isalak » par la reconnaissance.
   - les chiffres romains, lus a voix haute comme tels : « Tier III » devenait
     « Tier trois romain ».
+  - la ponctuation typographique. Le modele de langue rend volontiers
+    l'apostrophe courbe ; une apostrophe que le moteur ne reconnait pas casse
+    l'elision, et « l'assistant » se met a se lire « L assistant », la lettre
+    epelee.
 
 On ne corrige pas cela en changeant de moteur, mais en ecrivant au moteur ce
 qu'il doit dire. Ce fichier est donc une table, pas du code : elle se complete
@@ -23,8 +27,8 @@ pas transformer « district » en « diS Trict ».
 """
 import re
 
-# Le prenom de l'assistant. La graphie retenue a ete choisie a l'oreille parmi
-# plusieurs candidates, la forme normale etant mal prononcee par la voix upmc.
+# Le prenom de l'assistant. La graphie a ete choisie a l'oreille parmi quatre
+# candidates soumises en contexte : ecrit normalement, la voix upmc le deforme.
 PRENOM = "Izak"
 
 # Le sigle de l'entreprise. Il s'epelle : S, puis T. Jamais « st » en un son.
@@ -55,7 +59,6 @@ TABLE = {
     r"\bdatacenters\b": "data centers",
 
     # --- lieux, souvent hors du francais courant
-    r"\bNkok\b": "Nkok",
     r"\bGrand-Bassam\b": "Grand Bassam",
 
     # --- courriels et adresses : lus lettre a lettre, c'est inutilisable a
@@ -64,21 +67,66 @@ TABLE = {
     r"https?://\S+": "le lien affiche a l'ecran",
 }
 
+# Ponctuation typographique ramenee a la ponctuation simple. Les guillemets
+# disparaissent : la pause qu'ils marquent suffit a l'oral.
+TYPOGRAPHIE = {
+    "’": "'",      # apostrophe courbe, celle que produit le modele
+    "‘": "'",
+    "“": "",       # guillemets anglais
+    "”": "",
+    "«": "",       # guillemets francais
+    "»": "",
+    "–": ", ",     # tiret demi-cadratin
+    "—": ", ",     # tiret cadratin
+    "…": ". ",     # points de suspension
+    " ": " ",      # espace insecable
+    " ": " ",      # espace fine insecable
+    "œ": "oe",     # ligature, rarement bien rendue
+    "Œ": "OE",
+}
+
 # Les heures ecrites « 8h » ou « 17h30 » se lisent mal. On les developpe.
-HEURE_PLEINE = re.compile(r"\b(\d{1,2})\s*h\b(?!\d)")
 HEURE_MINUTES = re.compile(r"\b(\d{1,2})\s*h\s*(\d{2})\b")
+HEURE_PLEINE = re.compile(r"\b(\d{1,2})\s*h\b(?!\d)")
 
 COMPILEES = [(re.compile(motif), remplacement) for motif, remplacement in TABLE.items()]
+
+PUCE = re.compile(r"^\s*[-*•]\s*", re.M)
+ESPACE_AVANT_PONCT = re.compile(r"\s+([,.;:!?])")
+ESPACE_APRES_PONCT = re.compile(r"([,.;:!?])(?=[^\s,.;:!?])")
+PONCT_REPETEE = re.compile(r"([,.;:!?])(?:\s*[,.;:!?])+")
+ESPACES = re.compile(r"\s{2,}")
 
 
 def prepare(texte):
     """Rend le texte tel qu'il doit etre prononce, sans changer son sens."""
-    t = HEURE_MINUTES.sub(lambda m: "%s heures %s" % (m.group(1), m.group(2)), texte)
+    t = texte
+    for avant, apres in TYPOGRAPHIE.items():
+        t = t.replace(avant, apres)
+
+    t = HEURE_MINUTES.sub(lambda m: "%s heures %s" % (m.group(1), m.group(2)), t)
     t = HEURE_PLEINE.sub(lambda m: "%s heures" % m.group(1), t)
+
     for motif, remplacement in COMPILEES:
         t = motif.sub(remplacement, t)
-    # Les puces et tirets de liste deviennent des pauses, pas des mots.
-    t = re.sub(r"^\s*[-*•]\s*", "", t, flags=re.M)
+
+    # Une liste a puces se lit comme une suite d'elements, pas comme des tirets.
+    t = PUCE.sub("", t)
     t = re.sub(r"\n{2,}", ". ", t)
-    t = re.sub(r"\n", ", ", t)
-    return re.sub(r"\s{2,}", " ", t).strip()
+    t = t.replace("\n", ", ")
+
+    # Les substitutions laissent la ponctuation decollee du mot, et Piper
+    # marquerait alors sa pause au mauvais endroit.
+    t = ESPACE_AVANT_PONCT.sub(r"\1", t)
+    t = PONCT_REPETEE.sub(r"\1", t)
+    t = ESPACE_APRES_PONCT.sub(r"\1 ", t)
+    return ESPACES.sub(" ", t).strip()
+
+
+# Note deliberee : on ne tente PAS de reconstituer une elision absente, du
+# genre « l assistant » vers « l'assistant ». La tentation etait grande, le
+# defaut ayant ete remarque a l'ecoute, mais il venait d'une commande d'essai
+# ou les apostrophes avaient ete retirees pour contourner le shell, pas d'un
+# texte reel : la base de connaissances et les reponses du modele portent de
+# vraies apostrophes. Deviner l'elision reviendrait a reecrire du texte correct
+# sur la foi d'une heuristique, pour corriger un cas qui ne se produit pas.
