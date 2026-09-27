@@ -93,7 +93,15 @@ Le code d'invitation n'était soumis à aucune vérification au-delà de son exi
 
 Corrigé au passage : `visitor_arrival_confirmed` remettait le rendez-vous à `confirme` à chaque arrivée, ce qui ressuscitait un rendez-vous annulé.
 
-**Reste ouvert.** Le code demeure réutilisable autant de fois qu'on le présente dans sa journée de validité. Un usage unique, ou un jeton renouvelé à chaque passage, reste à décider.
+### Usage unique — posé le 27/09/2026
+
+Le code demeurait réutilisable autant de fois qu'on le présentait dans sa journée de validité. Il suffisait donc de signaler sa sortie pour pouvoir rentrer à nouveau, ou de prêter son code à quelqu'un d'autre.
+
+**Ce que « usage unique » veut dire ici.** Le code sert trois fois dans le parcours normal : à la lecture, à l'arrivée, puis au départ. Le faire mourir à la première présentation aurait cassé le départ, donc le registre. La règle posée est donc : **une seule visite par code**. Une fois qu'une visite a été ouverte avec un code, aucune autre ne peut l'être, même après le départ, même le jour même. Une visite close d'office épuise le code au même titre, sans quoi il aurait suffi d'attendre la clôture de nuit pour recommencer le lendemain.
+
+La lecture du code reste permise et renseigne l'état : la borne en a besoin pour guider le visiteur. Elle affiche trois écrans distincts selon le cas — proposition de confirmer sa présence, rappel de l'arrivée déjà enregistrée avec un bouton pour enregistrer la sortie, ou refus explicite si le code est épuisé.
+
+**Reste ouvert sur ce point.** Le formulaire de demande collecte une `endDate` pour les visites sur plusieurs jours, mais aucun contrôle ne s'en sert : le code n'est valable que le jour de `date`. Une visite de trois jours est donc impossible aujourd'hui, et l'usage unique ne change rien à cette limite puisque le contrôle de date la bloquait déjà. À traiter ensemble, quand le besoin sera confirmé.
 
 ## 11. Registre des visites — complété le 27/09/2026
 

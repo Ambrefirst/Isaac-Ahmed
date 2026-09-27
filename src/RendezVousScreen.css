@@ -135,3 +135,8 @@
 .depart-recap { width: 100%; max-width: 420px; margin: 22px auto 26px; text-align: left; }
 .depart-recap .info-row:last-child { border-bottom: 0; }
 .depart-message { font-size: 1.12rem; line-height: 1.6; margin: 6px 0 0; }
+
+/* Etats du code lus au recapitulatif. Le ton differe : l'un est un refus,
+   l'autre une simple information sur une visite en cours. */
+.code-epuise { margin: 18px 0 0; padding: 14px 16px; border-left: 3px solid var(--bad, #E07A7A); background: rgba(224, 122, 122, .08); line-height: 1.6; }
+.code-en-cours { margin: 18px 0 16px; padding: 14px 16px; border-left: 3px solid var(--light-blue, #7AAFC9); background: rgba(122, 175, 201, .08); line-height: 1.6; }

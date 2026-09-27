@@ -80,6 +80,18 @@ export default function RendezVousScreen({ onMenu }) {
     photoProvided: false,
     termsAccepted: false,
   });
+  /* Appelee depuis le recapitulatif, quand la lecture du code a revele une
+     visite deja ouverte. On ne passe pas par setMode puis scan : l'etat de React
+     n'est pas encore a jour au moment ou scan s'executerait. */
+  async function enregistrerSortie(codeVisite) {
+    setScanError("");
+    try {
+      setDeparture(await recordDeparture(codeVisite));
+      setStep("departure-done");
+    } catch (err) {
+      setScanError(err.message);
+    }
+  }
   async function scan(decodedCode) {
     setScanError("");
     try {
@@ -157,7 +169,20 @@ export default function RendezVousScreen({ onMenu }) {
     {step === "request-done" && <Panel title={t("rdv.header.request-done.title")} text={t("rdv.requestdone.text")} action={t("rdv.requestdone.action")} onClick={() => setStep("actions")} />}
     {step === "request-failed" && <Panel title={t("rdv.header.request-failed.title")} text={t("rdv.requestfailed.text")} action={t("rdv.requestfailed.action")} onClick={() => setStep("create")} />}
     {step === "scanner" && <section className="rdv-panel"><h2>{t(enDepart ? "rdv.departure.scan.title" : "rdv.scanner.title")}</h2><p>{t(enDepart ? "rdv.departure.scan.intro" : "rdv.scanner.intro")}</p><QrScanner onScan={scan} onError={setScanError} />{scanError && <p className="qr-error">{scanError}</p>}</section>}
-    {step === "summary" && visit && <section className="rdv-panel"><h2>{t("rdv.summary.title")}</h2><Info label={t("rdv.summary.visitor")} value={visit.visitor} /><Info label={t("rdv.summary.company")} value={visit.company} /><Info label={t("rdv.summary.host")} value={visit.host} /><Info label={t("rdv.summary.date")} value={`${visit.date} à ${visit.time}`} /><Info label={t("rdv.summary.purpose")} value={visit.purpose} /><button className="rdv-primary" onClick={notify}>{t("rdv.summary.confirm")}</button></section>}
+    {/* Un code ne sert qu'une fois. Plutot que de laisser le visiteur confirmer
+        une presence que le serveur refusera, la borne le dit ici, et propose ce
+        qui a encore du sens : enregistrer sa sortie s'il est toujours sur site. */}
+    {step === "summary" && visit && <section className="rdv-panel"><h2>{t("rdv.summary.title")}</h2><Info label={t("rdv.summary.visitor")} value={visit.visitor} /><Info label={t("rdv.summary.company")} value={visit.company} /><Info label={t("rdv.summary.host")} value={visit.host} /><Info label={t("rdv.summary.date")} value={`${visit.date} à ${visit.time}`} /><Info label={t("rdv.summary.purpose")} value={visit.purpose} />
+      {visit.visiteTerminee
+        ? <p className="code-epuise">{t("rdv.summary.codeSpent")}</p>
+        : visit.visiteEnCours
+          ? <>
+              <p className="code-en-cours">{t("rdv.summary.alreadyIn").replace("{heure}", heureLisible(visit.visiteEnCours.entryAt))}</p>
+              <button className="rdv-primary" onClick={() => enregistrerSortie(visit.code)}>{t("rdv.departure.code.submit")}</button>
+            </>
+          : <button className="rdv-primary" onClick={notify}>{t("rdv.summary.confirm")}</button>}
+      {scanError && <p className="qr-error">{scanError}</p>}
+    </section>}
     {step === "notify" && <Panel title={t("rdv.header.notify.title")} text={notification.message} action={t("rdv.notify.action")} onClick={onMenu} />}
     {/* L'en-tete annonce deja « Depart enregistre » : le repeter en titre de
         panneau ferait lire deux fois la meme phrase avant l'information utile. */}

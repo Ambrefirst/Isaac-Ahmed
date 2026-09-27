@@ -139,6 +139,8 @@ export const translations = {
     "rdv.summary.date": "Date",
     "rdv.summary.purpose": "Objet",
     "rdv.summary.confirm": "Confirmer ma présence",
+    "rdv.summary.codeSpent": "Ce code a déjà servi pour une visite terminée. Il n'est plus valable. Merci de vous adresser à l'accueil.",
+    "rdv.summary.alreadyIn": "Votre arrivée est déjà enregistrée depuis {heure}. Vous pouvez enregistrer votre sortie.",
 
     "rdv.departure.code.title": "Saisir mon code",
     "rdv.departure.code.intro": "Entrez le code que vous avez présenté à votre arrivée. Votre heure de sortie sera enregistrée.",
@@ -346,6 +348,8 @@ export const translations = {
     "rdv.summary.date": "Date",
     "rdv.summary.purpose": "Purpose",
     "rdv.summary.confirm": "Confirm my presence",
+    "rdv.summary.codeSpent": "This code has already been used for a completed visit. It is no longer valid. Please see the front desk.",
+    "rdv.summary.alreadyIn": "Your arrival was already recorded at {heure}. You can record your departure.",
 
     "rdv.departure.code.title": "Enter my code",
     "rdv.departure.code.intro": "Enter the code you showed on arrival. Your departure time will be recorded.",
