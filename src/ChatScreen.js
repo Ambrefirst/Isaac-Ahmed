@@ -271,17 +271,11 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
         </form>
       </section>
 
-      {modeVocal && (
-        <ConversationVocale
-          onEnvoyer={(texte) => onSend(texte)}
-          onFermer={() => setModeVocal(false)}
-          derniereReponse={
-            messages.length && messages[messages.length - 1].sender !== "visitor"
-              ? messages[messages.length - 1].text
-              : null
-          }
-        />
-      )}
+      {/* La conversation parlee n'ecrit rien dans le fil : elle parle. Le
+          parcours « je dicte puis j'envoie » existe deja, c'est le bouton micro
+          du champ de saisie. */}
+      {modeVocal && <ConversationVocale onFermer={() => setModeVocal(false)} />}
+
     </main>
   );
 }

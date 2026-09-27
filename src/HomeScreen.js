@@ -168,7 +168,7 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
             {/* La sphere porte l'etat reel de la conversation : elle ecoute,
                 elle reflechit, elle parle. C'est la que M2 rend enfin vrais les
                 etats que le composant reservait depuis M1. */}
-            <Orb state={vocal.etatOrbe} size={190} niveau={vocal.niveau} />
+            <Orb state={vocal.etatOrbe} size={190} niveau={vocal.niveau} niveaux={vocal.niveaux} />
           </button>
 
           {/* Mise en page de la maquette : une invite en capitales espacees, la

@@ -40,6 +40,11 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
      sphere pendant que le visiteur parle : sans ce retour, on a le sentiment
      de parler a un mur, et c'est exactement ce qui a ete reproche. */
   const [niveau, setNiveau] = useState(0);
+  /* Cinq bandes de frequences de la voix d'Isaac pendant qu'il parle. Les
+     barres de la sphere suivent ce qu'il dit reellement : une animation qui
+     boucle toujours pareil se voit immediatement, et donne l'impression d'un
+     decor plutot que d'une parole. */
+  const [niveaux, setNiveaux] = useState([0, 0, 0, 0, 0]);
   /* Depuis quand Isaac cherche. Sur cette machine, une reponse demande une a
      deux minutes : une attente muette passe pour une panne. */
   const [attenteDepuis, setAttenteDepuis] = useState(null);
@@ -47,6 +52,9 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
   const enregistreurRef = useRef(null);
   const lecteurRef = useRef(null);
   const analyseRef = useRef(null);
+  /* Un seul contexte audio pour toute la conversation : en creer un par phrase
+     finit par saturer le navigateur, qui en limite le nombre. */
+  const sonRef = useRef(null);
   const vivantRef = useRef(false);
   const historiqueRef = useRef([]);
 
@@ -59,8 +67,56 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
       if (!url || !vivantRef.current) return;
       await new Promise((resolve) => {
         const audio = new Audio(url);
+        audio.crossOrigin = "anonymous";
         lecteurRef.current = audio;
-        const fin = () => { URL.revokeObjectURL(url); resolve(); };
+
+        /* On branche une analyse sur le son reellement joue. Les barres de la
+           sphere doivent suivre l'intonation d'Isaac : quand il appuie, elles
+           montent ; quand il baisse, elles retombent. Une vague qui repasse
+           toujours a l'identique se reconnait tout de suite comme un decor. */
+        let image = null;
+        try {
+          const contexte = sonRef.current || new (window.AudioContext || window.webkitAudioContext)();
+          sonRef.current = contexte;
+          if (contexte.state === "suspended") contexte.resume();
+          const source = contexte.createMediaElementSource(audio);
+          const analyseur = contexte.createAnalyser();
+          analyseur.fftSize = 256;
+          analyseur.smoothingTimeConstant = 0.55;
+          source.connect(analyseur);
+          analyseur.connect(contexte.destination);
+
+          const spectre = new Uint8Array(analyseur.frequencyBinCount);
+          /* Cinq bandes, des graves aux aigus : la voix ne bouge pas de la meme
+             facon partout, et c'est ce qui rend le mouvement credible. */
+          const bornes = [0, 4, 10, 20, 38, 64];
+          const suivre = () => {
+            if (!vivantRef.current || audio.paused || audio.ended) return;
+            analyseur.getByteFrequencyData(spectre);
+            const bandes = [];
+            for (let b = 0; b < 5; b += 1) {
+              let somme = 0;
+              const debut = bornes[b];
+              const fin = Math.min(bornes[b + 1], spectre.length);
+              for (let i = debut; i < fin; i += 1) somme += spectre[i];
+              const moyenne = somme / Math.max(1, fin - debut) / 255;
+              bandes.push(Math.min(1, moyenne * 1.7));
+            }
+            setNiveaux(bandes);
+            image = requestAnimationFrame(suivre);
+          };
+          image = requestAnimationFrame(suivre);
+        } catch (e) {
+          /* Sans analyse, la parole reste audible : on perd le mouvement,
+             pas la voix. C'est le bon ordre de priorite. */
+        }
+
+        const fin = () => {
+          if (image) cancelAnimationFrame(image);
+          setNiveaux([0, 0, 0, 0, 0]);
+          URL.revokeObjectURL(url);
+          resolve();
+        };
         audio.onended = fin;
         audio.onerror = fin;
         audio.play().catch(fin);
@@ -164,6 +220,14 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
     if (vivantRef.current) ecouter();
   }, [dire, ecouter, salutation]);
 
+  /* Reprendre apres un silence trop long : on rouvre le micro sans refaire la
+     salutation, qui n'aurait aucun sens au milieu d'une conversation. */
+  const reprendre = useCallback(() => {
+    vivantRef.current = true;
+    setErreur("");
+    ecouter();
+  }, [ecouter]);
+
   const arreter = useCallback(() => {
     vivantRef.current = false;
     if (enregistreurRef.current) enregistreurRef.current.liberer();
@@ -185,6 +249,6 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
     : etat === ETATS.REFLECHIT ? "pense"
     : "repos";
 
-  return { etat, etatOrbe, entendu, reponse, erreur, niveau, attenteDepuis,
-           demarrer, arreter, actif: etat !== ETATS.ARRET };
+  return { etat, etatOrbe, entendu, reponse, erreur, niveau, niveaux, attenteDepuis,
+           demarrer, reprendre, arreter, actif: etat !== ETATS.ARRET };
 }

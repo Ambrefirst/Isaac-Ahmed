@@ -96,11 +96,18 @@
   background: var(--pale);
   opacity: 0.92;
 }
-.orb-barres i:nth-child(1) { height: 10%; transform: translateX(-26px); animation: orb-vu 0.9s infinite var(--ease); }
-.orb-barres i:nth-child(2) { height: 19%; transform: translateX(-13px); animation: orb-vu 0.9s 0.12s infinite var(--ease); }
-.orb-barres i:nth-child(3) { height: 26%; animation: orb-vu 0.9s 0.24s infinite var(--ease); }
-.orb-barres i:nth-child(4) { height: 17%; transform: translateX(13px); animation: orb-vu 0.9s 0.36s infinite var(--ease); }
-.orb-barres i:nth-child(5) { height: 9%; transform: translateX(26px); animation: orb-vu 0.9s 0.48s infinite var(--ease); }
+/* Hauteur au repos de chaque barre. La hauteur reelle vient de la voix : les
+   variables --b1 a --b5 portent l'amplitude de cinq bandes de frequences,
+   mesurees sur le son effectivement joue. L'animation en boucle ne sert que de
+   repli quand l'analyse n'est pas disponible. */
+.orb-barres i:nth-child(1) { height: 26%; transform: translateX(-26px); scale: 1 calc(0.12 + var(--b1, 0) * 0.88); }
+.orb-barres i:nth-child(2) { height: 26%; transform: translateX(-13px); scale: 1 calc(0.12 + var(--b2, 0) * 0.88); }
+.orb-barres i:nth-child(3) { height: 26%; scale: 1 calc(0.12 + var(--b3, 0) * 0.88); }
+.orb-barres i:nth-child(4) { height: 26%; transform: translateX(13px);  scale: 1 calc(0.12 + var(--b4, 0) * 0.88); }
+.orb-barres i:nth-child(5) { height: 26%; transform: translateX(26px);  scale: 1 calc(0.12 + var(--b5, 0) * 0.88); }
+/* Un lissage court : assez pour ne pas trembler, assez peu pour suivre une
+   syllabe. Au-dela, on retombe sur une vague qui glisse. */
+.orb-barres i { transition: scale .07s linear; }
 @keyframes orb-vu {
   0%, 100% { scale: 1 0.45; }
   50% { scale: 1 1; }
@@ -142,10 +149,8 @@
   .orb .orb-onde    { animation-duration: 3.4s !important; animation-iteration-count: infinite !important; }
   .orb .orb-orbite  { animation-duration: 6s   !important; animation-iteration-count: infinite !important; }
   .orb .orb-orbite-2 { animation-duration: 8.5s !important; }
-  .orb .orb-barres i { animation-duration: 1.5s !important; animation-iteration-count: infinite !important; }
-
-  /* L'amplitude des barres est reduite : elles respirent au lieu de sauter. */
-  .orb .orb-barres i { animation-name: orb-vu-calme !important; }
+  /* Les barres suivent desormais la voix reelle, il n'y a plus d'animation en
+     boucle a ralentir : le mouvement vient du son, et il est deja module. */
 }
 @keyframes orb-vu-calme {
   0%, 100% { scale: 1 0.7; }
