@@ -151,6 +151,8 @@ Le texte reconnu est **déposé dans le champ de saisie, pas envoyé directement
 
 **Reste à faire sur ce point.** Mesurer en environnement bruyant, et éprouver la chaîne sur la borne réelle avec son micro, et non au navigateur avec un micro simulé.
 
+> **La configuration nginx n'est pas versionnée**, et ne doit pas l'être : elle donne la carte complète des services internes, leurs ports et les adresses du réseau privé, alors que le dépôt est public. Elle vit sur la tour, dans `isaac-app-conf/`, avec une copie de sauvegarde avant chaque modification. Les routes audio ajoutées le 27/09 sont décrites ci-dessus en toutes lettres, ce qui suffit à les reconstituer.
+
 Quatre points doivent être tenus au moment du raccordement, chacun venant d'un défaut déjà constaté :
 
 1. **Convertir l'audio en WAV 16 kHz mono avant transcription.** Sans cela le service répond `200` avec un texte vide, et un client naïf conclut que le visiteur n'a rien dit. C'est le point 5 de `ECHECS_SILENCIEUX.md`.

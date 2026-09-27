@@ -153,3 +153,8 @@ docs/code/routeur_patch.js
 routeur*.js
 rdv_*.json
 chat_*.json
+
+# Configuration nginx de la tour : elle donne la carte des services internes,
+# les ports et les adresses du reseau prive. Le depot est public.
+docs/code/nginx_default.conf
+*default.conf
