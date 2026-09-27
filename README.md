@@ -13,7 +13,7 @@ Assistant IA multimodal pour automation de gestion des rendez-vous visiteurs : c
  Screens: Welcome, Home, Chat, RDV, MyAppointments, Admin 
  HTTPS on tower:8443 (nginx reverse proxy) 
 
- Tailscale (100.71.79.97:5678)
+ Tailscale (tour:5678, nom MagicDNS)
  
 
  BACKEND TOWER (Self-Hosted, Docker) 
@@ -27,8 +27,8 @@ Assistant IA multimodal pour automation de gestion des rendez-vous visiteurs : c
  qwen2.5:7b-instruct (8-12s per query, grounded RAG) 
  
  Data persistence 
- JSON files (appointments, conversations, staff, notifications) 
- Vector DB (in-memory, survives ~48h restart) 
+ PostgreSQL isaac-postgres (appointments, visits, audit, conversations, staff) 
+ PostgreSQL isaac-pgvector (knowledge base embeddings, pgvector) 
 
 ```
 
@@ -54,7 +54,7 @@ accueil-app/
  aiService.js # Chat → n8n webhook (RAG)
  appointmentService.js # RDV requests, lookups, cancellations
  notificationService.js # Escalate to staff
- *.test.js # Service unit tests (10 tests passing)
+ *.test.js # Service unit tests (18 tests passing)
  
  *.css # Component styling (ST Digital brand)
  index.js # React DOM mount
@@ -124,14 +124,15 @@ accueil-app/
 
 ### Backend (Self-Hosted)
 - **n8n 2.36** — Workflow orchestration (Docker)
- - 3 main workflows: Chat (RAG), RDV (QR+notifications), Team responses
- - JSON file storage (no cloud DB)
+ - 6 workflows: Chat (RAG), RDV (QR + notifications + visit register), Team responses,
+   Visitor (public), Knowledge base indexing, Nightly visit closure
+ - PostgreSQL storage (no cloud DB) — the JSON files under isaac-app-data are dead remnants
  - SMTP notifications (Gmail + fallback)
 
 - **Ollama** — Local LLM inference (Docker)
  - Model: `qwen2.5:7b-instruct` (7B parameters, French-capable)
  - Response time: 8-12 seconds per query
- - Vector DB: in-memory (ephemeral, survives 2 days idle max)
+ - Vector DB: PostgreSQL + pgvector, persistent since 27/09/2026 (container isaac-pgvector)
 
 - **Nginx** — Reverse proxy + static file serving
  - Port 8443 (visitor app + admin panel)
@@ -139,13 +140,19 @@ accueil-app/
  - Cache headers: no-cache on index.html, max-age on /static/
 
 ### Network
-- **Tailscale** — VPN mesh for secure backend access (100.71.79.97:5678)
-- **Funnel** — Planned for public team-response links (pending Aminta sudo)
+- **Tailscale** — VPN mesh for secure backend access. **Always use the MagicDNS name**, never a
+  hardcoded tailnet IP: the tower's address changed from 100.71.79.97 to 100.71.79.98 on 27/09/2026
+  and every hardcoded link broke.
+- **Funnel** — Live. Serves port 8444 publicly: visitor app, chat, team-response page.
+  The admin panel and the appointment router return 404 on that surface (closed 21/09/2026).
 
 ### Development
-- **Git** — Version control (5 commits, full history)
+- **Git** — Version control, pushed to github.com/Ambrefirst/Isaac-Ahmed (public repository:
+  no credentials, no infrastructure addresses, no attack paths may be committed)
 - **npm** — Dependency management (41 packages, no high-risk vulns)
-- **Jest** — Unit testing (10 tests passing)
+- **Jest** — Unit testing (18 tests passing)
+- **Router test bench** — 61 checks against the deployed router code, run outside n8n and
+  outside PostgreSQL (`scratchpad/test_routeur.js`, reference copy in `docs/code/`)
 - **ESLint** — Code quality (React app config)
 
 ## Quick Start
@@ -160,7 +167,8 @@ npm install
 
 # 2. Configure environment (must point to tower)
 cp .env.example .env.local
-# Edit .env.local: set REACT_APP_N8N_* to http://100.71.79.97:5678/webhook/...
+# Edit .env.development.local: set REACT_APP_N8N_* to the tower webhooks
+# (production uses relative paths, proxied by nginx — see .env.production)
 
 # 3. Run dev server
 npm start
@@ -198,7 +206,7 @@ See `docs/05_Documentation_deploiement.docx` for:
 npm test
 
 # Manual end-to-end
-1. Open http://localhost:3000 (or https://100.71.79.97:8443 on tower)
+1. Open http://localhost:3000 (or https://aminta-hp-elitedesk-800-g2-twr.tail51ab0e.ts.net:8443 on the tailnet)
 2. Chat with Isaac (should answer from RAG KB)
 3. Book appointment (creates JSON record on tower)
 4. Confirm as admin → QR code generated + email sent
@@ -218,17 +226,24 @@ All stage deliverables in `docs/`:
 
 ## Known Limitations
 
-1. **Vector DB ephemeral** — In-memory only, wiped on n8n container restart (Risk R12)
-2. **LLM response time** — Qwen2.5 7B on CPU: 8-12s per query (acceptable for kiosk, not real-time chat)
+1. **Shared passwords** — One password per country, shared by the whole site team. The activity
+   journal records the *site* an action came from, not the person. Nominative accounts needed.
+2. **LLM response time** — Qwen2.5 7B on CPU: prefill dominates (88% of latency, measured 24/09).
+   Streaming would only remove the remaining 11%.
 3. **No Azure AD** — Outlook/Teams SMTP blocked by tenant policy; Gmail workaround used (Risk R3)
-4. **Tailscale Funnel pending** — Team response links not yet public without VPN
+4. **Multi-day visits impossible** — The form collects `endDate`, no check uses it. A code is only
+   valid on the day of `date`.
 5. **Mobile device cache** — Browser cache on kiosk phones may require hard refresh post-deploy
+6. **Conversations stored as one JSON array** — Fine at a few hundred, not at tens of thousands.
+   A real table, one row per exchange, is needed before production.
+
+See `docs/A_FAIRE_AVANT_MISE_EN_PRODUCTION.md` — eleven points, each naming what remains open.
 
 ## Next Steps (M2/M3)
 
-- Audio prototype (speech recognition + TTS, French)
+- Audio prototype (speech recognition + TTS, French) — **started 27/09/2026**
 - Video avatar rendering (if GPU becomes available)
-- Scale vector DB to persistent Postgres
+- Nominative accounts, replacing the shared per-country passwords
 - Integrate real Outlook/Teams notifications
 - Multi-language expansion (if required)
 
@@ -237,4 +252,4 @@ All stage deliverables in `docs/`:
 **Stage Timeline:** 13/08 → 30/09/2026 (8 weeks) 
 **Tutrice:** MEBANG MBOUROUNOU Aminta 
 **Stagiaire:** MENGUE ME NANG Tatille Ambre 
-**Last updated:** 2026-09-21
+**Last updated:** 2026-09-27

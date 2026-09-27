@@ -146,3 +146,10 @@ build*.tar.gz
 
 # Artefacts de build CRA (regenerables par npm run build)
 /build
+
+# Code des noeuds n8n : il porte le mot de passe PostgreSQL en clair.
+# Le depot est public, ces fichiers n'y entrent jamais.
+docs/code/routeur_patch.js
+routeur*.js
+rdv_*.json
+chat_*.json
