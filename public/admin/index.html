@@ -517,6 +517,32 @@ main.content{padding:24px 30px 56px}
 .bar-chart .col{max-width:110px}
 .bar-chart{justify-content:flex-start}
 
+
+/* Champ de recherche des tableaux. Il partage la grammaire des autres champs,
+   avec une loupe tracee en fond plutot qu'une icone posee par-dessus. */
+.champ-recherche{
+  flex:1 1 280px;min-width:220px;max-width:460px;
+  padding:10px 14px 10px 38px;border-radius:999px;font-size:.86rem;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237AAFC9' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:13px center;background-size:15px 15px;
+}
+.toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.recherche-vide{padding:26px 18px;text-align:center;color:var(--text-muted);font-size:.88rem}
+.registre-present{color:var(--ok);font-weight:700}
+.registre-sorti{color:var(--text-muted)}
+
+
+/* Le bouton Actualiser des en-tetes n'etait style que sous .toolbar : ailleurs
+   il s'affichait comme un bouton natif du navigateur, gris et hors charte. */
+button.ghost{
+  background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);
+  border-radius:999px;padding:9px 18px;cursor:pointer;font-family:var(--font);font-size:.82rem;
+  transition:color .22s var(--ease),border-color .22s var(--ease),background .22s var(--ease);
+}
+button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);background:rgba(122,175,201,.08)}
+:root[data-theme="clair"] button.ghost{background:rgba(255,255,255,.7);color:var(--text-muted)}
+:root[data-theme="clair"] button.ghost:hover{color:var(--navy);border-color:var(--blue);background:#fff}
+
 </style>
 </head>
 <body>
@@ -581,6 +607,7 @@ main.content{padding:24px 30px 56px}
         <button data-section="appointments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/><path d="m9 16 2 2 4-4"/></svg> <span>Demandes de rendez-vous</span></button>
         <button data-section="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/><circle cx="8.5" cy="15.5" r="1"/><circle cx="12" cy="15.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/></svg> <span>Calendrier</span></button>
         <button data-section="visitors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-2-4.3"/></svg> <span>Clients &amp; Visiteurs</span></button>
+        <button data-section="visits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></svg> <span>Registre des visites</span></button>
         <button data-section="datacenters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01M11 7h5M11 17h5"/></svg> <span>Data Centers</span></button>
         <button data-section="conversations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a7 7 0 0 1-7 7H8l-4 3v-5.5A7 7 0 0 1 8 4h5a7 7 0 0 1 7 7Z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg> <span>Conversations</span></button>
         <button data-section="content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5Z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5Z"/></svg> <span>Contenus &amp; FAQ</span></button>
@@ -647,6 +674,17 @@ main.content{padding:24px 30px 56px}
         <div class="table-scroll" id="visitorsWrap"></div>
       </section>
 
+      <!-- Registre des visites -->
+      <section id="section-visits" class="section" hidden>
+        <div class="content-header"><div><h2>Registre des visites</h2><p>Entrées et sorties horodatées, à partir du code présenté à la borne.</p></div><button class="ghost" id="refreshVisits">Actualiser</button></div>
+        <div class="stat-grid" id="visitsStats" style="grid-template-columns:repeat(3,1fr);"></div>
+        <div class="toolbar" style="margin-top:16px;">
+          <div class="cat-tabs" id="visitsFilters"></div>
+          <input type="search" id="visitsSearch" class="champ-recherche" placeholder="Rechercher un visiteur, une société, un code" aria-label="Rechercher dans le registre" />
+        </div>
+        <div class="table-scroll" id="visitsWrap"></div>
+      </section>
+
       <!-- Data centers -->
       <section id="section-datacenters" class="section" hidden>
         <div class="content-header"><div><h2>Data Centers</h2><p>Infrastructures ST Digital (source : site officiel st.digital).</p></div></div>
@@ -656,7 +694,11 @@ main.content{padding:24px 30px 56px}
 
       <!-- Conversations -->
       <section id="section-conversations" class="section" hidden>
-        <div class="content-header"><div><h2>Conversations</h2><p>Historique des échanges avec Isaac (200 plus récents).</p></div><button class="ghost" id="refreshConv">Actualiser</button></div>
+        <div class="content-header"><div><h2>Conversations</h2><p>Historique des échanges avec Isaac.</p></div><button class="ghost" id="refreshConv">Actualiser</button></div>
+        <div class="toolbar">
+          <input type="search" id="convSearch" class="champ-recherche" placeholder="Rechercher une question, une réponse, une session" aria-label="Rechercher dans les conversations" />
+          <span class="count" id="convCount"></span>
+        </div>
         <div class="table-scroll" id="convWrap"></div>
       </section>
 
@@ -871,6 +913,7 @@ main.content{padding:24px 30px 56px}
       if (btn.dataset.section === "conversations" && !conversationsLoaded) loadConversations();
       if (btn.dataset.section === "notifications" && !notificationsLoaded) loadNotifications();
       if (btn.dataset.section === "content" && !kbLoaded) loadKb();
+      if (btn.dataset.section === "visits" && !visitsLoaded) loadVisits();
       if (btn.dataset.section === "team") loadStaff();
     });
   });
@@ -1395,12 +1438,45 @@ main.content{padding:24px 30px 56px}
       document.getElementById("convWrap").innerHTML = `<div class="error">Erreur : ${e.message}</div>`;
     }
   }
+  let convCache = [];
+  let convTotal = 0;
+
+  /* Le terme cherche est mis en evidence dans le resultat : sans cela, sur une
+     reponse de dix lignes, on ne voit pas pourquoi la ligne est ressortie. */
+  function echappe(t) {
+    return String(t == null ? "" : t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  }
+  function surligne(texte, q) {
+    const brut = echappe(texte);
+    if (!q) return brut;
+    const motif = new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
+    return brut.replace(motif, "<mark>$1</mark>");
+  }
+
   function renderConversations(list, total) {
+    if (list) { convCache = list; convTotal = total || list.length; }
     const wrap = document.getElementById("convWrap");
-    if (!list.length) { wrap.innerHTML = '<div class="empty">Aucune conversation enregistrée pour le moment.</div>'; return; }
-    const rows = list.map((c) => `<tr><td>${new Date(c.timestamp).toLocaleString("fr-FR")}</td><td><code>${(c.sessionId || "").slice(0, 10)}</code></td><td style="white-space:normal;max-width:260px;">${c.message}</td><td style="white-space:normal;max-width:340px;">${c.answer}</td></tr>`).join("");
+    const compteur = document.getElementById("convCount");
+    if (!convCache.length) {
+      wrap.innerHTML = '<div class="empty">Aucune conversation enregistrée pour le moment.</div>';
+      compteur.textContent = "";
+      return;
+    }
+    const q = (document.getElementById("convSearch").value || "").trim().toLowerCase();
+    const filtrees = q
+      ? convCache.filter((c) => [c.message, c.answer, c.sessionId].some((x) => String(x || "").toLowerCase().includes(q)))
+      : convCache;
+    compteur.textContent = q
+      ? `${filtrees.length} résultat${filtrees.length > 1 ? "s" : ""} sur ${convCache.length} échanges affichés`
+      : `${convCache.length} échanges affichés sur ${convTotal} enregistrés`;
+    if (!filtrees.length) {
+      wrap.innerHTML = '<div class="recherche-vide">Aucun échange ne contient ce terme.</div>';
+      return;
+    }
+    const rows = filtrees.map((c) => `<tr><td>${new Date(c.timestamp).toLocaleString("fr-FR")}</td><td><code>${echappe((c.sessionId || "").slice(0, 10))}</code></td><td style="white-space:normal;max-width:260px;">${surligne(c.message, q)}</td><td style="white-space:normal;max-width:340px;">${surligne(c.answer, q)}</td></tr>`).join("");
     wrap.innerHTML = `<table><thead><tr><th>Date</th><th>Session</th><th>Question</th><th>Réponse d'Isaac</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
+  document.getElementById("convSearch").addEventListener("input", () => renderConversations());
   function renderAiStats(list, total) {
     const uniqueSessions = new Set(list.map((c) => c.sessionId)).size;
     const cards = [
@@ -1432,6 +1508,83 @@ main.content{padding:24px 30px 56px}
       </div>`).join("")}</div>`;
   }
   document.getElementById("refreshConv").addEventListener("click", loadConversations);
+
+  /* ---------- Registre des visites (lazy) ---------- */
+  let visitsCache = [];
+  let visitsLoaded = false;
+  let visitsFiltre = "toutes";
+
+  async function loadVisits() {
+    visitsLoaded = true;
+    try {
+      const data = await authedCall({ event: "admin_list_visits" });
+      visitsCache = data.visits || [];
+      renderVisits();
+    } catch (e) {
+      document.getElementById("visitsWrap").innerHTML = `<div class="error">Erreur : ${e.message}</div>`;
+    }
+  }
+
+  function dureeLisible(v) {
+    const fin = v.exitAt || Date.now();
+    const minutes = Math.max(1, Math.round((fin - v.entryAt) / 60000));
+    if (minutes < 60) return minutes + " min";
+    return Math.floor(minutes / 60) + " h " + String(minutes % 60).padStart(2, "0");
+  }
+
+  function renderVisits() {
+    const presents = visitsCache.filter((v) => !v.exitAt);
+    const debutJour = new Date(); debutJour.setHours(0, 0, 0, 0);
+    const duJour = visitsCache.filter((v) => v.entryAt >= debutJour.getTime());
+    const terminees = visitsCache.filter((v) => v.exitAt);
+    const moyenne = terminees.length
+      ? Math.round(terminees.reduce((t, v) => t + (v.exitAt - v.entryAt), 0) / terminees.length / 60000)
+      : null;
+    const cartes = [
+      { label: "Actuellement sur site", value: presents.length },
+      { label: "Visites aujourd'hui", value: duJour.length },
+      { label: "Durée moyenne", value: moyenne === null ? "—" : (moyenne < 60 ? moyenne + " min" : Math.floor(moyenne / 60) + " h " + String(moyenne % 60).padStart(2, "0")) },
+    ];
+    document.getElementById("visitsStats").innerHTML = cartes.map((c) =>
+      `<div class="stat-card total"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`).join("");
+
+    const filtres = [["toutes", "Toutes"], ["encours", "Sur site (" + presents.length + ")"], ["terminees", "Terminées"]];
+    document.getElementById("visitsFilters").innerHTML = filtres.map((f) =>
+      `<button data-filtre="${f[0]}" class="${f[0] === visitsFiltre ? "active" : ""}">${f[1]}</button>`).join("");
+    document.querySelectorAll("#visitsFilters button").forEach((b) => {
+      b.addEventListener("click", () => { visitsFiltre = b.getAttribute("data-filtre"); renderVisits(); });
+    });
+
+    const q = (document.getElementById("visitsSearch").value || "").trim().toLowerCase();
+    let liste = visitsCache;
+    if (visitsFiltre === "encours") liste = liste.filter((v) => !v.exitAt);
+    if (visitsFiltre === "terminees") liste = liste.filter((v) => v.exitAt);
+    if (q) {
+      liste = liste.filter((v) => [v.visitor, v.company, v.code, v.host, v.purpose]
+        .some((x) => String(x || "").toLowerCase().includes(q)));
+    }
+
+    const wrap = document.getElementById("visitsWrap");
+    if (!liste.length) {
+      wrap.innerHTML = visitsCache.length
+        ? '<div class="recherche-vide">Aucune visite ne correspond à ce filtre.</div>'
+        : '<div class="empty">Aucune visite enregistrée. Le registre se remplit lorsqu\'un visiteur présente son code à la borne.</div>';
+      return;
+    }
+    const heure = (t) => new Date(t).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const rows = liste.map((v) => `<tr>
+      <td>${v.visitor || "—"}</td>
+      <td>${v.company || "—"}</td>
+      <td><code>${v.code || "—"}</code></td>
+      <td>${heure(v.entryAt)}</td>
+      <td class="${v.exitAt ? "registre-sorti" : "registre-present"}">${v.exitAt ? heure(v.exitAt) : "sur site"}</td>
+      <td>${dureeLisible(v)}</td>
+    </tr>`).join("");
+    wrap.innerHTML = `<table><thead><tr><th>Visiteur</th><th>Société</th><th>Code</th><th>Entrée</th><th>Sortie</th><th>Durée</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  document.getElementById("refreshVisits").addEventListener("click", loadVisits);
+  document.getElementById("visitsSearch").addEventListener("input", () => { if (visitsLoaded) renderVisits(); });
 
   /* ---------- Notifications (lazy) ---------- */
   async function loadNotifications() {
@@ -1516,7 +1669,7 @@ main.content{padding:24px 30px 56px}
   lockBtn.addEventListener("click", () => {
     clearStoredSession();
     session = null;
-    conversationsLoaded = notificationsLoaded = kbLoaded = false;
+    conversationsLoaded = notificationsLoaded = kbLoaded = visitsLoaded = false;
     appEl.style.display = "none";
     loginEl.style.display = "grid";
     passwordInput.value = "";
