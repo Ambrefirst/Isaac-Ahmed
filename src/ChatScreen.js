@@ -109,7 +109,11 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
   const [ecoute, setEcoute] = useState(false);
   const [transcription, setTranscription] = useState(false);
   const [erreurVoix, setErreurVoix] = useState("");
-  const [lectureActive, setLectureActive] = useState(false);
+  const [apercu, setApercu] = useState("");
+  /* Sur une borne, Isaac parle par defaut : un visiteur qui vient de dicter sa
+     question attend une reponse a voix haute, et personne ne va chercher un
+     bouton pour l'activer. Il reste coupable d'un geste. */
+  const [lectureActive, setLectureActive] = useState(audioDisponible);
   const enregistreurRef = useRef(null);
   const lecteurRef = useRef(null);
   const dernierLuRef = useRef(-1);
@@ -129,12 +133,20 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
       try {
         const blob = await enregistreurRef.current.arreter();
         const texte = await transcrire(blob);
-        /* Le texte est depose dans le champ, pas envoye directement. La mesure
-           du 27/09 donne un taux d'erreur mot de l'ordre de 12 %, ce qui rend
-           une relecture necessaire : envoyer sans montrer ferait poser a Isaac
-           une question que le visiteur n'a pas posee. */
-        setInput(texte);
+        setApercu("");
+        /* Le visiteur a appuye pour dire qu'il avait fini : sa question part.
+           Lui demander un second geste sur la fleche apres avoir parle casse le
+           mouvement, et sur une borne d'accueil personne ne relit son texte
+           avant de l'envoyer. Le texte reste visible dans la conversation, et
+           il peut toujours reformuler si la reconnaissance s'est trompee. */
+        if (texte && !busy) {
+          onSend(texte);
+          setInput("");
+        } else {
+          setInput(texte);
+        }
       } catch (e) {
+        setApercu("");
         setErreurVoix(e.message);
       } finally {
         setTranscription(false);
@@ -142,7 +154,8 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
       return;
     }
     try {
-      enregistreurRef.current = creerEnregistreur();
+      setApercu("");
+      enregistreurRef.current = creerEnregistreur({ surApercu: setApercu });
       await enregistreurRef.current.demarrer();
       setEcoute(true);
     } catch (e) {
@@ -192,7 +205,7 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
   useEffect(() => {
     const node = scrollRef.current;
     if (node) node.scrollTop = node.scrollHeight;
-  }, [displayMessages.length, phase, typingText]);
+  }, [displayMessages.length, phase, typingText, apercu, ecoute]);
 
   function renderMessage(message, key) {
     const isIsaac = message.sender !== "visitor";
@@ -251,6 +264,15 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
         <section className="chat-messages" aria-live="polite" ref={scrollRef}>
           {displayMessages.map((message, index) => renderMessage(message, `${message.sender}-${index}`))}
           {typingText !== null && renderMessage({ sender: "isaac", text: <>{typingText}<span className="typing-caret" aria-hidden="true" /></> }, "typing")}
+          {/* Bulle provisoire pendant que le visiteur parle : elle se remplit au
+              fil de la dictee, pour qu'il voie qu'il est entendu sans attendre
+              la fin. Le texte n'est pas definitif, d'ou le trait pointille. */}
+          {(ecoute || transcription) && renderMessage({
+            sender: "visitor",
+            text: apercu
+              ? <span className="apercu-dictee">{apercu}<span className="typing-caret" aria-hidden="true" /></span>
+              : <span className="apercu-dictee attente">{t(transcription ? "chat.voice.working" : "chat.voice.listening")}</span>,
+          }, "apercu")}
           {phase && <SequenceAttente phase={phase} t={t} />}
         </section>
 

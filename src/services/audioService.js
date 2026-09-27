@@ -137,7 +137,18 @@ export async function transcrire(blobAudio) {
     encodeURIComponent(AMORCE);
 
   const reponse = await fetch(url, { method: "POST", body: formulaire });
-  if (!reponse.ok) throw new Error("La reconnaissance vocale est indisponible pour le moment.");
+  if (!reponse.ok) {
+    /* Un 404 ne veut pas dire la meme chose qu'une panne : il signifie que la
+       chaine audio n'est pas servie sur cette adresse. Le cas s'est produit en
+       vrai, et « indisponible pour le moment » envoyait chercher du cote d'une
+       panne passagere alors qu'il fallait changer de lien. */
+    if (reponse.status === 404) {
+      throw new Error(
+        "La voix n'est pas disponible depuis ce lien. Ouvrez la borne par son adresse du reseau interne."
+      );
+    }
+    throw new Error("La reconnaissance vocale est indisponible pour le moment.");
+  }
 
   const donnees = await reponse.json().catch(() => ({}));
   const texte = (donnees.text || "").trim();
@@ -176,10 +187,35 @@ export async function synthetiser(texte) {
    il faut pouvoir libérer le micro même si l'utilisateur quitte l'écran en
    cours de route. Une piste laissée ouverte garde la diode du micro allumée,
    ce qui est inacceptable sur une borne d'accueil. */
-export function creerEnregistreur() {
+export function creerEnregistreur({ surApercu, intervalleApercu = 2500 } = {}) {
   let flux = null;
   let enregistreur = null;
   let morceaux = [];
+  let minuterie = null;
+  let enCours = false; // une transcription d'apercu est deja partie
+
+  /* Apercu pendant que le visiteur parle. On retranscrit a chaque fois TOUT ce
+     qui a ete dit depuis le debut, et non le seul fragment nouveau : decouper
+     l'audio toutes les deux secondes couperait des mots en deux, et le texte
+     affiche serait pire que pas de texte du tout.
+
+     Le cout augmente donc avec la duree. C'est assume : une question de borne
+     dure quelques secondes, et si elle s'allonge les apercus s'espacent
+     d'eux-memes puisqu'on n'en lance jamais deux a la fois. */
+  async function apercu() {
+    if (!surApercu || enCours || !morceaux.length) return;
+    enCours = true;
+    try {
+      const partiel = new Blob(morceaux, { type: enregistreur.mimeType || "audio/webm" });
+      const texte = await transcrire(partiel);
+      if (enregistreur) surApercu(texte);
+    } catch (e) {
+      /* Un apercu qui echoue ne doit rien casser : le visiteur parle toujours,
+         et la transcription finale reste a venir. */
+    } finally {
+      enCours = false;
+    }
+  }
 
   return {
     async demarrer() {
@@ -191,7 +227,11 @@ export function creerEnregistreur() {
       enregistreur.ondataavailable = (e) => {
         if (e.data && e.data.size) morceaux.push(e.data);
       };
-      enregistreur.start();
+      /* Le decoupage en tranches d'une seconde sert uniquement a disposer d'un
+         audio exploitable avant la fin : sans lui, MediaRecorder ne rend rien
+         tant qu'on ne l'a pas arrete. */
+      enregistreur.start(1000);
+      if (surApercu) minuterie = setInterval(apercu, intervalleApercu);
     },
 
     arreter() {
@@ -210,6 +250,8 @@ export function creerEnregistreur() {
     },
 
     liberer() {
+      if (minuterie) clearInterval(minuterie);
+      minuterie = null;
       if (flux) flux.getTracks().forEach((piste) => piste.stop());
       flux = null;
       enregistreur = null;

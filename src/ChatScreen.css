@@ -256,3 +256,13 @@
   font-size: .88rem;
   line-height: 1.5;
 }
+
+/* Bulle de dictee en cours. Le trait pointille dit que le texte n'est pas
+   definitif : sans ce signe, le visiteur croirait sa question deja posee. */
+.apercu-dictee { display: inline-block; }
+.apercu-dictee.attente { opacity: .65; font-style: italic; }
+.message.visitor:has(.apercu-dictee) .message-bubble,
+.message.visitor:has(.apercu-dictee) .bubble {
+  border: 1px dashed rgba(255, 255, 255, .45);
+  background-image: none;
+}
