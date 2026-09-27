@@ -98,3 +98,69 @@
   border-color: rgba(122, 175, 201, .7);
 }
 .home-parler-icone { display: grid; place-items: center; }
+
+/* --- Conversation parlee sur la borne -------------------------------------
+   Tout se passe autour de la sphere : pas de fenetre, pas de fil de texte.
+   Appuyer sur « Parler a Isaac » veut dire qu'on veut entendre une voix. */
+.home-vocal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  animation: vocal-entree .3s var(--ease, cubic-bezier(.22,.61,.36,1));
+}
+@keyframes vocal-entree { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.home-vocal-etat {
+  margin: 0;
+  font-size: 1.02rem;
+  color: var(--pale, #C8DCF0);
+  letter-spacing: .01em;
+}
+
+/* Ce qui a ete entendu, sous les yeux du visiteur : il doit constater que la
+   borne l'a compris avant meme d'entendre la reponse. */
+.home-vocal-entendu {
+  margin: 0;
+  padding: 11px 18px;
+  max-width: min(46ch, 100%);
+  border-radius: 14px;
+  background: rgba(46, 122, 181, .16);
+  border: 1px solid rgba(122, 175, 201, .25);
+  font-size: .92rem;
+  line-height: 1.55;
+}
+
+.home-vocal-erreur {
+  margin: 0;
+  padding: 10px 16px;
+  border-left: 3px solid var(--warn, #E8B44A);
+  background: rgba(232, 180, 74, .1);
+  font-size: .86rem;
+  text-align: left;
+  max-width: 44ch;
+}
+
+.home-parler.arreter {
+  background: rgba(192, 68, 60, .16);
+  border-color: rgba(192, 68, 60, .5);
+  color: #F0C9C6;
+}
+.home-parler.arreter:hover { background: rgba(192, 68, 60, .26); border-color: rgba(192, 68, 60, .8); }
+
+/* Pendant la conversation, la sphere n'est plus un bouton : on l'ecoute. */
+.home-orb-zone.en-conversation .home-orb-button { cursor: default; }
+
+/* La reponse d'Isaac, en plus de sa voix : on l'entend, et on peut la relire. */
+.home-vocal-reponse {
+  margin: 0;
+  padding: 12px 18px;
+  max-width: min(50ch, 100%);
+  border-radius: 14px;
+  background: rgba(200, 220, 240, .06);
+  border: 1px solid rgba(122, 175, 201, .2);
+  font-size: .92rem;
+  line-height: 1.6;
+  text-align: left;
+}

@@ -132,14 +132,9 @@ function App() {
 
   if (screen === "welcome") return <WelcomeScreen onStart={() => setScreen("home")} />;
   if (screen === "rdv") return <RendezVousScreen onMenu={() => setScreen("home")} />;
-  /* Le mode vocal est le meme ecran de conversation, ouvert d'emblee sur le
-     panneau parle. Passer par le meme composant garde un seul fil de
-     discussion : ce qui est dit a voix haute s'ecrit dans la meme
-     conversation, et le visiteur peut continuer au clavier s'il le souhaite. */
-  if (screen === "chat" || screen === "chat-vocal")
+  if (screen === "chat")
     return (
       <ChatScreen
-        vocalDemarre={screen === "chat-vocal"}
         messages={messages}
         phase={phase}
         typingText={typingText}
@@ -151,7 +146,7 @@ function App() {
         onMenu={() => setScreen("home")}
       />
     );
-  return <HomeScreen onAppointment={() => setScreen("rdv")} onAssistant={() => setScreen("chat")} onParler={() => setScreen("chat-vocal")} onWelcome={() => setScreen("welcome")} />;
+  return <HomeScreen onAppointment={() => setScreen("rdv")} onAssistant={() => setScreen("chat")} onWelcome={() => setScreen("welcome")} />;
 }
 
 export default App;

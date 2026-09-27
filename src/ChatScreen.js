@@ -98,7 +98,7 @@ function SequenceAttente({ phase, t }) {
 
 const SUGGESTIONS = ["chat.suggest.hours", "chat.suggest.datacenter", "chat.suggest.visit", "chat.suggest.about"];
 
-export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, onKeepWaiting, onEscalate, onSend, onMenu, vocalDemarre = false }) {
+export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, onKeepWaiting, onEscalate, onSend, onMenu }) {
   const [input, setInput] = useState("");
   const { t } = useLanguage();
   const scrollRef = useRef(null);
@@ -110,7 +110,10 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
   const [ecoute, setEcoute] = useState(false);
   const [transcription, setTranscription] = useState(false);
   const [erreurVoix, setErreurVoix] = useState("");
-  const [modeVocal, setModeVocal] = useState(vocalDemarre);
+  /* Ici, et seulement ici, la conversation parlee s'ouvre dans une fenetre :
+     on est deja dans un fil de discussion, l'y superposer a du sens. Sur la
+     borne d'accueil, au contraire, tout se passe autour de la sphere. */
+  const [modeVocal, setModeVocal] = useState(false);
   const enregistreurRef = useRef(null);
 
   function submit(event) {

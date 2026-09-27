@@ -3,6 +3,7 @@ import "./HomeScreen.css";
 import { useLanguage } from "./i18n";
 import Orb from "./Orb";
 import { audioDisponible } from "./services/audioService";
+import useConversationParlee from "./useConversationParlee";
 
 function ChevronDownIcon() {
   return (
@@ -96,8 +97,12 @@ function MicroIcon() {
   );
 }
 
-function HomeScreen({ onAppointment, onAssistant, onParler, onWelcome }) {
+function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
   const { t, language } = useLanguage();
+  /* La conversation parlee se tient ICI, sur la borne, autour de la sphere.
+     Elle n'ouvre pas de fenetre et ne mene pas au fil de discussion : appuyer
+     sur « Parler a Isaac » veut dire qu'on veut entendre une voix, pas lire. */
+  const vocal = useConversationParlee({ salutation: t("voix.salutation"), langue: language });
   const heure = useLocalTime(language);
 
   function openBackOffice() {
@@ -139,15 +144,36 @@ function HomeScreen({ onAppointment, onAssistant, onParler, onWelcome }) {
             ecrite. Sous elle, le bouton qui ouvre la conversation parlee : c'est
             sur la borne qu'un visiteur decide de parler plutot que de taper, pas
             une fois entre dans l'ecran de discussion. */}
-        <div className="home-orb-zone">
-          <button className="home-orb-button" onClick={onAssistant} aria-label={t("home.orbAria")}>
-            <Orb state="repos" size={190} />
+        <div className={`home-orb-zone ${vocal.actif ? "en-conversation" : ""}`}>
+          <button
+            className="home-orb-button"
+            onClick={vocal.actif ? undefined : onAssistant}
+            aria-label={vocal.actif ? t(`voix.etat.${vocal.etat}`) : t("home.orbAria")}
+            disabled={vocal.actif}
+          >
+            {/* La sphere porte l'etat reel de la conversation : elle ecoute,
+                elle reflechit, elle parle. C'est la que M2 rend enfin vrais les
+                etats que le composant reservait depuis M1. */}
+            <Orb state={vocal.etatOrbe} size={190} />
           </button>
-          {audioDisponible && (
-            <button className="home-parler" onClick={onParler}>
-              <span className="home-parler-icone" aria-hidden="true"><MicroIcon /></span>
-              {t("voix.ouvrir")}
-            </button>
+
+          {vocal.actif ? (
+            <div className="home-vocal">
+              <p className="home-vocal-etat" aria-live="polite">{t(`voix.etat.${vocal.etat}`)}</p>
+              {/* Le dernier echange reste lisible : le visiteur verifie qu'il a
+                  ete compris, et peut relire la reponse pendant qu'Isaac se tait. */}
+              {vocal.entendu && <p className="home-vocal-entendu">{vocal.entendu}</p>}
+              {vocal.reponse && <p className="home-vocal-reponse">{vocal.reponse}</p>}
+              {vocal.erreur && <p className="home-vocal-erreur" role="alert">{vocal.erreur}</p>}
+              <button className="home-parler arreter" onClick={vocal.arreter}>{t("voix.terminer")}</button>
+            </div>
+          ) : (
+            audioDisponible && (
+              <button className="home-parler" onClick={vocal.demarrer}>
+                <span className="home-parler-icone" aria-hidden="true"><MicroIcon /></span>
+                {t("voix.ouvrir")}
+              </button>
+            )
           )}
         </div>
 

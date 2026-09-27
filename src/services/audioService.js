@@ -249,6 +249,13 @@ export function creerEnregistreur({ surApercu, intervalleApercu = 2500 } = {}) {
       });
     },
 
+    /* Le flux brut, pour brancher une mesure de niveau sonore dessus : la
+       conversation parlee doit savoir quand le visiteur a fini, et personne
+       n'annonce la fin de sa phrase dans une conversation. */
+    flux() {
+      return flux;
+    },
+
     liberer() {
       if (minuterie) clearInterval(minuterie);
       minuterie = null;
