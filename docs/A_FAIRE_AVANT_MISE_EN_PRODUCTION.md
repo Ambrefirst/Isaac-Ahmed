@@ -136,7 +136,20 @@ L'événement `visits_autoclose` modifie le registre sans authentification d'adm
 
 Whisper et Piper tournent sur la tour, conteneurs `isaac-whisper` et `isaac-piper`. Rien ne sort de l'infrastructure. Mesuré sur dix enregistrements réels : **12,8 % de taux d'erreur mot**, transcription en 1,8 s pour 4,5 s de parole, synthèse en 0,19 s.
 
-**Rien n'est encore raccordé** : ni route nginx, ni workflow n8n, ni interface dans la borne. Les services existent et fonctionnent, la chaîne n'est pas branchée.
+**Raccordée le 27/09/2026.** Deux routes nginx, `/audio/transcription` et `/audio/synthese`, relayées **sur le réseau privé uniquement** : la surface publique répond 404. Une transcription coûte plusieurs secondes de processeur sur une machine qui n'en a que quatre cœurs ; l'exposer sans authentification en ferait un service de calcul gratuit pour n'importe qui.
+
+Dans la borne : un bouton micro et un bouton haut-parleur, volontairement **indépendants** — dicter sa question n'oblige pas à subir la réponse à voix haute.
+
+Les quatre points ci-dessous ont tous été tenus au raccordement, et sont couverts par des essais :
+
+- la conversion en **WAV 16 kHz mono se fait dans le navigateur**, avant l'envoi. Elle rend le format indépendant de ce que `MediaRecorder` décide de produire selon le navigateur, et garantit à Whisper le seul format dont on ait vérifié qu'il passe ;
+- un **texte vide lève une erreur** et affiche « Je n'ai rien entendu », au lieu d'être pris pour un silence ;
+- l'**amorce est passée en paramètre d'URL** ;
+- un **dictionnaire de correction** rattrape « une coque » en « Nkok », en traitant l'élision : sans cela « datacenter d'une coque » devenait « datacenter d'Nkok », pire que l'erreur d'origine.
+
+Le texte reconnu est **déposé dans le champ de saisie, pas envoyé directement** : avec un taux d'erreur mot de l'ordre de 12 %, envoyer sans montrer ferait poser à Isaac une question que le visiteur n'a pas posée.
+
+**Reste à faire sur ce point.** Mesurer en environnement bruyant, et éprouver la chaîne sur la borne réelle avec son micro, et non au navigateur avec un micro simulé.
 
 Quatre points doivent être tenus au moment du raccordement, chacun venant d'un défaut déjà constaté :
 

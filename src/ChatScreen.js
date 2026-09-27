@@ -2,6 +2,32 @@ import React, { useEffect, useRef, useState } from "react";
 import "./ChatScreen.css";
 import { useLanguage } from "./i18n";
 import Orb from "./Orb";
+import { audioDisponible, creerEnregistreur, synthetiser, transcrire } from "./services/audioService";
+
+function MicroIcon({ actif }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill={actif ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="2.5" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0" fill="none" />
+      <path d="M12 17.5V21" fill="none" />
+    </svg>
+  );
+}
+function SablierIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 3h10M7 21h10M8 3c0 4 8 5 8 9s-8 5-8 9" />
+    </svg>
+  );
+}
+function HautParleurIcon({ actif }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+      {actif ? <path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" /> : <path d="m16.5 9.5 4 5M20.5 9.5l-4 5" />}
+    </svg>
+  );
+}
 
 function BackIcon() {
   return (
@@ -76,12 +102,88 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
   const { t } = useLanguage();
   const scrollRef = useRef(null);
 
+  /* --- voix ---------------------------------------------------------------
+     Deux fonctions distinctes, et volontairement independantes : le visiteur
+     peut vouloir parler sans qu'Isaac lui reponde a voix haute, ou l'inverse.
+     Les lier aurait impose une borne sonore a qui ne veut que dicter. */
+  const [ecoute, setEcoute] = useState(false);
+  const [transcription, setTranscription] = useState(false);
+  const [erreurVoix, setErreurVoix] = useState("");
+  const [lectureActive, setLectureActive] = useState(false);
+  const enregistreurRef = useRef(null);
+  const lecteurRef = useRef(null);
+  const dernierLuRef = useRef(-1);
+
   function submit(event) {
     event.preventDefault();
     if (busy) return;
     onSend(input);
     setInput("");
   }
+
+  async function basculerMicro() {
+    setErreurVoix("");
+    if (ecoute) {
+      setEcoute(false);
+      setTranscription(true);
+      try {
+        const blob = await enregistreurRef.current.arreter();
+        const texte = await transcrire(blob);
+        /* Le texte est depose dans le champ, pas envoye directement. La mesure
+           du 27/09 donne un taux d'erreur mot de l'ordre de 12 %, ce qui rend
+           une relecture necessaire : envoyer sans montrer ferait poser a Isaac
+           une question que le visiteur n'a pas posee. */
+        setInput(texte);
+      } catch (e) {
+        setErreurVoix(e.message);
+      } finally {
+        setTranscription(false);
+      }
+      return;
+    }
+    try {
+      enregistreurRef.current = creerEnregistreur();
+      await enregistreurRef.current.demarrer();
+      setEcoute(true);
+    } catch (e) {
+      setErreurVoix(t("chat.voice.micRefuse"));
+    }
+  }
+
+  /* Le micro doit etre rendu si le visiteur quitte l'ecran en cours
+     d'enregistrement : une piste laissee ouverte garde la diode allumee, ce
+     qui est inacceptable sur une borne d'accueil. */
+  useEffect(() => () => {
+    if (enregistreurRef.current) enregistreurRef.current.liberer();
+    if (lecteurRef.current) lecteurRef.current.pause();
+  }, []);
+
+  /* Lecture a voix haute de la derniere reponse d'Isaac, quand elle est
+     demandee. On repere le message par son rang : sans cela, deux reponses
+     identiques a la suite ne seraient lues qu'une fois. */
+  useEffect(() => {
+    if (!lectureActive || busy) return;
+    const dernier = messages.length - 1;
+    if (dernier < 0 || dernier === dernierLuRef.current) return;
+    const message = messages[dernier];
+    if (!message || message.sender === "visitor" || !message.text) return;
+    dernierLuRef.current = dernier;
+    let annule = false;
+    synthetiser(message.text)
+      .then((url) => {
+        if (annule || !url) return;
+        if (lecteurRef.current) lecteurRef.current.pause();
+        const audio = new Audio(url);
+        lecteurRef.current = audio;
+        audio.onended = () => URL.revokeObjectURL(url);
+        audio.play().catch(() => URL.revokeObjectURL(url));
+      })
+      .catch(() => {
+        /* Une synthese indisponible ne doit pas interrompre la conversation :
+           la reponse reste lisible a l'ecran. */
+      });
+    return () => { annule = true; };
+  }, [messages, lectureActive, busy]);
 
   const displayMessages = [{ sender: "isaac", text: t("chat.greeting") }, ...messages];
   // Les suggestions n'ont de sens qu'au tout debut : apres, le visiteur sait quoi demander.
@@ -124,6 +226,24 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
             <h1>{t("chat.title")}</h1>
             <p>{t("chat.subtitle")}</p>
           </div>
+          {audioDisponible && (
+            <button
+              type="button"
+              className={`chat-lecture ${lectureActive ? "active" : ""}`}
+              onClick={() => {
+                if (lectureActive && lecteurRef.current) lecteurRef.current.pause();
+                /* On repart du dernier message : reactiver la lecture ne doit
+                   pas faire relire tout l'historique. */
+                dernierLuRef.current = messages.length - 1;
+                setLectureActive(!lectureActive);
+              }}
+              aria-pressed={lectureActive}
+              aria-label={t(lectureActive ? "chat.voice.muteOff" : "chat.voice.muteOn")}
+              title={t(lectureActive ? "chat.voice.muteOff" : "chat.voice.muteOn")}
+            >
+              <HautParleurIcon actif={lectureActive} />
+            </button>
+          )}
           {/* La sphere suit la conversation : au repos, puis en reflexion pendant le traitement. */}
           <Orb className="chat-orb" state={phase ? "pense" : "repos"} size={54} />
         </header>
@@ -154,16 +274,31 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
           </div>
         )}
 
+        {erreurVoix && <p className="chat-voix-erreur" role="alert">{erreurVoix}</p>}
+
         <form className="chat-input" onSubmit={submit}>
+          {audioDisponible && (
+            <button
+              type="button"
+              className={`chat-micro ${ecoute ? "ecoute" : ""}`}
+              onClick={basculerMicro}
+              disabled={busy || transcription}
+              aria-pressed={ecoute}
+              aria-label={t(ecoute ? "chat.voice.stop" : "chat.voice.start")}
+              title={t(ecoute ? "chat.voice.stop" : "chat.voice.start")}
+            >
+              {transcription ? <SablierIcon /> : <MicroIcon actif={ecoute} />}
+            </button>
+          )}
           <input
             required
-            disabled={busy}
+            disabled={busy || ecoute || transcription}
             value={input}
             onChange={(event) => setInput(event.target.value)}
             aria-label={t("chat.ariaLabel")}
-            placeholder={t("chat.placeholder")}
+            placeholder={t(ecoute ? "chat.voice.listening" : transcription ? "chat.voice.working" : "chat.placeholder")}
           />
-          <button disabled={busy} aria-label={t("chat.send")}><SendIcon /></button>
+          <button disabled={busy || ecoute || transcription} aria-label={t("chat.send")}><SendIcon /></button>
         </form>
       </section>
     </main>

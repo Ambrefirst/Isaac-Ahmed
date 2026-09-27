@@ -200,3 +200,59 @@
 }
 .chat-suggestion:hover { border-color: rgba(122, 175, 201, 0.55); background: rgba(122, 175, 201, 0.14); transform: translateY(-2px); }
 .chat-suggestion:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+
+/* --- Voix -----------------------------------------------------------------
+   Le micro et le haut-parleur sont deux commandes independantes : dicter sa
+   question n'oblige pas a subir la reponse a voix haute, et inversement. */
+.chat-micro {
+  flex: 0 0 auto;
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border, rgba(122, 175, 201, .3));
+  background: transparent;
+  color: var(--text-muted, #93AFC4);
+  cursor: pointer;
+  transition: color .22s var(--ease), border-color .22s var(--ease), background .22s var(--ease);
+}
+.chat-micro:hover:not(:disabled) { color: var(--light-blue, #7AAFC9); border-color: var(--light-blue, #7AAFC9); }
+.chat-micro:disabled { opacity: .45; cursor: default; }
+
+/* L'etat d'ecoute doit se voir de loin, sur une borne ou personne ne lit les
+   infobulles : le halo pulse tant que le micro est ouvert. */
+.chat-micro.ecoute {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(140deg, var(--blue, #2E7AB5), var(--navy, #1A4D7A));
+  animation: micro-pulse 1.6s ease-in-out infinite;
+}
+@keyframes micro-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 122, 181, .55); }
+  50%      { box-shadow: 0 0 0 10px rgba(46, 122, 181, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-micro.ecoute { animation: none; box-shadow: 0 0 0 4px rgba(46, 122, 181, .45); }
+}
+
+.chat-lecture {
+  margin-left: auto;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border, rgba(122, 175, 201, .3));
+  background: transparent;
+  color: var(--text-muted, #93AFC4);
+  cursor: pointer;
+  transition: color .22s var(--ease), border-color .22s var(--ease);
+}
+.chat-lecture:hover { color: var(--light-blue, #7AAFC9); border-color: var(--light-blue, #7AAFC9); }
+.chat-lecture.active { color: var(--light-blue, #7AAFC9); border-color: var(--light-blue, #7AAFC9); }
+
+.chat-voix-erreur {
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--warn, #E8B44A);
+  background: rgba(232, 180, 74, .1);
+  font-size: .88rem;
+  line-height: 1.5;
+}
