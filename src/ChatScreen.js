@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import "./ChatScreen.css";
 import { useLanguage } from "./i18n";
 import Orb from "./Orb";
-import { audioDisponible, creerEnregistreur, synthetiser, transcrire } from "./services/audioService";
+import { audioDisponible, creerEnregistreur, transcrire } from "./services/audioService";
+import ConversationVocale from "./ConversationVocale";
 
 function MicroIcon({ actif }) {
   return (
@@ -109,14 +110,8 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
   const [ecoute, setEcoute] = useState(false);
   const [transcription, setTranscription] = useState(false);
   const [erreurVoix, setErreurVoix] = useState("");
-  const [apercu, setApercu] = useState("");
-  /* Sur une borne, Isaac parle par defaut : un visiteur qui vient de dicter sa
-     question attend une reponse a voix haute, et personne ne va chercher un
-     bouton pour l'activer. Il reste coupable d'un geste. */
-  const [lectureActive, setLectureActive] = useState(audioDisponible);
+  const [modeVocal, setModeVocal] = useState(false);
   const enregistreurRef = useRef(null);
-  const lecteurRef = useRef(null);
-  const dernierLuRef = useRef(-1);
 
   function submit(event) {
     event.preventDefault();
@@ -133,20 +128,13 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
       try {
         const blob = await enregistreurRef.current.arreter();
         const texte = await transcrire(blob);
-        setApercu("");
-        /* Le visiteur a appuye pour dire qu'il avait fini : sa question part.
-           Lui demander un second geste sur la fleche apres avoir parle casse le
-           mouvement, et sur une borne d'accueil personne ne relit son texte
-           avant de l'envoyer. Le texte reste visible dans la conversation, et
-           il peut toujours reformuler si la reconnaissance s'est trompee. */
-        if (texte && !busy) {
-          onSend(texte);
-          setInput("");
-        } else {
-          setInput(texte);
-        }
+        /* La dictee remplit le champ de saisie, et rien de plus. C'est tout ce
+           qu'on lui demande : ecrire a la place du clavier. L'envoi reste un
+           geste du visiteur, sur la fleche, comme pour un texte tape.
+           Une version precedente envoyait toute seule : combinee a la lecture
+           a voix haute, elle faisait boucler la borne sur sa propre reponse. */
+        setInput(texte);
       } catch (e) {
-        setApercu("");
         setErreurVoix(e.message);
       } finally {
         setTranscription(false);
@@ -154,8 +142,10 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
       return;
     }
     try {
-      setApercu("");
-      enregistreurRef.current = creerEnregistreur({ surApercu: setApercu });
+      /* L'apercu s'ecrit dans le champ, la ou le visiteur ecrirait a la main :
+         il voit sa phrase se former a l'endroit ou il l'attend, et peut la
+         corriger avant d'envoyer. */
+      enregistreurRef.current = creerEnregistreur({ surApercu: setInput });
       await enregistreurRef.current.demarrer();
       setEcoute(true);
     } catch (e) {
@@ -168,35 +158,8 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
      qui est inacceptable sur une borne d'accueil. */
   useEffect(() => () => {
     if (enregistreurRef.current) enregistreurRef.current.liberer();
-    if (lecteurRef.current) lecteurRef.current.pause();
   }, []);
 
-  /* Lecture a voix haute de la derniere reponse d'Isaac, quand elle est
-     demandee. On repere le message par son rang : sans cela, deux reponses
-     identiques a la suite ne seraient lues qu'une fois. */
-  useEffect(() => {
-    if (!lectureActive || busy) return;
-    const dernier = messages.length - 1;
-    if (dernier < 0 || dernier === dernierLuRef.current) return;
-    const message = messages[dernier];
-    if (!message || message.sender === "visitor" || !message.text) return;
-    dernierLuRef.current = dernier;
-    let annule = false;
-    synthetiser(message.text)
-      .then((url) => {
-        if (annule || !url) return;
-        if (lecteurRef.current) lecteurRef.current.pause();
-        const audio = new Audio(url);
-        lecteurRef.current = audio;
-        audio.onended = () => URL.revokeObjectURL(url);
-        audio.play().catch(() => URL.revokeObjectURL(url));
-      })
-      .catch(() => {
-        /* Une synthese indisponible ne doit pas interrompre la conversation :
-           la reponse reste lisible a l'ecran. */
-      });
-    return () => { annule = true; };
-  }, [messages, lectureActive, busy]);
 
   const displayMessages = [{ sender: "isaac", text: t("chat.greeting") }, ...messages];
   // Les suggestions n'ont de sens qu'au tout debut : apres, le visiteur sait quoi demander.
@@ -205,7 +168,7 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
   useEffect(() => {
     const node = scrollRef.current;
     if (node) node.scrollTop = node.scrollHeight;
-  }, [displayMessages.length, phase, typingText, apercu, ecoute]);
+  }, [displayMessages.length, phase, typingText]);
 
   function renderMessage(message, key) {
     const isIsaac = message.sender !== "visitor";
@@ -239,24 +202,23 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
             <h1>{t("chat.title")}</h1>
             <p>{t("chat.subtitle")}</p>
           </div>
+          {/* Un bouton, une intention : ouvrir une conversation parlee. La
+              bascule de lecture a voix haute a ete retiree d'ici, parce qu'elle
+              n'avait de sens qu'associee a la dictee, et que cette association
+              faisait boucler la borne sur sa propre voix. Isaac parle dans le
+              mode vocal, ou le micro se ferme pendant qu'il parle. */}
           {audioDisponible && (
             <button
               type="button"
-              className={`chat-lecture ${lectureActive ? "active" : ""}`}
-              onClick={() => {
-                if (lectureActive && lecteurRef.current) lecteurRef.current.pause();
-                /* On repart du dernier message : reactiver la lecture ne doit
-                   pas faire relire tout l'historique. */
-                dernierLuRef.current = messages.length - 1;
-                setLectureActive(!lectureActive);
-              }}
-              aria-pressed={lectureActive}
-              aria-label={t(lectureActive ? "chat.voice.muteOff" : "chat.voice.muteOn")}
-              title={t(lectureActive ? "chat.voice.muteOff" : "chat.voice.muteOn")}
+              className="chat-lecture"
+              onClick={() => setModeVocal(true)}
+              title={t("voix.ouvrir")}
             >
-              <HautParleurIcon actif={lectureActive} />
+              <HautParleurIcon actif />
+              <span>{t("voix.ouvrir")}</span>
             </button>
           )}
+
           {/* La sphere suit la conversation : au repos, puis en reflexion pendant le traitement. */}
           <Orb className="chat-orb" state={phase ? "pense" : "repos"} size={54} />
         </header>
@@ -264,15 +226,6 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
         <section className="chat-messages" aria-live="polite" ref={scrollRef}>
           {displayMessages.map((message, index) => renderMessage(message, `${message.sender}-${index}`))}
           {typingText !== null && renderMessage({ sender: "isaac", text: <>{typingText}<span className="typing-caret" aria-hidden="true" /></> }, "typing")}
-          {/* Bulle provisoire pendant que le visiteur parle : elle se remplit au
-              fil de la dictee, pour qu'il voie qu'il est entendu sans attendre
-              la fin. Le texte n'est pas definitif, d'ou le trait pointille. */}
-          {(ecoute || transcription) && renderMessage({
-            sender: "visitor",
-            text: apercu
-              ? <span className="apercu-dictee">{apercu}<span className="typing-caret" aria-hidden="true" /></span>
-              : <span className="apercu-dictee attente">{t(transcription ? "chat.voice.working" : "chat.voice.listening")}</span>,
-          }, "apercu")}
           {phase && <SequenceAttente phase={phase} t={t} />}
         </section>
 
@@ -314,15 +267,27 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
           )}
           <input
             required
-            disabled={busy || ecoute || transcription}
+            disabled={busy}
             value={input}
             onChange={(event) => setInput(event.target.value)}
             aria-label={t("chat.ariaLabel")}
             placeholder={t(ecoute ? "chat.voice.listening" : transcription ? "chat.voice.working" : "chat.placeholder")}
           />
-          <button disabled={busy || ecoute || transcription} aria-label={t("chat.send")}><SendIcon /></button>
+          <button disabled={busy || ecoute} aria-label={t("chat.send")}><SendIcon /></button>
         </form>
       </section>
+
+      {modeVocal && (
+        <ConversationVocale
+          onEnvoyer={(texte) => onSend(texte)}
+          onFermer={() => setModeVocal(false)}
+          derniereReponse={
+            messages.length && messages[messages.length - 1].sender !== "visitor"
+              ? messages[messages.length - 1].text
+              : null
+          }
+        />
+      )}
     </main>
   );
 }

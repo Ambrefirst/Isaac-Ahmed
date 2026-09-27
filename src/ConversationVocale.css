@@ -1,0 +1,118 @@
+/* Conversation parlee : un voile plein ecran, parce qu'on ne fait plus qu'une
+   chose a la fois. Le visiteur parle, il ne lit pas. */
+
+.voix-voile {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(4, 18, 27, .88);
+  backdrop-filter: blur(14px);
+  animation: voix-entree .3s var(--ease, cubic-bezier(.22,.61,.36,1));
+}
+@keyframes voix-entree { from { opacity: 0; } to { opacity: 1; } }
+
+.voix-panneau {
+  position: relative;
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 40px 32px 34px;
+  border-radius: 24px;
+  border: 1px solid rgba(122, 175, 201, .22);
+  background: linear-gradient(135deg, rgba(200, 220, 240, .07), rgba(200, 220, 240, .02));
+  text-align: center;
+}
+
+.voix-fermer {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(122, 175, 201, .25);
+  background: transparent;
+  color: var(--text-muted, #93AFC4);
+  cursor: pointer;
+}
+.voix-fermer:hover { color: var(--pale, #C8DCF0); border-color: rgba(122, 175, 201, .5); }
+
+/* La taille est posee par la propriete size du composant, en style en ligne. */
+
+.voix-etat {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--pale, #C8DCF0);
+  letter-spacing: .01em;
+}
+
+/* Ce qui a ete entendu. Affiche en clair : le visiteur doit pouvoir constater
+   que la borne l'a compris, avant meme d'entendre la reponse. */
+.voix-transcrit {
+  margin: 0;
+  padding: 12px 18px;
+  max-width: 100%;
+  border-radius: 14px;
+  background: rgba(46, 122, 181, .16);
+  border: 1px solid rgba(122, 175, 201, .25);
+  font-size: .95rem;
+  line-height: 1.55;
+}
+
+.voix-erreur {
+  margin: 0;
+  padding: 10px 16px;
+  border-left: 3px solid var(--warn, #E8B44A);
+  background: rgba(232, 180, 74, .1);
+  font-size: .88rem;
+  text-align: left;
+}
+
+.voix-bouton {
+  margin-top: 6px;
+  min-width: 230px;
+  padding: 15px 30px;
+  border: 0;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(140deg, var(--blue, #2E7AB5), var(--navy, #1A4D7A));
+  box-shadow: 0 8px 24px rgba(46, 122, 181, .34);
+  transition: transform .2s var(--ease), filter .2s var(--ease);
+}
+.voix-bouton:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.08); }
+
+/* Le bouton ferme pendant qu'Isaac parle n'est pas une gene : c'est ce qui
+   empeche le micro d'entendre la reponse et de la renvoyer en boucle. */
+.voix-bouton:disabled { opacity: .4; cursor: default; box-shadow: none; }
+
+.voix-bouton.ecoute {
+  background: linear-gradient(140deg, #C0443C, #8E2F29);
+  box-shadow: 0 8px 24px rgba(192, 68, 60, .34);
+  animation: voix-pulse 1.6s ease-in-out infinite;
+}
+@keyframes voix-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(192, 68, 60, .5); }
+  50%      { box-shadow: 0 0 0 14px rgba(192, 68, 60, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .voix-bouton.ecoute { animation: none; } }
+
+.voix-aide {
+  margin: 0;
+  font-size: .82rem;
+  line-height: 1.5;
+  color: var(--text-muted, #93AFC4);
+  max-width: 42ch;
+}
+
+@media (max-width: 560px) {
+  .voix-panneau { padding: 34px 20px 26px; gap: 14px; }
+  .voix-orbe { transform: scale(.75); }
+}

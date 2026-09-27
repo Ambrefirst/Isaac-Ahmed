@@ -234,7 +234,7 @@
   .chat-micro.ecoute { animation: none; box-shadow: 0 0 0 4px rgba(46, 122, 181, .45); }
 }
 
-.chat-lecture {
+.screen-header .chat-lecture {
   margin-left: auto;
   width: 40px; height: 40px;
   display: grid; place-items: center;
@@ -265,4 +265,40 @@
 .message.visitor:has(.apercu-dictee) .bubble {
   border: 1px dashed rgba(255, 255, 255, .45);
   background-image: none;
+}
+
+/* --- Bascule de la voix d'Isaac -------------------------------------------
+   Elle etait ronde, muette et coincee entre le titre et la sphere : personne
+   ne pouvait deviner ce qu'elle faisait. Elle devient une pastille portant un
+   mot, et l'etat se lit sans avoir a interpreter un dessin. */
+.screen-header .chat-lecture {
+  margin-left: auto;
+  width: auto; height: auto;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px 9px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border, rgba(122, 175, 201, .28));
+  background: rgba(200, 220, 240, .05);
+  color: var(--text-muted, #93AFC4);
+  font-family: inherit;
+  font-size: .78rem;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .22s var(--ease), border-color .22s var(--ease), background .22s var(--ease);
+}
+.screen-header .chat-lecture svg { flex: 0 0 auto; }
+.screen-header .chat-lecture:hover { color: var(--pale, #C8DCF0); border-color: rgba(122, 175, 201, .5); }
+
+/* Voix active : c'est l'etat normal d'une borne, il se montre sans crier. */
+.screen-header .chat-lecture.active {
+  color: var(--pale, #C8DCF0);
+  border-color: rgba(122, 175, 201, .55);
+  background: rgba(46, 122, 181, .16);
+}
+
+/* Sur un ecran etroit, le mot cede la place plutot que de pousser le titre. */
+@media (max-width: 620px) {
+  .screen-header .chat-lecture { padding: 10px; gap: 0; }
+  .screen-header .chat-lecture span { display: none; }
 }
