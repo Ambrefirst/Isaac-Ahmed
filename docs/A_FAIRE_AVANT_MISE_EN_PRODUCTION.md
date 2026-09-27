@@ -29,7 +29,17 @@ Le nœud Code du workflow `Isaac - Rendez-vous` contient par ailleurs une consta
 
 ## 3. Passer à de vrais comptes utilisateurs
 
-Un mot de passe partagé par pays ne permet ni de savoir qui a confirmé un rendez-vous, ni de retirer l'accès à une personne qui quitte l'équipe. La section « Utilisateurs » du back-office le signale déjà honnêtement. À remplacer par des comptes nominatifs avant exploitation, avec limitation des tentatives de connexion.
+Un mot de passe partagé par pays ne permet ni de savoir qui a confirmé un rendez-vous, ni de retirer l'accès à une personne qui quitte l'équipe. À remplacer par des comptes nominatifs avant exploitation, avec limitation des tentatives de connexion.
+
+**Atténué le 27/09/2026 par un journal d'activité.** Le back-office ne gardait aucune trace de ce qu'on y faisait : ni les confirmations, ni les refus, ni les clôtures manuelles, ni les changements de mot de passe. Seuls les courriels partis laissaient une trace, indirecte et incomplète — un changement de mot de passe n'en envoie aucun.
+
+Le routeur journalise désormais, dans la clé `audit` de `app_data` et par ajout atomique : connexion, connexion refusée avec l'identifiant saisi, changement de statut d'un rendez-vous avec son motif, clôture manuelle d'une visite, clôture de nuit, ajout et retrait d'un membre d'équipe, changement de mot de passe. Le mot de passe lui-même n'y figure évidemment pas, seulement le fait qu'il a changé et sa longueur. L'événement `admin_list_audit` restitue les 500 dernières entrées du site, plus celles des tâches automatiques, qui n'ont pas de site et concernent tout le monde.
+
+**Ce que le journal ne peut pas dire tant que les comptes sont partagés.** Il indique le **site** d'où l'action a été prononcée, pas la personne. C'est écrit en clair dans la section. Le jour où les comptes seront nominatifs, il suffira d'enrichir la même entrée — la structure est prévue pour.
+
+La connexion n'est journalisée que lorsque la borne de connexion pose le drapeau `journaliserConnexion` : l'événement `admin_list_appointments` sert aussi à chaque actualisation, et le journal se remplirait d'entrées sans intérêt.
+
+> **Deux sections retirées le 27/09/2026.** « Data Centers » n'affichait que du texte figé recopié du site public, déjà présent dans la base de connaissances d'Isaac — deux sources pour le même fait, sans lien entre elles : le jour où une certification change, l'une des deux ment. Sa suppression enlève un doublon, pas une fonction. « Utilisateurs » n'affichait que le compte de la session en cours, c'est-à-dire ce que Paramètres → Session dit déjà ; la carte de compte a rejoint Paramètres → Compte et sécurité, et l'emplacement sert maintenant au journal. **Onze sections.**
 
 ## 4. Adresses e-mail réelles
 

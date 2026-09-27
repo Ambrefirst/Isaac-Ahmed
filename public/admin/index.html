@@ -557,6 +557,11 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
 .btn-clore:hover:not(:disabled){color:var(--warn);border-color:var(--warn)}
 .btn-clore:disabled{opacity:.5;cursor:default}
 
+
+/* Les actions qui meritent d'etre vues en parcourant : un refus, une cloture
+   d'office, un retrait d'equipe, un changement de mot de passe. */
+.journal-alerte{color:var(--warn);font-weight:700}
+
 </style>
 </head>
 <body>
@@ -622,12 +627,11 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
         <button data-section="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/><circle cx="8.5" cy="15.5" r="1"/><circle cx="12" cy="15.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/></svg> <span>Calendrier</span></button>
         <button data-section="visitors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-2-4.3"/></svg> <span>Clients &amp; Visiteurs</span></button>
         <button data-section="visits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></svg> <span>Registre des visites</span></button>
-        <button data-section="datacenters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01M11 7h5M11 17h5"/></svg> <span>Data Centers</span></button>
         <button data-section="conversations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a7 7 0 0 1-7 7H8l-4 3v-5.5A7 7 0 0 1 8 4h5a7 7 0 0 1 7 7Z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg> <span>Conversations</span></button>
         <button data-section="content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5Z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5Z"/></svg> <span>Contenus &amp; FAQ</span></button>
         <button data-section="notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6Z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg> <span>Notifications</span></button>
         <button data-section="team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="3"/><path d="M6 20a6 6 0 0 1 12 0"/><circle cx="4.5" cy="10.5" r="2"/><circle cx="19.5" cy="10.5" r="2"/></svg> <span>Équipe</span></button>
-        <button data-section="users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="m16 11 5 5M19 14l1.5 1.5"/><circle cx="14.5" cy="9.5" r="2"/></svg> <span>Utilisateurs</span></button>
+        <button data-section="journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H16l3 3v14.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20.5Z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h4"/></svg> <span>Journal d'activité</span></button>
         <button data-section="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 7.2l1.9 1.1M17.9 15.7l1.9 1.1M4.2 16.8l1.9-1.1M17.9 8.3l1.9-1.1"/></svg> <span>Paramètres</span></button>
       </nav>
       <div class="side-foot">
@@ -699,11 +703,6 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
         <div class="table-scroll" id="visitsWrap"></div>
       </section>
 
-      <!-- Data centers -->
-      <section id="section-datacenters" class="section" hidden>
-        <div class="content-header"><div><h2>Data Centers</h2><p>Infrastructures ST Digital (source : site officiel st.digital).</p></div></div>
-        <div class="card-grid" id="dcGrid"></div>
-      </section>
 
 
       <!-- Conversations -->
@@ -752,10 +751,14 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
       </section>
 
       <!-- Users -->
-      <section id="section-users" class="section" hidden>
-        <div class="content-header"><div><h2>Utilisateurs</h2><p>Comptes ayant accès à ce back-office.</p></div></div>
-        <div class="note-box">Chaque site dispose d'un compte administrateur partagé — pas encore de comptes individuels nominatifs.</div>
-        <div class="card-grid" id="usersGrid"></div>
+      <section id="section-journal" class="section" hidden>
+        <div class="content-header"><div><h2>Journal d'activité</h2><p>Ce qui a été fait depuis ce back-office, et quand.</p></div><button class="ghost" id="refreshJournal">Actualiser</button></div>
+        <div class="note-box">Les comptes étant partagés par site, le journal indique le site d'où l'action a été prononcée, pas la personne. Il faudra des comptes nominatifs pour aller plus loin.</div>
+        <div class="toolbar">
+          <div class="cat-tabs" id="journalFilters"></div>
+          <input type="search" id="journalSearch" class="champ-recherche" placeholder="Rechercher une action, un visiteur, un membre" aria-label="Rechercher dans le journal" />
+        </div>
+        <div class="table-scroll" id="journalWrap"></div>
       </section>
 
       <!-- Settings -->
@@ -873,7 +876,10 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     loginBtn.disabled = true;
     loginBtn.textContent = "Connexion…";
     try {
-      const data = await callRdv({ event: "admin_list_appointments", adminCountry: country, adminPassword: password });
+      /* Seule la connexion pose ce drapeau : l'evenement sert aussi a chaque
+         actualisation, et le journal se remplirait d'entrees sans interet. */
+      const data = await callRdv({ event: "admin_list_appointments", adminCountry: country, adminPassword: password,
+                                   journaliserConnexion: true, adminEmail: email || "" });
       session = { country, password, email: email || "", since: new Date().toISOString() };
       setStoredSession(session);
       appointmentsCache = data.appointments || [];
@@ -909,9 +915,7 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     renderAppointmentsTable();
     renderCalendar();
     renderVisitors();
-    renderDataCenters();
     renderReports();
-    renderUsers();
     renderSettings();
     loadConversations();
   }
@@ -928,6 +932,7 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
       if (btn.dataset.section === "notifications" && !notificationsLoaded) loadNotifications();
       if (btn.dataset.section === "content" && !kbLoaded) loadKb();
       if (btn.dataset.section === "visits" && !visitsLoaded) loadVisits();
+      if (btn.dataset.section === "journal" && !journalLoaded) loadJournal();
       if (btn.dataset.section === "team") loadStaff();
     });
   });
@@ -1212,16 +1217,6 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
   }
 
   /* ---------- Data centers ---------- */
-  function renderDataCenters() {
-    const grid = document.getElementById("dcGrid");
-    grid.innerHTML = Object.entries(DC_INFO).map(([code, dc]) => `
-      <div class="dc-card ${session.country === code ? "current" : ""}">
-        <h4>${COUNTRY_FLAGS[code]} ${dc.name}</h4>
-        <div class="loc">${dc.city}</div>
-        <ul>${dc.facts.map((f) => `<li>${f}</li>`).join("")}</ul>
-        ${session.country === code ? '<span class="tag">Votre site</span>' : ""}
-      </div>`).join("");
-  }
 
   /* ---------- Reports ---------- */
   function renderReports() {
@@ -1240,23 +1235,6 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     document.getElementById("reportHost").innerHTML = breakdown("host", hostLabel);
   }
 
-  /* ---------- Users ---------- */
-  function renderUsers() {
-    /* Repli si le pays stocke ne correspond a aucun site connu : sans cela,
-       une session ancienne ou un code de pays inattendu fait echouer tout le
-       tableau de bord, et l'utilisateur ne voit qu'un echec de connexion. */
-    const dc = DC_INFO[session.country] || { name: session.country, city: "", facts: [] };
-    document.getElementById("usersGrid").innerHTML = `
-      <div class="dc-card current">
-        <h4>${COUNTRY_FLAGS[session.country] || ""} Administrateur ${dc.name}</h4>
-        <div class="loc">Compte partagé du site</div>
-        <ul>
-          <li>Rôle : Administrateur back-office</li>
-          <li>Portée : demandes du site ${dc.name} uniquement</li>
-          ${session.email ? `<li>Email de connexion : ${session.email}</li>` : ""}
-        </ul>
-      </div>`;
-  }
 
   /* ---------- Settings ---------- */
   var ongletReglages = "apparence";
@@ -1290,7 +1268,14 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
         }).join("") + `</div>`;
     } else if (ongletReglages === "securite") {
       corps = `
-        <h4>Changer le mot de passe</h4>
+        <h4>Compte de ce site</h4>
+        <ul>
+          <li>Rôle : administrateur du back-office</li>
+          <li>Portée : les demandes et visites du site ${dc.name} uniquement</li>
+          <li>Type : compte partagé, pas de compte nominatif</li>
+          ${session.email ? `<li>Identifiant de connexion : ${session.email}</li>` : ""}
+        </ul>
+        <h4 style="margin-top:26px;">Changer le mot de passe</h4>
         <p class="muted-note">Ce mot de passe est partage par tout le personnel du site ${dc.name}.
         Changez-le des qu'une personne quitte l'equipe. Il n'est affiche nulle part, notez-le.</p>
         <form id="pwdForm" autocomplete="off">
@@ -1523,6 +1508,84 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
   }
   document.getElementById("refreshConv").addEventListener("click", loadConversations);
 
+  /* ---------- Journal d'activite (lazy) ---------- */
+  let journalCache = [];
+  let journalLoaded = false;
+  let journalFiltre = "toutes";
+
+  /* Les actions arrivent du serveur sous forme de jetons stables. La traduction
+     vit ici : le journal doit rester lisible sans avoir a deviner ce que
+     rendez_vous_refuse veut dire, et le serveur n'a pas a connaitre le francais
+     de l'interface. */
+  const ACTIONS = {
+    connexion: { libelle: "Connexion", famille: "acces" },
+    connexion_refusee: { libelle: "Connexion refusée", famille: "acces", alerte: true },
+    mot_de_passe_change: { libelle: "Mot de passe changé", famille: "acces", alerte: true },
+    rendez_vous_confirme: { libelle: "Rendez-vous confirmé", famille: "rendezvous" },
+    rendez_vous_refuse: { libelle: "Rendez-vous refusé", famille: "rendezvous", alerte: true },
+    rendez_vous_annule: { libelle: "Rendez-vous annulé", famille: "rendezvous", alerte: true },
+    rendez_vous_en_attente: { libelle: "Remis en attente", famille: "rendezvous" },
+    rendez_vous_en_attente_equipe: { libelle: "Remis en attente équipe", famille: "rendezvous" },
+    visite_close_manuellement: { libelle: "Visite close manuellement", famille: "visites", alerte: true },
+    visites_closes_d_office: { libelle: "Visites closes d'office", famille: "visites", alerte: true },
+    membre_ajoute: { libelle: "Membre ajouté à l'équipe", famille: "equipe" },
+    membre_retire: { libelle: "Membre retiré de l'équipe", famille: "equipe", alerte: true },
+  };
+  function decrit(action) {
+    return ACTIONS[action] || { libelle: action, famille: "autres" };
+  }
+
+  async function loadJournal() {
+    journalLoaded = true;
+    try {
+      const data = await authedCall({ event: "admin_list_audit" });
+      journalCache = data.entries || [];
+      renderJournal();
+    } catch (e) {
+      document.getElementById("journalWrap").innerHTML = `<div class="error">Erreur : ${e.message}</div>`;
+    }
+  }
+
+  function renderJournal() {
+    const familles = [["toutes", "Tout"], ["acces", "Accès"], ["rendezvous", "Rendez-vous"],
+                      ["visites", "Visites"], ["equipe", "Équipe"]];
+    document.getElementById("journalFilters").innerHTML = familles.map((f) =>
+      `<button data-famille="${f[0]}" class="${f[0] === journalFiltre ? "active" : ""}">${f[1]}</button>`).join("");
+    document.querySelectorAll("#journalFilters button").forEach((b) => {
+      b.addEventListener("click", () => { journalFiltre = b.getAttribute("data-famille"); renderJournal(); });
+    });
+
+    const q = (document.getElementById("journalSearch").value || "").trim().toLowerCase();
+    let liste = journalCache;
+    if (journalFiltre !== "toutes") liste = liste.filter((e) => decrit(e.action).famille === journalFiltre);
+    if (q) {
+      liste = liste.filter((e) => [decrit(e.action).libelle, e.cible, e.detail, e.site]
+        .some((x) => String(x || "").toLowerCase().includes(q)));
+    }
+
+    const wrap = document.getElementById("journalWrap");
+    if (!liste.length) {
+      wrap.innerHTML = journalCache.length
+        ? '<div class="recherche-vide">Aucune action ne correspond à ce filtre.</div>'
+        : '<div class="empty">Aucune action enregistrée. Le journal se remplit dès la prochaine action effectuée depuis ce back-office.</div>';
+      return;
+    }
+    const rows = liste.map((e) => {
+      const d = decrit(e.action);
+      return `<tr>
+        <td>${heure(e.timestamp)}</td>
+        <td class="${d.alerte ? "journal-alerte" : ""}">${d.libelle}</td>
+        <td>${e.cible || "—"}</td>
+        <td style="white-space:normal;max-width:320px;">${e.detail || "—"}</td>
+        <td>${e.site || "tâche automatique"}</td>
+      </tr>`;
+    }).join("");
+    wrap.innerHTML = `<table><thead><tr><th>Date</th><th>Action</th><th>Objet</th><th>Détail</th><th>Prononcée depuis</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  document.getElementById("refreshJournal").addEventListener("click", loadJournal);
+  document.getElementById("journalSearch").addEventListener("input", () => { if (journalLoaded) renderJournal(); });
+
   /* ---------- Registre des visites (lazy) ---------- */
   let visitsCache = [];
   let visitsLoaded = false;
@@ -1720,7 +1783,7 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
   lockBtn.addEventListener("click", () => {
     clearStoredSession();
     session = null;
-    conversationsLoaded = notificationsLoaded = kbLoaded = visitsLoaded = false;
+    conversationsLoaded = notificationsLoaded = kbLoaded = visitsLoaded = journalLoaded = false;
     appEl.style.display = "none";
     loginEl.style.display = "grid";
     passwordInput.value = "";
