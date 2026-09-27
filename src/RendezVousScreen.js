@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./RendezVousScreen.css";
-import { getVisitFromInvitation, submitAppointmentRequest } from "./services/appointmentService";
+import { getVisitFromInvitation, recordDeparture, submitAppointmentRequest } from "./services/appointmentService";
 import { prepareHostNotification } from "./services/notificationService";
 import QrScanner from "./QrScanner";
 import PhotoCapture from "./PhotoCapture";
@@ -22,6 +22,16 @@ const STEP_HEADER_KEYS = {
   "my-appointments": "rdv.header.my-appointments",
   "request-done": "rdv.header.request-done",
   "request-failed": "rdv.header.request-failed",
+  "departure-done": "rdv.header.departure-done",
+};
+
+/* Le depart emprunte les memes ecrans que l'arrivee : meme code, meme camera.
+   Seuls les titres changent, pour que le visiteur sache lequel des deux il est
+   en train de faire. */
+const DEPARTURE_HEADER_KEYS = {
+  "identify-choice": "rdv.header.departure-choice",
+  "manual-code": "rdv.header.departure-code",
+  "scanner": "rdv.header.departure-scanner",
 };
 
 const BACK_TARGETS = {
@@ -32,6 +42,7 @@ const BACK_TARGETS = {
   "create": "actions",
   "request-failed": "create",
   "my-appointments": "actions",
+  "departure-done": "actions",
 };
 
 export default function RendezVousScreen({ onMenu }) {
@@ -44,6 +55,10 @@ export default function RendezVousScreen({ onMenu }) {
   const [manualCode, setManualCode] = useState("");
   const [visit, setVisit] = useState(null);
   const [notification, setNotification] = useState(null);
+  /* "arrivee" ou "depart" : les ecrans de saisie du code sont partages, c'est
+     ce drapeau qui decide de ce que l'on fait du code une fois lu. */
+  const [mode, setMode] = useState("arrivee");
+  const [departure, setDeparture] = useState(null);
   const [request, setRequest] = useState({
     firstName: "",
     lastName: "",
@@ -68,6 +83,11 @@ export default function RendezVousScreen({ onMenu }) {
   async function scan(decodedCode) {
     setScanError("");
     try {
+      if (mode === "depart") {
+        setDeparture(await recordDeparture(decodedCode));
+        setStep("departure-done");
+        return;
+      }
       const foundVisit = await getVisitFromInvitation(decodedCode);
       setVisit(foundVisit);
       setStep("summary");
@@ -75,11 +95,19 @@ export default function RendezVousScreen({ onMenu }) {
       setScanError(err.message);
     }
   }
+  function ouvrir(nouveauMode) {
+    setMode(nouveauMode);
+    setScanError("");
+    setManualCode("");
+    setStep("identify-choice");
+  }
   async function notify() {
     try {
       setNotification(await prepareHostNotification(visit));
     } catch (err) {
-      setNotification({ message: t("rdv.notify.fallback") });
+      /* Le routeur explique pourquoi il refuse : code d'un rendez-vous annule,
+         ou presente un autre jour. Ce message vaut mieux que le repli generique. */
+      setNotification({ message: err.message || t("rdv.notify.fallback") });
     }
     setStep("notify");
   }
@@ -95,11 +123,12 @@ export default function RendezVousScreen({ onMenu }) {
     setStep("request-done");
   }
   const internalBack = step === "actions" ? null : () => setStep(BACK_TARGETS[step] || "actions");
-  const headerKey = STEP_HEADER_KEYS[step] || STEP_HEADER_KEYS.actions;
+  const enDepart = mode === "depart";
+  const headerKey = (enDepart && DEPARTURE_HEADER_KEYS[step]) || STEP_HEADER_KEYS[step] || STEP_HEADER_KEYS.actions;
   return <main className="rdv-page"><section className="rdv-container"><header className="rdv-header"><button className="back-button" onClick={internalBack || onMenu} aria-label={t("rdv.back")}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg></button><div><h1>{t(`${headerKey}.title`)}</h1><p>{t(`${headerKey}.subtitle`)}</p></div><button className="go-home" onClick={onMenu}>{t("rdv.goHome")}</button></header>
-    {step === "actions" && <section className="rdv-grid"><Action title={t("rdv.action.create.title")} text={t("rdv.action.create.text")} onClick={() => setStep("create")} /><Action title={t("rdv.action.identify.title")} text={t("rdv.action.identify.text")} onClick={() => setStep("identify-choice")} strong /><Action title={t("rdv.action.myappointments.title")} text={t("rdv.action.myappointments.text")} onClick={() => setStep("my-appointments")} /></section>}
+    {step === "actions" && <section className="rdv-grid"><Action title={t("rdv.action.create.title")} text={t("rdv.action.create.text")} onClick={() => setStep("create")} /><Action title={t("rdv.action.identify.title")} text={t("rdv.action.identify.text")} onClick={() => ouvrir("arrivee")} strong /><Action title={t("rdv.action.departure.title")} text={t("rdv.action.departure.text")} onClick={() => ouvrir("depart")} /><Action title={t("rdv.action.myappointments.title")} text={t("rdv.action.myappointments.text")} onClick={() => setStep("my-appointments")} /></section>}
     {step === "identify-choice" && <section className="rdv-grid choice-grid"><Action title={t("rdv.identify.code.title")} text={t("rdv.identify.code.text")} onClick={() => setStep("manual-code")} /><Action title={t("rdv.identify.scan.title")} text={t("rdv.identify.scan.text")} onClick={() => { setScanError(""); setStep("scanner"); }} strong /></section>}
-    {step === "manual-code" && <section className="rdv-panel"><h2>{t("rdv.manualcode.title")}</h2><p>{t("rdv.manualcode.intro")}</p><form className="manual-code" onSubmit={(event) => { event.preventDefault(); scan(manualCode); }}><input required value={manualCode} onChange={(event) => setManualCode(event.target.value)} placeholder={t("rdv.manualcode.placeholder")} /><button>{t("rdv.manualcode.submit")}</button></form>{scanError && <p className="qr-error">{scanError}</p>}</section>}
+    {step === "manual-code" && <section className="rdv-panel"><h2>{t(enDepart ? "rdv.departure.code.title" : "rdv.manualcode.title")}</h2><p>{t(enDepart ? "rdv.departure.code.intro" : "rdv.manualcode.intro")}</p><form className="manual-code" onSubmit={(event) => { event.preventDefault(); scan(manualCode); }}><input required value={manualCode} onChange={(event) => setManualCode(event.target.value)} placeholder={t("rdv.manualcode.placeholder")} /><button>{t(enDepart ? "rdv.departure.code.submit" : "rdv.manualcode.submit")}</button></form>{scanError && <p className="qr-error">{scanError}</p>}</section>}
     {step === "my-appointments" && <MyAppointmentsScreen />}
     {step === "create" && <section className="rdv-panel"><h2>{t("rdv.create.title")}</h2><p>{t("rdv.create.intro")}</p><form className="appointment-form" onSubmit={submitRequest}>
       <Field label={t("rdv.field.firstName")} value={request.firstName} onChange={(value) => updateRequest("firstName", value)} />
@@ -127,10 +156,29 @@ export default function RendezVousScreen({ onMenu }) {
     </form></section>}
     {step === "request-done" && <Panel title={t("rdv.header.request-done.title")} text={t("rdv.requestdone.text")} action={t("rdv.requestdone.action")} onClick={() => setStep("actions")} />}
     {step === "request-failed" && <Panel title={t("rdv.header.request-failed.title")} text={t("rdv.requestfailed.text")} action={t("rdv.requestfailed.action")} onClick={() => setStep("create")} />}
-    {step === "scanner" && <section className="rdv-panel"><h2>{t("rdv.scanner.title")}</h2><p>{t("rdv.scanner.intro")}</p><QrScanner onScan={scan} onError={setScanError} />{scanError && <p className="qr-error">{scanError}</p>}</section>}
+    {step === "scanner" && <section className="rdv-panel"><h2>{t(enDepart ? "rdv.departure.scan.title" : "rdv.scanner.title")}</h2><p>{t(enDepart ? "rdv.departure.scan.intro" : "rdv.scanner.intro")}</p><QrScanner onScan={scan} onError={setScanError} />{scanError && <p className="qr-error">{scanError}</p>}</section>}
     {step === "summary" && visit && <section className="rdv-panel"><h2>{t("rdv.summary.title")}</h2><Info label={t("rdv.summary.visitor")} value={visit.visitor} /><Info label={t("rdv.summary.company")} value={visit.company} /><Info label={t("rdv.summary.host")} value={visit.host} /><Info label={t("rdv.summary.date")} value={`${visit.date} à ${visit.time}`} /><Info label={t("rdv.summary.purpose")} value={visit.purpose} /><button className="rdv-primary" onClick={notify}>{t("rdv.summary.confirm")}</button></section>}
     {step === "notify" && <Panel title={t("rdv.header.notify.title")} text={notification.message} action={t("rdv.notify.action")} onClick={onMenu} />}
+    {/* L'en-tete annonce deja « Depart enregistre » : le repeter en titre de
+        panneau ferait lire deux fois la meme phrase avant l'information utile. */}
+    {step === "departure-done" && departure && <section className="rdv-panel centered"><p className="depart-message">{departure.message || t("rdv.departure.done.text")}</p>
+      <div className="depart-recap">
+        <Info label={t("rdv.departure.done.entry")} value={heureLisible(departure.entryAt)} />
+        <Info label={t("rdv.departure.done.exit")} value={heureLisible(departure.exitAt)} />
+        <Info label={t("rdv.departure.done.duration")} value={dureeLisible(departure.durationMinutes)} />
+      </div>
+      <button className="rdv-primary" onClick={onMenu}>{t("rdv.notify.action")}</button></section>}
   </section></main>;
+}
+
+function heureLisible(horodatage) {
+  if (!horodatage) return "—";
+  return new Date(horodatage).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+function dureeLisible(minutes) {
+  if (!minutes && minutes !== 0) return "—";
+  if (minutes < 60) return `${minutes} min`;
+  return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, "0")}`;
 }
 function Action({ title, text, onClick, strong }) { return <button className={`action-card ${strong ? "strong" : ""}`} onClick={onClick}><h2>{title}</h2><p>{text}</p><span>→</span></button>; }
 function Info({ label, value }) { return <div className="info-row"><span>{label}</span><strong>{value}</strong></div>; }

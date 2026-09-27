@@ -13,6 +13,23 @@ export async function prepareHostNotification(visit) {
       visit,
     }),
   });
-  if (!response.ok) throw new Error("La notification de l'hôte n'a pas pu être envoyée.");
-  return { accepted: true, message: "Votre présence a été confirmée. L'hôte a été prévenu." };
+  if (!response.ok) {
+    /* Le routeur refait ici les controles de statut et de date : l'arrivee est
+       un appel distinct de la lecture du code. Son message est precis, il doit
+       arriver jusqu'au visiteur. */
+    let precis = null;
+    try {
+      const data = await response.json();
+      precis = data && data.error;
+    } catch (e) {
+      /* reponse sans corps JSON */
+    }
+    throw new Error(precis || "La notification de l'hôte n'a pas pu être envoyée.");
+  }
+  const data = await response.json().catch(() => ({}));
+  return {
+    accepted: true,
+    message: data.message || "Votre présence a été confirmée. L'hôte a été prévenu.",
+    dejaPresent: data.dejaPresent === true,
+  };
 }

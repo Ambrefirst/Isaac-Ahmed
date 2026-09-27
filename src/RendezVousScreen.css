@@ -128,3 +128,10 @@
 
 /* --- etats d'un rendez-vous --- */
 .status-badge { border-radius: 999px; letter-spacing: .08em; font-size: .68rem; padding: 5px 12px; }
+
+/* Recapitulatif de sortie. Le panneau centre aligne tout son contenu au centre,
+   ce qui rendait les trois lignes illisibles : on leur rend un alignement de
+   tableau, et une largeur bornee pour que les valeurs restent en regard. */
+.depart-recap { width: 100%; max-width: 420px; margin: 22px auto 26px; text-align: left; }
+.depart-recap .info-row:last-child { border-bottom: 0; }
+.depart-message { font-size: 1.12rem; line-height: 1.6; margin: 6px 0 0; }
