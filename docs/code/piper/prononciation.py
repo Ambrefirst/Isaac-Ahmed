@@ -25,7 +25,7 @@ import re
 
 # Le prenom de l'assistant. La graphie retenue a ete choisie a l'oreille parmi
 # plusieurs candidates, la forme normale etant mal prononcee par la voix upmc.
-PRENOM = "Izaac"
+PRENOM = "Izak"
 
 # Le sigle de l'entreprise. Il s'epelle : S, puis T. Jamais « st » en un son.
 SIGLE = "S T"

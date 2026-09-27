@@ -77,12 +77,14 @@ Piper lit ce qu'on lui écrit. Sur un texte métier, cela produit trois familles
 | Écrit | Prononcé | Corrigé en |
 |---|---|---|
 | `ST Digital` | « sans digital » | `S T Digital` |
-| `Isaac` | déformé, réentendu « Isalak » | `Izaac` |
+| `Isaac` | déformé, réentendu « Isalak » | `Izak` |
 | `Tier III` | « Tier trois romain » | `Tier 3` |
 | `8h` | mal découpé | `8 heures` |
 | `info@st.digital` | épelé lettre à lettre | « l'adresse affichée à l'écran » |
 
 > **ST n'est pas un mot.** C'est le sigle de **Solutions de Transformation**, et les deux lettres doivent s'entendre séparément. C'est une exigence de l'entreprise, pas une préférence de lecture.
+
+La graphie du prénom a été choisie à l'oreille, parmi quatre candidates soumises en contexte : `Izak` est celle qui a été retenue.
 
 Ces règles vivent dans une **table**, `prononciation.py`, appliquée avant chaque synthèse. Elle se complète au fil des mots qu'on entend mal, sans toucher au service. L'en-tête `X-Texte-Lu` de la réponse restitue le texte réellement prononcé : quand une prononciation surprend, on voit immédiatement ce qui a été lu.
 
