@@ -97,6 +97,20 @@ function MicroIcon() {
   );
 }
 
+/* Une reponse demande une a deux minutes sur cette machine, sans GPU. Une
+   attente muette passe pour une panne : on montre qu'elle avance. */
+function CompteurAttente({ depuis, t }) {
+  const [secondes, setSecondes] = React.useState(0);
+  React.useEffect(() => {
+    if (!depuis) return undefined;
+    const suivre = () => setSecondes(Math.round((Date.now() - depuis) / 1000));
+    suivre();
+    const m = setInterval(suivre, 1000);
+    return () => clearInterval(m);
+  }, [depuis]);
+  return <p className="home-attente">{t("voix.attente").replace("{s}", secondes)}</p>;
+}
+
 function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
   const { t, language } = useLanguage();
   /* La conversation parlee se tient ICI, sur la borne, autour de la sphere.
@@ -154,27 +168,31 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
             {/* La sphere porte l'etat reel de la conversation : elle ecoute,
                 elle reflechit, elle parle. C'est la que M2 rend enfin vrais les
                 etats que le composant reservait depuis M1. */}
-            <Orb state={vocal.etatOrbe} size={190} />
+            <Orb state={vocal.etatOrbe} size={190} niveau={vocal.niveau} />
           </button>
 
-          {vocal.actif ? (
-            <div className="home-vocal">
-              <p className="home-vocal-etat" aria-live="polite">{t(`voix.etat.${vocal.etat}`)}</p>
-              {/* Le dernier echange reste lisible : le visiteur verifie qu'il a
-                  ete compris, et peut relire la reponse pendant qu'Isaac se tait. */}
-              {vocal.entendu && <p className="home-vocal-entendu">{vocal.entendu}</p>}
-              {vocal.reponse && <p className="home-vocal-reponse">{vocal.reponse}</p>}
-              {vocal.erreur && <p className="home-vocal-erreur" role="alert">{vocal.erreur}</p>}
-              <button className="home-parler arreter" onClick={vocal.arreter}>{t("voix.terminer")}</button>
-            </div>
-          ) : (
-            audioDisponible && (
-              <button className="home-parler" onClick={vocal.demarrer}>
-                <span className="home-parler-icone" aria-hidden="true"><MicroIcon /></span>
-                {t("voix.ouvrir")}
-              </button>
-            )
-          )}
+          {/* Mise en page de la maquette : une invite en capitales espacees, la
+              phrase entendue en dessous, et rien d'autre. Le gros bouton rouge
+              precedent ecrasait la sphere, qui est pourtant l'interface. */}
+          <div className="home-invite">
+            {vocal.actif ? (
+              <>
+                <p className="home-etat-txt" aria-live="polite">{t(`voix.etat.${vocal.etat}`)}</p>
+                {vocal.etat === "reflechit" && <CompteurAttente depuis={vocal.attenteDepuis} t={t} />}
+                {vocal.entendu && <p className="home-transcript">{vocal.entendu}</p>}
+                {vocal.reponse && <p className="home-vocal-reponse">{vocal.reponse}</p>}
+                {vocal.erreur && <p className="home-vocal-erreur" role="alert">{vocal.erreur}</p>}
+                <button className="home-terminer" onClick={vocal.arreter}>{t("voix.terminer")}</button>
+              </>
+            ) : (
+              audioDisponible && (
+                <button className="home-cta" onClick={vocal.demarrer}>
+                  <MicroIcon />
+                  {t("voix.appuyez")}
+                </button>
+              )
+            )}
+          </div>
         </div>
 
         <div className="home-parcours-label"><span className="accent-dash" />{t("home.parcours")}</div>

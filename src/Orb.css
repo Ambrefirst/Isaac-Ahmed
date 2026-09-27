@@ -108,3 +108,21 @@
 
 /* au repos, la respiration est plus lente : la borne attend sans solliciter */
 .orb-repos .orb-halo { animation-duration: 6.5s; }
+
+/* --- Reaction au niveau sonore -------------------------------------------
+   Pendant l'ecoute, la sphere suit la voix. Sans ce retour immediat, le
+   visiteur ne sait pas s'il est entendu : un libelle fixe ne le dit pas.
+   La variable --niveau vaut 0 au silence et 1 a pleine voix. */
+.orb-ecoute .orb-noyau {
+  transform: scale(calc(1 + var(--niveau, 0) * 0.28));
+  transition: transform .09s linear;
+}
+.orb-ecoute .orb-halo {
+  opacity: calc(0.55 + var(--niveau, 0) * 0.45);
+  transform: scale(calc(1 + var(--niveau, 0) * 0.12));
+  transition: opacity .12s linear, transform .12s linear;
+}
+/* Les ondes s'ecartent plus vite quand la voix porte. */
+.orb-ecoute .orb-onde {
+  animation-duration: calc(2.1s - var(--niveau, 0) * 0.7s);
+}

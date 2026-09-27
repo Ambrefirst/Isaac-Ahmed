@@ -36,6 +36,13 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
   const [entendu, setEntendu] = useState("");
   const [reponse, setReponse] = useState("");
   const [erreur, setErreur] = useState("");
+  /* Niveau sonore du micro, rendu a l'interface. C'est lui qui fait reagir la
+     sphere pendant que le visiteur parle : sans ce retour, on a le sentiment
+     de parler a un mur, et c'est exactement ce qui a ete reproche. */
+  const [niveau, setNiveau] = useState(0);
+  /* Depuis quand Isaac cherche. Sur cette machine, une reponse demande une a
+     deux minutes : une attente muette passe pour une panne. */
+  const [attenteDepuis, setAttenteDepuis] = useState(null);
 
   const enregistreurRef = useRef(null);
   const lecteurRef = useRef(null);
@@ -99,6 +106,10 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
           for (let i = 0; i < echantillons.length; i += 1) somme += echantillons[i] * echantillons[i];
           const niveau = Math.sqrt(somme / echantillons.length);
 
+          /* Echelle ramenee a 0..1 pour l'affichage : le seuil de silence
+             correspond a 0, et on sature bien avant le maximum theorique pour
+             que la sphere reagisse a une voix normale, pas seulement a un cri. */
+          setNiveau(Math.min(1, Math.max(0, (niveau - SEUIL_SILENCE) / 0.08)));
           if (niveau > SEUIL_SILENCE) { dernierSon = Date.now(); aParle = true; }
 
           const silence = Date.now() - dernierSon;
@@ -116,7 +127,9 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
       if (!vivantRef.current) return;
       if (!aParle) { setEtat(ETATS.ARRET); return; }
 
+      setNiveau(0);
       setEtat(ETATS.REFLECHIT);
+      setAttenteDepuis(Date.now());
       const question = await transcrire(blob);
       if (!vivantRef.current) return;
       setEntendu(question);
@@ -129,6 +142,7 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
         { sender: "isaac", text: dit },
       ].slice(-8);
       setReponse(dit);
+      setAttenteDepuis(null);
 
       await dire(dit);
       if (vivantRef.current) ecouter();
@@ -155,6 +169,8 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
     if (enregistreurRef.current) enregistreurRef.current.liberer();
     if (lecteurRef.current) lecteurRef.current.pause();
     if (analyseRef.current) { try { analyseRef.current.contexte.close(); } catch (e) {} }
+    setNiveau(0);
+    setAttenteDepuis(null);
     enregistreurRef.current = null;
     lecteurRef.current = null;
     analyseRef.current = null;
@@ -169,5 +185,6 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
     : etat === ETATS.REFLECHIT ? "pense"
     : "repos";
 
-  return { etat, etatOrbe, entendu, reponse, erreur, demarrer, arreter, actif: etat !== ETATS.ARRET };
+  return { etat, etatOrbe, entendu, reponse, erreur, niveau, attenteDepuis,
+           demarrer, arreter, actif: etat !== ETATS.ARRET };
 }

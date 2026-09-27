@@ -13,12 +13,17 @@ import "./Orb.css";
  *
  * Aucun etat ne doit etre simule : la sphere est un indicateur, pas une decoration.
  */
-export default function Orb({ state = "repos", size = 180, className = "" }) {
+export default function Orb({ state = "repos", size = 180, className = "", niveau = 0 }) {
   const etat = ["repos", "ecoute", "pense", "parle"].includes(state) ? state : "repos";
+  /* Le niveau sonore du micro fait reagir la sphere en direct pendant l'ecoute.
+     C'est le seul temoin qui dise au visiteur qu'il est entendu au moment meme
+     ou il parle : un libelle « je vous ecoute » ne bouge pas, et on a le
+     sentiment de parler a un mur. La valeur ne sert qu'a l'etat ecoute. */
+  const reaction = etat === "ecoute" ? Math.min(1, Math.max(0, niveau)) : 0;
   return (
     <div
       className={`orb orb-${etat} ${className}`.trim()}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, "--niveau": reaction }}
       data-state={etat}
       aria-hidden="true"
     >

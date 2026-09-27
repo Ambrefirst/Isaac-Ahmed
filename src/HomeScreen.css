@@ -102,22 +102,10 @@
 /* --- Conversation parlee sur la borne -------------------------------------
    Tout se passe autour de la sphere : pas de fenetre, pas de fil de texte.
    Appuyer sur « Parler a Isaac » veut dire qu'on veut entendre une voix. */
-.home-vocal {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-top: 18px;
-  animation: vocal-entree .3s var(--ease, cubic-bezier(.22,.61,.36,1));
-}
+
 @keyframes vocal-entree { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-.home-vocal-etat {
-  margin: 0;
-  font-size: 1.02rem;
-  color: var(--pale, #C8DCF0);
-  letter-spacing: .01em;
-}
+
 
 /* Ce qui a ete entendu, sous les yeux du visiteur : il doit constater que la
    borne l'a compris avant meme d'entendre la reponse. */
@@ -142,11 +130,7 @@
   max-width: 44ch;
 }
 
-.home-parler.arreter {
-  background: rgba(192, 68, 60, .16);
-  border-color: rgba(192, 68, 60, .5);
-  color: #F0C9C6;
-}
+
 .home-parler.arreter:hover { background: rgba(192, 68, 60, .26); border-color: rgba(192, 68, 60, .8); }
 
 /* Pendant la conversation, la sphere n'est plus un bouton : on l'ecoute. */
@@ -164,3 +148,82 @@
   line-height: 1.6;
   text-align: left;
 }
+
+/* --- Invite de la conversation parlee, d'apres la maquette ----------------
+   Capitales espacees, discretion, et surtout rien qui ecrase la sphere : c'est
+   elle l'interface, le reste ne fait que la commenter. */
+.home-invite {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  min-height: 96px;
+}
+
+.home-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(122, 175, 201, .45);
+  background: rgba(46, 122, 181, .14);
+  color: var(--pale, #C8DCF0);
+  font-family: inherit;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  cursor: pointer;
+  transition: transform .22s var(--ease), background .22s var(--ease), border-color .22s var(--ease);
+}
+.home-cta:hover {
+  transform: translateY(-2px);
+  background: rgba(46, 122, 181, .26);
+  border-color: rgba(122, 175, 201, .8);
+}
+
+.home-etat-txt {
+  margin: 0;
+  font-size: .72rem;
+  letter-spacing: .18em;
+  color: var(--light-blue, #7AAFC9);
+  min-height: 14px;
+}
+
+/* L'attente est longue sur cette machine : on la montre plutot que de laisser
+   croire a une panne. Le compteur avance, donc quelque chose se passe. */
+.home-attente {
+  margin: 0;
+  font-size: .74rem;
+  letter-spacing: .04em;
+  color: var(--text-muted, #93AFC4);
+}
+
+.home-transcript {
+  margin: 0;
+  padding: 11px 20px;
+  max-width: min(46ch, 100%);
+  border-radius: 999px;
+  background: rgba(46, 122, 181, .16);
+  border: 1px solid rgba(122, 175, 201, .25);
+  font-size: .92rem;
+  line-height: 1.5;
+}
+
+/* Fin de conversation : un lien discret, pas un bouton rouge qui prend toute
+   la place sous la sphere. */
+.home-terminer {
+  margin-top: 2px;
+  padding: 7px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted, #93AFC4);
+  font-family: inherit;
+  font-size: .76rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+}
+.home-terminer:hover { color: var(--pale, #C8DCF0); border-bottom-color: rgba(122, 175, 201, .5); }
