@@ -126,3 +126,28 @@
 .orb-ecoute .orb-onde {
   animation-duration: calc(2.1s - var(--niveau, 0) * 0.7s);
 }
+
+/* --- Mouvement reduit ------------------------------------------------------
+   La regle generale de index.css ramene TOUTES les animations de la page a
+   0,01 ms et une seule iteration quand le systeme demande le mouvement reduit.
+   Pour des effets decoratifs, c'est la bonne reponse. Pour la sphere, c'est un
+   contresens : elle est un indicateur d'etat, pas une decoration. Figee, elle
+   ne dit plus si le micro est ouvert, si Isaac cherche ou s'il parle, et le
+   visiteur se retrouve devant deux points immobiles.
+
+   On lui rend donc son mouvement, mais ralenti et de faible amplitude : ce que
+   le reglage cherche a eviter, c'est l'agitation, pas l'information. */
+@media (prefers-reduced-motion: reduce) {
+  .orb .orb-halo    { animation-duration: 9s   !important; animation-iteration-count: infinite !important; }
+  .orb .orb-onde    { animation-duration: 3.4s !important; animation-iteration-count: infinite !important; }
+  .orb .orb-orbite  { animation-duration: 6s   !important; animation-iteration-count: infinite !important; }
+  .orb .orb-orbite-2 { animation-duration: 8.5s !important; }
+  .orb .orb-barres i { animation-duration: 1.5s !important; animation-iteration-count: infinite !important; }
+
+  /* L'amplitude des barres est reduite : elles respirent au lieu de sauter. */
+  .orb .orb-barres i { animation-name: orb-vu-calme !important; }
+}
+@keyframes orb-vu-calme {
+  0%, 100% { scale: 1 0.7; }
+  50% { scale: 1 1; }
+}

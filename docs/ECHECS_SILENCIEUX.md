@@ -204,7 +204,23 @@ Trois fois, une mesure a donné un chiffre faux **sans se tromper de calcul**.
 
 ---
 
-## Ce que ces seize cas ont en commun
+## 17. Une regle d'accessibilite qui efface l'information
+
+**Ce qui se passait.** Les orbites de l'etat « reflexion » et les barres de l'etat « parole » restaient **figees**. La sphere, qui est le seul temoin de ce que fait la borne, ne disait plus rien.
+
+**Pourquoi rien ne le signalait.** Aucune erreur, aucun defaut de code : les animations etaient correctement declarees. Une regle generale de la feuille de style ramenait **toutes** les animations de la page a 0,01 ms et une seule iteration lorsque le systeme demande le mouvement reduit. Elles s'executaient donc, instantanement, et se figeaient sur leur derniere image.
+
+**Comment il a ete trouve.** En mesurant la duree d'animation calculee : `1e-05s`, `iterations: 1`. Une animation qui existe, qui porte le bon nom, et qui ne dure rien.
+
+**Pourquoi c'etait un contresens.** Pour un effet decoratif, couper le mouvement est la bonne reponse. La sphere n'est pas decorative : sa documentation dit depuis M1 qu'elle est **un indicateur, pas une decoration**, et que l'etat « ecoute » ne doit jamais etre affiche sans micro reellement ouvert. Figee, elle ne dit plus si le micro est ouvert, si Isaac cherche, ou s'il parle.
+
+**Ce qui l'empeche.** La sphere est exemptee de la regle generale, avec un mouvement ralenti et de faible amplitude. Ce que le reglage cherche a eviter, c'est l'agitation, pas l'information.
+
+> **Ce que cela apprend.** Une bonne pratique appliquee sans distinguer le decoratif de l'informatif devient une regression d'accessibilite. Le reglage existe pour les personnes sensibles au mouvement : leur retirer le seul signal qui dit que le microphone les ecoute ne les aide pas.
+
+---
+
+## Ce que ces dix-sept cas ont en commun
 
 Un seul mécanisme les explique tous : **quelque part, une opération qui échoue renvoie le même signal qu'une opération qui réussit**. Un `200` sur un texte vide. Un fichier écrit que personne ne lit. Un paramètre ignoré. Un magasin vectoriel vide qui répond quand même.
 
