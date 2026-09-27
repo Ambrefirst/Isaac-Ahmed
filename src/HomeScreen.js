@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./HomeScreen.css";
 import { useLanguage } from "./i18n";
 import Orb from "./Orb";
+import { audioDisponible } from "./services/audioService";
 
 function ChevronDownIcon() {
   return (
@@ -85,7 +86,17 @@ function useLocalTime(language) {
   return now.toLocaleTimeString(language === "en" ? "en-GB" : "fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
-function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
+function MicroIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="2.5" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0" />
+      <path d="M12 17.5V21" />
+    </svg>
+  );
+}
+
+function HomeScreen({ onAppointment, onAssistant, onParler, onWelcome }) {
   const { t, language } = useLanguage();
   const heure = useLocalTime(language);
 
@@ -124,13 +135,20 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
           </div>
         </section>
 
-        {/* La sphere est l'interface, pas un decor : elle ouvre la conversation.
-            Les etats "ecoute" et "parole" du composant Orb attendent le module vocal (M2)
-            et ne sont volontairement pas exposes ici tant qu'aucun microphone n'existe. */}
+        {/* La sphere est l'interface, pas un decor : elle ouvre la conversation
+            ecrite. Sous elle, le bouton qui ouvre la conversation parlee : c'est
+            sur la borne qu'un visiteur decide de parler plutot que de taper, pas
+            une fois entre dans l'ecran de discussion. */}
         <div className="home-orb-zone">
           <button className="home-orb-button" onClick={onAssistant} aria-label={t("home.orbAria")}>
             <Orb state="repos" size={190} />
           </button>
+          {audioDisponible && (
+            <button className="home-parler" onClick={onParler}>
+              <span className="home-parler-icone" aria-hidden="true"><MicroIcon /></span>
+              {t("voix.ouvrir")}
+            </button>
+          )}
         </div>
 
         <div className="home-parcours-label"><span className="accent-dash" />{t("home.parcours")}</div>

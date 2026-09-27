@@ -98,7 +98,7 @@ function SequenceAttente({ phase, t }) {
 
 const SUGGESTIONS = ["chat.suggest.hours", "chat.suggest.datacenter", "chat.suggest.visit", "chat.suggest.about"];
 
-export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, onKeepWaiting, onEscalate, onSend, onMenu }) {
+export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, onKeepWaiting, onEscalate, onSend, onMenu, vocalDemarre = false }) {
   const [input, setInput] = useState("");
   const { t } = useLanguage();
   const scrollRef = useRef(null);
@@ -110,7 +110,7 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
   const [ecoute, setEcoute] = useState(false);
   const [transcription, setTranscription] = useState(false);
   const [erreurVoix, setErreurVoix] = useState("");
-  const [modeVocal, setModeVocal] = useState(false);
+  const [modeVocal, setModeVocal] = useState(vocalDemarre);
   const enregistreurRef = useRef(null);
 
   function submit(event) {
