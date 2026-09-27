@@ -35,9 +35,21 @@ Un mot de passe partagé par pays ne permet ni de savoir qui a confirmé un rend
 
 Les constantes d'expédition et le fichier `hosts.json` pointent vers une boîte Gmail personnelle utilisée pour les tests, pas vers les adresses ST Digital. À basculer avant toute démonstration à un client, et avant exploitation.
 
-## 5. Persistance de la base vectorielle
+## 5. Persistance de la base vectorielle — atténué le 27/09/2026, non résolu
 
-La base de connaissances est indexée dans un magasin vectoriel **en mémoire**. Tout redémarrage du conteneur n8n la vide, et le chat se met alors à répondre sans contexte, donc à inventer, sans aucun message d'erreur. C'est exactement ce qui s'est produit le 21/09. À remplacer par un magasin persistant, ou à défaut à réindexer automatiquement au démarrage.
+La base de connaissances est indexée dans un magasin vectoriel **en mémoire**. Tout redémarrage du conteneur n8n la vide, et le chat se met alors à répondre sans contexte, donc à inventer, sans aucun message d'erreur.
+
+> **Le défaut s'est produit une seconde fois le 27/09/2026**, à la suite des redémarrages nécessaires au déploiement des workflows. Isaac a répondu « ouvert de 8h00 à 18h00, samedi de 8h00 à 12h00 » alors que la base validée indique **8h-17h du lundi au vendredi, fermé le week-end**. Aucune erreur, aucun signe visible : seule une question de contrôle permettait de s'en apercevoir.
+
+**Atténuation posée.** Le workflow `Isaac - Indexation base de connaissances` a reçu un déclencheur planifié, toutes les trente minutes. Le nœud d'insertion ayant `clearStore`, la réindexation est idempotente et ne crée pas de doublons. La durée maximale de la panne silencieuse passe ainsi de « jusqu'à ce que quelqu'un s'en aperçoive » à trente minutes.
+
+**Ce n'est pas un correctif.** Une demi-heure de réponses inventées reste inacceptable en exploitation, et une réindexation concurrente d'une question laisse une fenêtre de quelques secondes sans contexte. Il faut un magasin vectoriel persistant. En attendant, **toute intervention comportant un `docker restart n8n` doit être suivie immédiatement** de :
+
+```
+curl -s -X POST http://127.0.0.1:5678/webhook/isaac-index-kb -H 'Content-Type: application/json' -d '{}'
+```
+
+puis d'une question de contrôle dont la réponse est connue, par exemple les horaires d'accueil.
 
 ## 6. Canal de notification officiel
 
@@ -56,3 +68,34 @@ Le code QR envoyé au visiteur avec son invitation était généré par un servi
 Copie de référence de l'encodeur : `docs/code/qr_encoder.js`. Vérifié par un décodeur indépendant sur cinq codes de test.
 
 Reste à traiter sur ce point : les adresses d'expédition et de réception des courriels pointent encore vers une boîte personnelle, voir le point 4.
+
+## 9. Journal des conversations — corrigé le 27/09/2026
+
+Le back-office lit les conversations dans PostgreSQL, mais le workflow de chat les écrivait encore dans `/home/node/.n8n-appdata/conversations.json`, à l'intérieur du conteneur n8n. C'est le même piège que celui décrit au point 2, cette fois dans l'autre sens : personne ne lisait ce que le chat écrivait.
+
+**Conséquence mesurée.** La ligne PostgreSQL était figée au **08/09/2026**, avec 63 échanges. Le fichier en contenait **255**. Tout ce qui a été dit à Isaac depuis le 08/09 était invisible depuis le back-office, y compris l'intégralité de la recette des 20 questions du 21/09 et la journée de mesure du 24/09. Les compteurs d'usage du tableau de bord affichaient donc des valeurs fausses, et non un creux d'activité.
+
+**Corrigé.** Les 255 conversations ont été fusionnées et rapatriées, sauvegarde préalable conservée sous la clé `conversations_avant_migration_26092026`. Le nœud `Log conversation` écrit désormais en base, par **ajout atomique** en SQL plutôt que par lecture-modification-écriture : deux visiteurs qui interrogent Isaac en même temps ne peuvent plus effacer l'échange l'un de l'autre, ce que la version précédente permettait. Le bornage à 3000 échanges se fait en base, sans rapatrier le tableau entier.
+
+Reste à traiter : les conversations sont stockées comme **un seul tableau JSON** sous une clé unique. À 255 échanges c'est sans conséquence ; à plusieurs dizaines de milliers, toute lecture rapatriera l'ensemble. Une vraie table, une ligne par échange, s'impose avant exploitation. C'est aussi ce qui permettrait une recherche côté serveur, là où le back-office filtre aujourd'hui la liste déjà chargée.
+
+## 10. Contrôles du code d'invitation — posés le 27/09/2026
+
+Le code d'invitation n'était soumis à aucune vérification au-delà de son existence. Un code restait donc une clé d'entrée valable **indéfiniment**, et **quel que soit le statut** du rendez-vous : un rendez-vous confirmé puis annulé conservait un code fonctionnel, et un code émis pour le 30 septembre ouvrait encore la borne en janvier.
+
+**Posé.** `invitation_lookup` et `visitor_arrival_confirmed` refusent maintenant, avec un motif distinct à chaque fois :
+
+- un rendez-vous dont le statut n'est pas `confirme` : annulé, refusé, ou en attente ;
+- un code présenté un autre jour que celui du rendez-vous, la date étant comparée dans le **fuseau du site visité** et non celui du serveur, qui tourne en UTC.
+
+Corrigé au passage : `visitor_arrival_confirmed` remettait le rendez-vous à `confirme` à chaque arrivée, ce qui ressuscitait un rendez-vous annulé.
+
+**Reste ouvert.** Le code demeure réutilisable autant de fois qu'on le présente dans sa journée de validité. Un usage unique, ou un jeton renouvelé à chaque passage, reste à décider.
+
+## 11. Registre des visites — posé le 27/09/2026
+
+Les entrées et sorties sont désormais horodatées : `visitor_arrival_confirmed` ouvre la visite, `visitor_departure` la ferme et calcule sa durée, `admin_list_visits` la restitue au back-office. La borne propose un parcours « Signaler mon départ » qui reprend le même code.
+
+Ce registre répond à une obligation de procédure sur les sites ST Digital, et à une question que le système ne savait pas traiter : **qui se trouve dans le bâtiment en ce moment**, ce qu'une évacuation exige de savoir immédiatement.
+
+**Limite connue.** Rien n'oblige un visiteur à signaler son départ. Une visite jamais close reste indéfiniment ouverte et fausse le compteur des présents. Il faut prévoir une clôture automatique en fin de journée, ou une clôture manuelle depuis le back-office. Aucune des deux n'existe aujourd'hui.
