@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Isaac Ahmed — Direction A</title>
+<style>
+  :root{
+    --navy:#1A4D7A; --blue:#2E7AB5; --sky:#7AAFC9; --pale:#C8DCF0;
+    --ink:#061923; --ink2:#0A2233;
+    --glass:rgba(200,220,240,.06); --line:rgba(122,175,201,.22);
+    --txt:#E8F1F8; --txt-dim:#93AFC4;
+    --ease:cubic-bezier(.22,.61,.36,1);
+    --font:"Century Gothic","Questrial","Futura","Trebuchet MS",sans-serif;
+    --font-title:"Cambria","Georgia",serif;
+    --opacite-fond:.15;           /* demande : photo du data center a 15% */
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#050D14;color:var(--txt);font-family:var(--font);-webkit-font-smoothing:antialiased}
+
+  .revue{max-width:1180px;margin:0 auto;padding:40px 24px 80px}
+  .revue h1{font-family:var(--font-title);font-size:30px;font-weight:700;margin:0 0 6px}
+  .revue .sous{color:var(--txt-dim);font-size:14px;margin:0 0 34px;line-height:1.6;max-width:72ch}
+  .bloc{margin:56px 0 0}
+  .bloc > h2{font-family:var(--font-title);font-size:20px;margin:0 0 4px;color:var(--pale)}
+  .bloc > p.note{color:var(--txt-dim);font-size:13.5px;margin:0 0 20px;line-height:1.6;max-width:78ch}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:900px){.duo{grid-template-columns:1fr}}
+  .etiq{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.16em;
+        text-transform:uppercase;color:var(--sky);margin:0 0 10px}
+  .etiq b{font-weight:700;color:var(--pale)}
+
+  .borne{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--ink);
+         box-shadow:0 30px 70px rgba(0,0,0,.45);position:relative}
+  .ecran{height:600px;overflow-y:auto;overflow-x:hidden;position:relative;scrollbar-width:thin}
+  .ecran::-webkit-scrollbar{width:6px}
+  .ecran::-webkit-scrollbar-thumb{background:rgba(122,175,201,.25);border-radius:3px}
+
+  /* ---------- fonds ---------- */
+  .fond{position:absolute;inset:0;pointer-events:none}
+  .fond.photo{background-image:url("fond_datacenter.jpg");background-size:cover;background-position:center;
+       opacity:var(--opacite-fond);filter:saturate(.85)}
+  .fond.lueur{background:
+     radial-gradient(900px 520px at 18% -8%, rgba(46,122,181,.30), transparent 62%),
+     radial-gradient(700px 500px at 108% 30%, rgba(26,77,122,.26), transparent 60%),
+     linear-gradient(170deg, rgba(10,34,51,.88) 0%, rgba(6,25,35,.90) 55%, rgba(4,18,27,.94) 100%)}
+
+  /* ---------- en-tete ---------- */
+  .barre{position:relative;display:flex;align-items:center;justify-content:space-between;padding:16px 22px;z-index:3}
+  .marque{display:flex;align-items:center;gap:10px}
+  .marque .cube{display:grid;grid-template-columns:repeat(3,5px);gap:2px}
+  .marque .cube i{width:5px;height:5px;background:var(--blue);border-radius:1px;display:block}
+  .marque .cube i:nth-child(3n){background:var(--sky)}
+  .marque .cube i:nth-child(5){background:var(--pale)}
+  .marque .nom{font-size:13px;letter-spacing:.22em;font-weight:700}
+  .marque .nom span{color:var(--sky);font-weight:400}
+  .puce{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:15px;
+        border:1px solid var(--line);background:var(--glass);font-size:11.5px;letter-spacing:.08em;
+        color:var(--pale);cursor:pointer;transition:border-color .25s var(--ease),background .25s var(--ease)}
+  .puce:hover{border-color:rgba(122,175,201,.5);background:rgba(122,175,201,.12)}
+  .puce svg{width:13px;height:13px;stroke:var(--sky);fill:none;stroke-width:1.6}
+
+  .ancrage{position:relative;z-index:3;display:flex;gap:18px;align-items:center;
+           padding:0 22px 4px;font-size:11px;letter-spacing:.1em;color:var(--txt-dim)}
+  .ancrage .pt{display:inline-flex;align-items:center;gap:7px}
+  .vivant{width:6px;height:6px;border-radius:50%;background:#49D18B;animation:battement 2.6s infinite var(--ease)}
+  @keyframes battement{0%{box-shadow:0 0 0 0 rgba(73,209,139,.55)}70%{box-shadow:0 0 0 7px rgba(73,209,139,0)}100%{box-shadow:0 0 0 0 rgba(73,209,139,0)}}
+
+  .hero{position:relative;z-index:2;padding:26px 30px 6px}
+  .eyebrow{font-size:10.5px;letter-spacing:.24em;color:var(--sky);margin:0 0 12px}
+  .hero h2{font-family:var(--font-title);font-size:34px;line-height:1.12;margin:0 0 10px;font-weight:700}
+  .hero h2 em{font-style:normal;color:var(--sky)}
+  .hero p{color:var(--txt-dim);font-size:13.5px;line-height:1.65;margin:0;max-width:44ch}
+
+  /* ---------- sphere ---------- */
+  .scene{position:relative;z-index:2;display:grid;place-items:center;padding:16px 0 4px}
+  .orbe{position:relative;width:180px;height:180px;display:grid;place-items:center;cursor:pointer}
+  .orbe .halo{position:absolute;inset:0;border-radius:50%;
+       background:radial-gradient(circle at 50% 46%, rgba(46,122,181,.55), rgba(26,77,122,.16) 48%, transparent 70%);
+       filter:blur(4px);animation:respire 5.5s infinite var(--ease)}
+  @keyframes respire{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.07);opacity:1}}
+  .orbe .anneau{position:absolute;border-radius:50%;border:1px solid rgba(122,175,201,.3)}
+  .orbe .a1{inset:18px} .orbe .a2{inset:38px;border-color:rgba(122,175,201,.18)}
+  .orbe .onde{position:absolute;inset:8px;border-radius:50%;border:1px solid rgba(122,175,201,.45);
+       opacity:0;animation:onde 3.4s infinite var(--ease)}
+  .orbe .onde.d2{animation-delay:1.15s} .orbe .onde.d3{animation-delay:2.3s}
+  @keyframes onde{0%{transform:scale(.72);opacity:.55}100%{transform:scale(1.18);opacity:0}}
+  .orbe .noyau{position:relative;width:66px;height:66px;border-radius:18px;
+       background:linear-gradient(145deg, rgba(122,175,201,.95), rgba(46,122,181,.85));
+       box-shadow:0 0 34px rgba(46,122,181,.65), inset 0 0 18px rgba(232,241,248,.35);
+       transition:transform .3s var(--ease)}
+  .orbe .noyau::after{content:"";position:absolute;inset:15px;border-radius:9px;
+       background:radial-gradient(circle at 34% 30%, #EAF4FB, rgba(200,220,240,.25) 62%, transparent)}
+  .orbe .orbite{position:absolute;inset:6px;border-radius:50%;animation:tourne 9s linear infinite;display:none}
+  .orbe .orbite i{position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;
+       background:var(--pale);box-shadow:0 0 10px var(--sky)}
+  @keyframes tourne{to{transform:rotate(360deg)}}
+  .orbe .barres{position:absolute;inset:0;display:none;place-items:center}
+  .orbe .barres i{position:absolute;width:4px;border-radius:2px;background:var(--pale);opacity:.92}
+  .orbe .barres i:nth-child(1){height:18px;left:62px;animation:vu .9s infinite var(--ease)}
+  .orbe .barres i:nth-child(2){height:34px;left:74px;animation:vu .9s .12s infinite var(--ease)}
+  .orbe .barres i:nth-child(3){height:46px;left:86px;animation:vu .9s .24s infinite var(--ease)}
+  .orbe .barres i:nth-child(4){height:30px;left:98px;animation:vu .9s .36s infinite var(--ease)}
+  .orbe .barres i:nth-child(5){height:16px;left:110px;animation:vu .9s .48s infinite var(--ease)}
+  @keyframes vu{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}
+
+  /* etats appliques par une classe sur .orbe */
+  .orbe.repos .onde{display:none}
+  .orbe.ecoute .onde{display:block;animation-duration:2.1s}
+  .orbe.pense .onde{display:none}
+  .orbe.pense .orbite{display:block;animation-duration:3.4s}
+  .orbe.pense .orbite.o2{animation-duration:5.2s;animation-direction:reverse;inset:22px}
+  .orbe.parle .noyau{display:none}
+  .orbe.parle .barres{display:grid}
+
+  .invite{position:relative;z-index:2;text-align:center;padding:2px 30px 0}
+  .invite .cta{display:inline-flex;align-items:center;gap:9px;padding:10px 18px;border-radius:24px;
+     border:1px solid rgba(122,175,201,.42);background:rgba(46,122,181,.16);cursor:pointer;
+     font-size:12.5px;letter-spacing:.1em;color:var(--pale);transition:all .26s var(--ease)}
+  .invite .cta:hover{background:rgba(122,175,201,.24);transform:translateY(-2px)}
+  .invite .cta svg{width:15px;height:15px;stroke:var(--pale);fill:none;stroke-width:1.7;stroke-linecap:round}
+  .invite .etat-txt{margin:10px 0 0;font-size:11px;letter-spacing:.18em;color:var(--sky);min-height:14px}
+  .transcript{margin:8px auto 0;max-width:46ch;font-size:12.5px;color:var(--txt-dim);line-height:1.5;
+     min-height:32px;opacity:0;transition:opacity .4s var(--ease)}
+  .transcript.on{opacity:1}
+  .transcript b{color:var(--pale);font-weight:400}
+
+  .titre-sec{position:relative;z-index:2;display:flex;align-items:center;gap:12px;
+             padding:22px 30px 12px;font-size:10.5px;letter-spacing:.22em;color:var(--sky)}
+  .titre-sec .trait{height:1px;width:26px;background:var(--sky);opacity:.7}
+  .parcours{position:relative;z-index:2;display:grid;gap:14px;padding:0 30px 30px}
+
+  .carteA{position:relative;display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:16px;
+     border:1px solid var(--line);background:linear-gradient(135deg, rgba(200,220,240,.075), rgba(200,220,240,.02));
+     backdrop-filter:blur(8px);cursor:pointer;overflow:hidden;
+     transition:transform .28s var(--ease),border-color .28s var(--ease),box-shadow .28s var(--ease)}
+  .carteA::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+     background:linear-gradient(180deg,var(--sky),transparent);opacity:.75}
+  .carteA:hover{transform:translateY(-3px);border-color:rgba(122,175,201,.55);
+     box-shadow:0 16px 40px rgba(0,0,0,.42), 0 0 0 1px rgba(122,175,201,.22)}
+  .carteA .ic{flex:0 0 46px;height:46px;border-radius:13px;display:grid;place-items:center;
+     background:rgba(46,122,181,.18);border:1px solid rgba(122,175,201,.3)}
+  .carteA .ic svg{width:21px;height:21px;stroke:var(--pale);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .carteA .tx{flex:1}
+  .carteA .tx b{display:block;font-size:16px;letter-spacing:.04em;margin-bottom:3px}
+  .carteA .tx span{font-size:12.5px;color:var(--txt-dim)}
+  .carteA .fl{flex:0 0 auto;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+     border:1px solid var(--line);transition:transform .28s var(--ease),background .28s var(--ease)}
+  .carteA:hover .fl{transform:translateX(4px);background:rgba(122,175,201,.16)}
+  .carteA .fl svg{width:14px;height:14px;stroke:var(--pale);fill:none;stroke-width:1.8}
+  .carteA .mode{position:absolute;right:66px;top:50%;transform:translateY(-50%);display:flex;gap:6px}
+  .carteA .mode span{font-size:9.5px;letter-spacing:.14em;color:var(--sky);border:1px solid var(--line);
+     border-radius:10px;padding:3px 7px}
+
+  /* ---------- conversation ---------- */
+  .conv{position:relative;z-index:2;display:flex;flex-direction:column;height:100%}
+  .conv-tete{display:flex;align-items:center;gap:13px;padding:16px 22px;border-bottom:1px solid var(--line)}
+  .portrait{position:relative;width:42px;height:42px;border-radius:50%;flex:0 0 42px;
+     background:linear-gradient(150deg,#1A4D7A,#2E7AB5);display:grid;place-items:center;
+     border:1px solid rgba(122,175,201,.45);overflow:hidden}
+  .portrait svg{width:26px;height:26px;fill:rgba(232,241,248,.92)}
+  .portrait .dispo{position:absolute;right:1px;bottom:1px;width:9px;height:9px;border-radius:50%;
+     background:#49D18B;border:2px solid var(--ink)}
+  .conv-tete .qui b{display:block;font-size:14.5px}
+  .conv-tete .qui span{font-size:11.5px;color:var(--txt-dim)}
+  .fil{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+  .msg{max-width:78%;padding:12px 15px;font-size:13px;line-height:1.6;border-radius:14px}
+  .msg.lui{align-self:flex-start;background:rgba(200,220,240,.07);border:1px solid var(--line);border-bottom-left-radius:5px}
+  .msg.moi{align-self:flex-end;background:linear-gradient(135deg,var(--navy),var(--blue));border-bottom-right-radius:5px}
+
+  .attente{align-self:flex-start;max-width:78%;padding:13px 16px;border-radius:14px;border-bottom-left-radius:5px;
+     background:rgba(200,220,240,.05);border:1px solid var(--line)}
+  .etape{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--txt-dim);
+     padding:3px 0;opacity:.35;transition:opacity .5s var(--ease),color .5s var(--ease)}
+  .etape.on{opacity:1;color:var(--pale)}
+  .etape.fini{opacity:.65;color:var(--sky)}
+  .coche{width:14px;height:14px;flex:0 0 14px}
+  .coche svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rot{width:14px;height:14px;border-radius:50%;border:1.6px solid rgba(122,175,201,.3);
+     border-top-color:var(--sky);animation:tourne .9s linear infinite;flex:0 0 14px}
+  .jauge{height:2px;background:rgba(122,175,201,.16);border-radius:2px;margin-top:10px;overflow:hidden}
+  .jauge i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--sky));
+     animation:progresse 12s linear forwards}
+  @keyframes progresse{to{width:100%}}
+
+  .suggest{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 12px}
+  .sug{padding:9px 13px;border-radius:16px;border:1px solid var(--line);background:var(--glass);
+     font-size:12px;color:var(--pale);cursor:pointer;transition:all .24s var(--ease)}
+  .sug:hover{border-color:rgba(122,175,201,.55);background:rgba(122,175,201,.14);transform:translateY(-2px)}
+  .saisie{display:flex;align-items:center;gap:10px;margin:0 22px 20px;padding:6px 6px 6px 18px;
+     border-radius:26px;border:1px solid var(--line);background:rgba(6,25,35,.7)}
+  .saisie input{flex:1;background:none;border:0;outline:0;color:var(--txt);font-family:var(--font);font-size:13px;padding:10px 0}
+  .saisie input::placeholder{color:#6E8CA2}
+  .mic{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--glass);
+     cursor:pointer;display:grid;place-items:center}
+  .mic svg{width:16px;height:16px;stroke:var(--sky);fill:none;stroke-width:1.8;stroke-linecap:round}
+  .env{width:38px;height:38px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+     background:linear-gradient(140deg,var(--blue),var(--navy));box-shadow:0 6px 18px rgba(46,122,181,.4)}
+  .env svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- etats ---------- */
+  .etats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media(max-width:900px){.etats{grid-template-columns:repeat(2,1fr)}}
+  .etat{border:1px solid var(--line);border-radius:14px;padding:18px 12px 14px;text-align:center;
+     background:linear-gradient(180deg,rgba(10,34,51,.8),rgba(4,18,27,.8))}
+  .etat .mini{width:118px;height:118px;margin:0 auto 12px}
+  .etat b{display:block;font-size:12.5px;letter-spacing:.14em;color:var(--pale);margin-bottom:4px}
+  .etat span{font-size:11.5px;color:var(--txt-dim);line-height:1.5}
+  .mini .orbe{width:118px;height:118px;cursor:default}
+  .mini .noyau{width:42px;height:42px;border-radius:12px}
+  .mini .noyau::after{inset:10px;border-radius:6px}
+  .mini .barres i:nth-child(1){height:12px;left:36px} .mini .barres i:nth-child(2){height:24px;left:47px}
+  .mini .barres i:nth-child(3){height:32px;left:58px} .mini .barres i:nth-child(4){height:20px;left:69px}
+  .mini .barres i:nth-child(5){height:11px;left:80px}
+
+  .legende{color:var(--txt-dim);font-size:12.5px;line-height:1.7;margin-top:14px;max-width:82ch}
+  .legende b{color:var(--pale);font-weight:700}
+  .reglage{display:flex;align-items:center;gap:12px;margin:14px 0 0;font-size:12.5px;color:var(--txt-dim)}
+  .reglage input{accent-color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="revue">
+
+  <h1>Isaac Ahmed — direction A</h1>
+  <p class="sous">Direction retenue, avec la photo du Data Center en arrière-plan à 15 pour cent et une sphère
+  devenue interactive. Le parcours reste défilant. L'image de fond est un visuel de substitution : déposez la
+  vraie photo sous le nom <code>fond_datacenter.jpg</code> et rien d'autre ne bouge.</p>
+
+  <div class="reglage">
+    <label for="op">Opacité du fond</label>
+    <input id="op" type="range" min="0" max="40" value="15" />
+    <span id="opval">15 %</span>
+  </div>
+
+  <!-- ============ ACCUEIL ============ -->
+  <div class="bloc">
+    <h2>1. Écran d'accueil, la sphère devient l'interface</h2>
+    <p class="note">On peut parler à Isaac sans entrer nulle part : on appuie sur la sphère, on parle, elle répond.
+    Le parcours « Parler à Isaac » reste là pour l'écrit. Appuyez sur la sphère de la maquette, elle enchaîne
+    les quatre états comme elle le fera en vrai.</p>
+
+    <div class="duo">
+      <div>
+        <div class="etiq">Accueil · <b>repos, prêt à écouter</b></div>
+        <div class="borne"><div class="ecran">
+          <div class="fond photo"></div>
+          <div class="fond lueur"></div>
+
+          <div class="barre">
+            <div class="marque">
+              <div class="cube"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="nom">ST DIGITAL <span>| Data Center</span></div>
+            </div>
+            <div class="puce">FR <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+          </div>
+
+          <div class="ancrage">
+            <span class="pt"><span class="vivant"></span> Isaac est disponible</span>
+            <span class="pt">Libreville · 08:14</span>
+          </div>
+
+          <div class="hero">
+            <p class="eyebrow">INTERFACE D'ACCUEIL INTELLIGENTE</p>
+            <h2>Bienvenue chez<br/><em>ST DIGITAL</em></h2>
+            <p>Isaac vous accompagne pour votre visite, votre rendez-vous
+            et vos questions d'orientation.</p>
+          </div>
+
+          <div class="scene">
+            <div class="orbe repos" id="orbe">
+              <div class="halo"></div>
+              <div class="onde"></div><div class="onde d2"></div><div class="onde d3"></div>
+              <div class="anneau a1"></div><div class="anneau a2"></div>
+              <div class="orbite"><i></i></div><div class="orbite o2"><i></i></div>
+              <div class="barres"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="noyau"></div>
+            </div>
+          </div>
+
+          <div class="invite">
+            <div class="cta" id="cta">
+              <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+              APPUYEZ POUR PARLER
+            </div>
+            <p class="etat-txt" id="etatTxt"></p>
+            <p class="transcript" id="trans"></p>
+          </div>
+
+          <div class="titre-sec"><span class="trait"></span> OU CHOISISSEZ UN PARCOURS</div>
+          <div class="parcours">
+            <div class="carteA">
+              <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/><path d="M9 16l2 2 4-4"/></svg></div>
+              <div class="tx"><b>RENDEZ-VOUS</b><span>Prendre ou gérer un rendez-vous</span></div>
+              <div class="fl"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            </div>
+            <div class="carteA">
+              <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M12 8v4l3 2"/><circle cx="19" cy="5" r="2"/></svg></div>
+              <div class="tx"><b>PARLER À ISAAC</b><span>Écrire, ou parler, ou les deux</span></div>
+              <div class="mode"><span>TEXTE</span><span>VOIX</span></div>
+              <div class="fl"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- conversation : attente -->
+      <div>
+        <div class="etiq">Conversation · <b>Isaac raconte ce qu'il fait</b></div>
+        <div class="borne"><div class="ecran" style="overflow:hidden">
+          <div class="fond photo"></div>
+          <div class="fond lueur"></div>
+          <div class="conv">
+            <div class="conv-tete">
+              <div class="portrait">
+                <svg viewBox="0 0 24 24"><path d="M12 12a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Zm0 1.8c-3.6 0-7 1.9-7 4.3V21h14v-2.9c0-2.4-3.4-4.3-7-4.3Z"/></svg>
+                <span class="dispo"></span>
+              </div>
+              <div class="qui"><b>Isaac Ahmed</b><span>Assistant d'accueil · en ligne</span></div>
+            </div>
+            <div class="fil">
+              <div class="msg lui">Bonjour, je suis Isaac Ahmed, assistant d'accueil de ST DIGITAL.
+              Comment puis-je vous orienter ?</div>
+              <div class="msg moi">Quels sont vos horaires d'ouverture ?</div>
+              <div class="attente">
+                <div class="etape fini"><span class="coche"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span> Je comprends votre question</div>
+                <div class="etape on"><span class="rot"></span> Je consulte la base de connaissances</div>
+                <div class="etape"><span class="coche"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span> Je rédige la réponse</div>
+                <div class="jauge"><i></i></div>
+              </div>
+            </div>
+            <div class="suggest">
+              <div class="sug">Où se trouve le Datacenter ?</div>
+              <div class="sug">Je viens pour un rendez-vous</div>
+              <div class="sug">Que fait ST DIGITAL ?</div>
+            </div>
+            <div class="saisie">
+              <input placeholder="Posez votre question à Isaac..." />
+              <button class="mic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+              <button class="env"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5L4 12Z"/></svg></button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ETATS ============ -->
+  <div class="bloc">
+    <h2>2. La sphère, quatre états</h2>
+    <p class="note">Un seul composant, quatre comportements, branchés sur des états réels du système :
+    repos, écoute du microphone, traitement de la question, restitution vocale.</p>
+
+    <div class="etats">
+      <div class="etat">
+        <div class="mini"><div class="orbe repos">
+          <div class="halo"></div><div class="anneau a1"></div><div class="anneau a2"></div><div class="noyau"></div>
+        </div></div>
+        <b>REPOS</b><span>Respiration lente. La borne est vivante, elle n'appelle pas.</span>
+      </div>
+      <div class="etat">
+        <div class="mini"><div class="orbe ecoute">
+          <div class="halo"></div>
+          <div class="onde"></div><div class="onde d2"></div><div class="onde d3"></div>
+          <div class="anneau a1"></div><div class="anneau a2"></div><div class="noyau"></div>
+        </div></div>
+        <b>ÉCOUTE</b><span>Ondes concentriques. Le microphone est ouvert, et cela se voit.</span>
+      </div>
+      <div class="etat">
+        <div class="mini"><div class="orbe pense">
+          <div class="halo"></div><div class="anneau a1"></div><div class="anneau a2"></div>
+          <div class="orbite"><i></i></div><div class="orbite o2"><i></i></div>
+          <div class="noyau"></div>
+        </div></div>
+        <b>RÉFLEXION</b><span>Orbites croisées. C'est l'état des cent secondes d'attente.</span>
+      </div>
+      <div class="etat">
+        <div class="mini"><div class="orbe parle">
+          <div class="halo"></div><div class="anneau a1"></div><div class="anneau a2"></div>
+          <div class="barres"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="noyau"></div>
+        </div></div>
+        <b>PAROLE</b><span>Onde sonore. Prête pour le module vocal, sans rien promettre avant.</span>
+      </div>
+    </div>
+
+    <p class="legende">Ce que la maquette change par rapport à l'application actuelle : typographie
+    <b>Century Gothic</b> et <b>Cambria</b> au lieu d'Arial, icônes vectorielles au lieu des étiquettes
+    « RDV » et « IA », bandeau d'ancrage avec le site et l'heure, attente transformée en séquence lisible,
+    questions proposées pour éviter le clavier, et sphère promue au rang d'interface principale.</p>
+  </div>
+
+</div>
+
+<script>
+  // reglage de l'opacite du fond
+  const op = document.getElementById('op'), opval = document.getElementById('opval');
+  op.addEventListener('input', () => {
+    document.documentElement.style.setProperty('--opacite-fond', op.value / 100);
+    opval.textContent = op.value + ' %';
+  });
+
+  // demonstration du cycle vocal
+  const orbe = document.getElementById('orbe');
+  const etatTxt = document.getElementById('etatTxt');
+  const trans = document.getElementById('trans');
+  const cta = document.getElementById('cta');
+  let enCours = false;
+
+  function etat(nom, libelle){
+    orbe.className = 'orbe ' + nom;
+    etatTxt.textContent = libelle;
+  }
+
+  function cycle(){
+    if (enCours) return;
+    enCours = true;
+    trans.classList.remove('on'); trans.innerHTML = '';
+    etat('ecoute', 'ISAAC VOUS ÉCOUTE');
+    setTimeout(() => {
+      trans.classList.add('on');
+      trans.innerHTML = 'Vous avez dit : <b>« Quels sont vos horaires d\'ouverture ? »</b>';
+      etat('pense', 'ISAAC CHERCHE LA RÉPONSE');
+    }, 2600);
+    setTimeout(() => etat('parle', 'ISAAC RÉPOND'), 6200);
+    setTimeout(() => {
+      trans.innerHTML = 'Isaac : <b>« Nos horaires sont de 8h à 17h, du lundi au vendredi. »</b>';
+    }, 6400);
+    setTimeout(() => { etat('repos', ''); enCours = false; }, 11000);
+  }
+  orbe.addEventListener('click', cycle);
+  cta.addEventListener('click', cycle);
+
+  // boucle de l'attente textuelle
+  const etapes = document.querySelectorAll('.attente .etape');
+  if (etapes.length) {
+    let i = 1;
+    setInterval(() => {
+      etapes.forEach((e, k) => {
+        e.classList.remove('on', 'fini');
+        if (k < i) e.classList.add('fini');
+        if (k === i) e.classList.add('on');
+      });
+      i = (i + 1) % (etapes.length + 1);
+      const j = document.querySelector('.jauge i');
+      if (j) { j.style.animation = 'none'; void j.offsetWidth; j.style.animation = 'progresse 12s linear forwards'; }
+    }, 4000);
+  }
+</script>
+</body>
+</html>
