@@ -104,9 +104,44 @@ Ces règles vivent dans une **table**, `prononciation.py`, appliquée avant chaq
 
 `siwis` reste embarquée et reste sélectionnable par le champ `voix` de la requête.
 
+## Mesure sur de vrais enregistrements — le seul chiffre qui compte
+
+Dix phrases dictées au micro, à la distance d'une borne, **44,8 s de parole**, 4,5 s par phrase en moyenne.
+
+| Réglage | Taux d'erreur mot | Phrases parfaites | Facteur temps réel |
+|---|---|---|---|
+| Sans amorce | 26,9 % | 3 / 10 | × 0,38 |
+| Avec amorce métier | 15,4 % | 4 / 10 | × 0,40 |
+| **Avec amorce et filtre de silence** | **12,8 %** | **5 / 10** | **× 0,40** |
+
+**Le temps est meilleur que prévu.** Le facteur × 0,40 sur de la vraie voix, contre × 0,75 mesuré sur la synthèse : la transcription prend **1,8 s pour 4,5 s de parole**. La marge est confortable, là où la mesure synthétique laissait craindre le contraire.
+
+**L'amorce vaut son poids** : elle divise le taux d'erreur par deux. Le filtre de silence apporte un gain plus modeste.
+
+### Ce que valent vraiment ces 12,8 %
+
+Plusieurs écarts comptés comme erreurs n'en sont pas :
+
+- « quels sont **les** horaires » entendu « **vos** horaires » — c'est vraisemblablement ce qui a été dit, ma référence ne correspond pas à l'énoncé réel ;
+- « J'ai rendez-vous » entendu « J'ai **un** rendez-vous », même remarque ;
+- « **Euh** je cherche » entendu « Je cherche » — Whisper écarte l'hésitation, ce qui est souhaitable pour une borne.
+
+**Le taux réel est donc inférieur à 12,8 %.** Une seule erreur résiste vraiment, et elle compte : **« Nkok » entendu « une coque »**. C'est le nom du Datacenter du Gabon, donc le mot le plus prononcé du site.
+
+### Le réglage ne se règle pas sur trois phrases
+
+En cherchant l'amorce qui corrigerait « Nkok », une découverte a tranché la question : **le modèle n'est pas déterministe**. Le même fichier, le même réglage, deux appels — et « à dix heures » devient « à disir ». Les écarts entre variantes d'amorce se sont révélés **du même ordre que le bruit du modèle lui-même**.
+
+Sur-ajuster sur les trois phrases difficiles aurait donné un réglage pire en moyenne. Le réglage retenu est donc celui qui gagne sur les dix : **amorce métier complète, filtre de silence actif**.
+
+### La correction de « Nkok » ne relève pas du réglage
+
+Elle relève de l'application. De même qu'un dictionnaire de prononciation corrige ce que Piper dit mal, un **dictionnaire de correction après transcription** doit rattraper ce que Whisper entend mal sur le vocabulaire du site : « une coque » vers « Nkok », « détestateur » vers « datacenter ». C'est le miroir exact de ce qui existe déjà pour la synthèse.
+
 ## Ce qui reste à faire
 
-1. **Mesurer la reconnaissance sur de vrais enregistrements.** Rien d'autre ne permettra de conclure sur la qualité.
-2. **Régler l'amorce** : elle apporte beaucoup, elle peut aussi nuire. À ajuster sur les enregistrements réels.
-3. **Décider du déclenchement** : bouton pressé pendant qu'on parle, ou détection automatique de fin de phrase. Le facteur × 0,75 interdit le flux continu.
-4. **Traiter le cas du bruit de hall**, qui n'est pas représenté ici du tout.
+1. **Convertir l'audio en WAV 16 kHz mono avant transcription.** Ce n'est pas une optimisation : sans cette conversion, le service répond `200` avec un texte vide, et un client naïf conclut que le visiteur n'a rien dit. Voir `ECHECS_SILENCIEUX.md`, point 5.
+2. **Poser un dictionnaire de correction après transcription**, pour le vocabulaire du site. « Nkok » est la seule erreur qui résiste au réglage, et c'est le mot le plus prononcé.
+3. **Traiter un texte vide comme une erreur**, jamais comme un silence du visiteur.
+4. **Décider du déclenchement** : bouton maintenu pendant qu'on parle, ou détection de fin de phrase. Le facteur × 0,40 laisse le choix ouvert, contrairement à ce que laissait craindre la mesure synthétique.
+5. **Mesurer en environnement bruyant**, qui n'est toujours pas représenté : les dix enregistrements ont été faits au calme.

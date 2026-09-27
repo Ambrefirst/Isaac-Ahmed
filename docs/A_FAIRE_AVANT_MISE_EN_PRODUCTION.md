@@ -131,3 +131,24 @@ Ce registre répond à une obligation de procédure sur les sites ST Digital, et
 L'événement `visits_autoclose` modifie le registre sans authentification d'administrateur : il est protégé par un secret partagé avec le seul workflow planifié, et refusé sans lui. Le point d'entrée `isaac-rdv` n'est de toute façon pas exposé sur la surface publique.
 
 **Reste ouvert.** Un visiteur peut encore présenter son code plusieurs fois dans sa journée de validité, voir le point 10.
+
+## 12. Chaîne audio — installée le 27/09/2026, non raccordée
+
+Whisper et Piper tournent sur la tour, conteneurs `isaac-whisper` et `isaac-piper`. Rien ne sort de l'infrastructure. Mesuré sur dix enregistrements réels : **12,8 % de taux d'erreur mot**, transcription en 1,8 s pour 4,5 s de parole, synthèse en 0,19 s.
+
+**Rien n'est encore raccordé** : ni route nginx, ni workflow n8n, ni interface dans la borne. Les services existent et fonctionnent, la chaîne n'est pas branchée.
+
+Quatre points doivent être tenus au moment du raccordement, chacun venant d'un défaut déjà constaté :
+
+1. **Convertir l'audio en WAV 16 kHz mono avant transcription.** Sans cela le service répond `200` avec un texte vide, et un client naïf conclut que le visiteur n'a rien dit. C'est le point 5 de `ECHECS_SILENCIEUX.md`.
+2. **Traiter un texte vide comme une erreur**, jamais comme un silence.
+3. **Passer l'amorce de vocabulaire en paramètre d'URL**, pas en champ de formulaire — elle divise le taux d'erreur par deux, et passée au mauvais endroit elle est ignorée sans bruit.
+4. **Poser un dictionnaire de correction après transcription.** « Nkok » est la seule erreur qui résiste au réglage, et c'est le nom du Datacenter du Gabon.
+
+Reste également à mesurer en **environnement bruyant** : les dix enregistrements ont été faits au calme.
+
+---
+
+## Lire aussi
+
+`ECHECS_SILENCIEUX.md` recense les seize pannes qui n'ont produit **aucune erreur** au cours du projet, avec pour chacune comment elle a été trouvée et ce qui l'empêche aujourd'hui. Deux d'entre elles se sont produites **deux fois**, faute d'avoir été consignées la première : c'est la raison d'être de ce document.
