@@ -14,6 +14,18 @@ function MicroIcon({ actif }) {
     </svg>
   );
 }
+/* L'icone reprend les barres de la sphere quand Isaac parle. Deux microphones
+   cote a cote ne disaient pas lequel faisait quoi : le micro sert a dicter, ce
+   bouton-ci sert a entendre Isaac. Le dessin doit porter cette difference, pas
+   le seul emplacement. */
+function OndeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M3 11v2" /><path d="M7.5 8v8" /><path d="M12 4.5v15" /><path d="M16.5 8v8" /><path d="M21 11v2" />
+    </svg>
+  );
+}
+
 function SablierIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -208,10 +220,10 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
                 type="button"
                 className="chat-orb-parler"
                 onClick={() => setModeVocal(true)}
-                aria-label={t("voix.ouvrir")}
                 title={t("voix.ouvrir")}
               >
-                <MicroIcon />
+                <OndeIcon />
+                <span>{t("voix.parler")}</span>
               </button>
             )}
           </div>
@@ -253,8 +265,8 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
               onClick={basculerMicro}
               disabled={busy || transcription}
               aria-pressed={ecoute}
-              aria-label={t(ecoute ? "chat.voice.stop" : "chat.voice.start")}
-              title={t(ecoute ? "chat.voice.stop" : "chat.voice.start")}
+              aria-label={t(ecoute ? "chat.voice.stop" : "chat.voice.dicter")}
+              title={t(ecoute ? "chat.voice.stop" : "chat.voice.dicter")}
             >
               {transcription ? <SablierIcon /> : <MicroIcon actif={ecoute} />}
             </button>

@@ -280,12 +280,21 @@
 }
 .chat-orb { margin: 0; }
 
-.chat-orb-parler {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
+/* Une pastille qui porte un mot, pas un second micro muet. Le micro du champ
+   sert a dicter ; celui-ci fait parler Isaac. Deux dessins identiques ne
+   disaient pas cette difference, et l'emplacement seul ne suffisait pas. */
+.screen-header .chat-orb-parler {
+  width: auto;
+  height: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 10px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .12em;
   border: 1px solid rgba(122, 175, 201, .35);
   background: rgba(46, 122, 181, .14);
   color: var(--pale, #C8DCF0);
@@ -293,9 +302,9 @@
   padding: 0;
   transition: transform .2s var(--ease), background .2s var(--ease), border-color .2s var(--ease);
 }
-.chat-orb-parler:hover {
+.screen-header .chat-orb-parler:hover {
   transform: translateY(-1px);
   background: rgba(46, 122, 181, .28);
   border-color: rgba(122, 175, 201, .75);
 }
-.chat-orb-parler svg { width: 16px; height: 16px; }
+.screen-header .chat-orb-parler svg { width: 16px; height: 16px; }
