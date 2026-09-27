@@ -543,6 +543,20 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
 :root[data-theme="clair"] button.ghost{background:rgba(255,255,255,.7);color:var(--text-muted)}
 :root[data-theme="clair"] button.ghost:hover{color:var(--navy);border-color:var(--blue);background:#fff}
 
+
+/* Sortie non constatee : ni le vert de la presence, ni le gris d'un depart
+   observe. La mention est portee par la ligne elle-meme, pas par une legende
+   en bas de tableau que personne ne lit. */
+.registre-estime{color:var(--warn);font-weight:700}
+.mention-cloture{display:block;font-size:.68rem;font-weight:400;letter-spacing:.04em;opacity:.85;margin-top:2px}
+.btn-clore{
+  background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);
+  border-radius:999px;padding:5px 13px;font-size:.72rem;cursor:pointer;font-family:var(--font);
+  transition:color .2s var(--ease),border-color .2s var(--ease);
+}
+.btn-clore:hover:not(:disabled){color:var(--warn);border-color:var(--warn)}
+.btn-clore:disabled{opacity:.5;cursor:default}
+
 </style>
 </head>
 <body>
@@ -1525,6 +1539,12 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     }
   }
 
+  /* Partagee par le tableau et par la cellule de sortie : elle etait declaree
+     dans renderVisits, donc hors de portee de celluleSortie. */
+  function heure(t) {
+    return new Date(t).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  }
+
   function dureeLisible(v) {
     const fin = v.exitAt || Date.now();
     const minutes = Math.max(1, Math.round((fin - v.entryAt) / 60000));
@@ -1571,16 +1591,47 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
         : '<div class="empty">Aucune visite enregistrée. Le registre se remplit lorsqu\'un visiteur présente son code à la borne.</div>';
       return;
     }
-    const heure = (t) => new Date(t).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
     const rows = liste.map((v) => `<tr>
       <td>${v.visitor || "—"}</td>
       <td>${v.company || "—"}</td>
       <td><code>${v.code || "—"}</code></td>
       <td>${heure(v.entryAt)}</td>
-      <td class="${v.exitAt ? "registre-sorti" : "registre-present"}">${v.exitAt ? heure(v.exitAt) : "sur site"}</td>
+      <td class="${celluleSortie(v).classe}">${celluleSortie(v).texte}</td>
       <td>${dureeLisible(v)}</td>
+      <td>${v.exitAt ? "" : `<button class="btn-clore" data-clore="${v.id}">Clore</button>`}</td>
     </tr>`).join("");
-    wrap.innerHTML = `<table><thead><tr><th>Visiteur</th><th>Société</th><th>Code</th><th>Entrée</th><th>Sortie</th><th>Durée</th></tr></thead><tbody>${rows}</tbody></table>`;
+    wrap.innerHTML = `<table><thead><tr><th>Visiteur</th><th>Société</th><th>Code</th><th>Entrée</th><th>Sortie</th><th>Durée</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+    document.querySelectorAll("[data-clore]").forEach((b) => {
+      b.addEventListener("click", () => clore(b.getAttribute("data-clore"), b));
+    });
+  }
+
+  /* Une sortie non constatee ne s'affiche pas comme une sortie. La duree qui
+     l'accompagne n'est pas une duree observee, et le tableau doit le dire :
+     c'est toute la difference entre un registre et une supposition. */
+  function celluleSortie(v) {
+    if (!v.exitAt) return { classe: "registre-present", texte: "sur site" };
+    if (v.clotureConstatee === false) {
+      const quoi = v.clotureMotif === "automatique" ? "clôture d'office" : "clôture manuelle";
+      return { classe: "registre-estime", texte: `${heure(v.exitAt)}<span class="mention-cloture">${quoi}</span>` };
+    }
+    return { classe: "registre-sorti", texte: heure(v.exitAt) };
+  }
+
+  async function clore(id, bouton) {
+    const v = visitsCache.find((x) => x.id === id);
+    const qui = v ? (v.visitor || "ce visiteur") : "cette visite";
+    if (!window.confirm(`Clore la visite de ${qui} ?\n\nLe départ n'a pas été signalé à la borne. La visite sera marquée close sans sortie constatée.`)) return;
+    bouton.disabled = true;
+    bouton.textContent = "…";
+    try {
+      await authedCall({ event: "admin_close_visit", visitId: id });
+      await loadVisits();
+    } catch (e) {
+      bouton.disabled = false;
+      bouton.textContent = "Clore";
+      window.alert("La clôture a échoué : " + e.message);
+    }
   }
 
   document.getElementById("refreshVisits").addEventListener("click", loadVisits);

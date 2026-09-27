@@ -35,21 +35,24 @@ Un mot de passe partagé par pays ne permet ni de savoir qui a confirmé un rend
 
 Les constantes d'expédition et le fichier `hosts.json` pointent vers une boîte Gmail personnelle utilisée pour les tests, pas vers les adresses ST Digital. À basculer avant toute démonstration à un client, et avant exploitation.
 
-## 5. Persistance de la base vectorielle — atténué le 27/09/2026, non résolu
+## 5. Persistance de la base vectorielle — RÉSOLU le 27/09/2026
 
-La base de connaissances est indexée dans un magasin vectoriel **en mémoire**. Tout redémarrage du conteneur n8n la vide, et le chat se met alors à répondre sans contexte, donc à inventer, sans aucun message d'erreur.
+La base de connaissances était indexée dans un magasin vectoriel **en mémoire**. Tout redémarrage du conteneur n8n la vidait, et le chat se mettait alors à répondre sans contexte, donc à inventer, **sans aucun message d'erreur**.
 
-> **Le défaut s'est produit une seconde fois le 27/09/2026**, à la suite des redémarrages nécessaires au déploiement des workflows. Isaac a répondu « ouvert de 8h00 à 18h00, samedi de 8h00 à 12h00 » alors que la base validée indique **8h-17h du lundi au vendredi, fermé le week-end**. Aucune erreur, aucun signe visible : seule une question de contrôle permettait de s'en apercevoir.
+> **Le défaut s'est produit deux fois**, le 21/09 puis le 27/09. La seconde fois, Isaac a répondu « ouvert de 8h00 à 18h00, samedi de 8h00 à 12h00 » alors que la base validée indique **8h-17h du lundi au vendredi, fermé le week-end**. Rien ne le signalait : seule une question de contrôle dont la réponse était connue permettait de s'en apercevoir.
 
-**Atténuation posée.** Le workflow `Isaac - Indexation base de connaissances` a reçu un déclencheur planifié, toutes les trente minutes. Le nœud d'insertion ayant `clearStore`, la réindexation est idempotente et ne crée pas de doublons. La durée maximale de la panne silencieuse passe ainsi de « jusqu'à ce que quelqu'un s'en aperçoive » à trente minutes.
+**Résolu.** Le magasin vectoriel est désormais **PostgreSQL avec l'extension pgvector**, dans un conteneur dédié `isaac-pgvector` (image `pgvector/pgvector:pg16`, base `isaac_kb`, table `isaac_kb`, port 5434 sur la boucle locale). Les deux workflows concernés utilisent le nœud `vectorStorePGVector` avec l'identifiant n8n « Isaac - Magasin vectoriel ».
 
-**Ce n'est pas un correctif.** Une demi-heure de réponses inventées reste inacceptable en exploitation, et une réindexation concurrente d'une question laisse une fenêtre de quelques secondes sans contexte. Il faut un magasin vectoriel persistant. En attendant, **toute intervention comportant un `docker restart n8n` doit être suivie immédiatement** de :
+> **Pourquoi un second conteneur plutôt que l'extension dans `isaac-postgres`.** L'image officielle `postgres:16-alpine` ne porte pas l'extension. Basculer sur l'image pgvector aurait fait passer la base métier de musl à glibc, donc changer de bibliothèque de collation sous un répertoire de données existant, ce qui expose à une corruption des index textuels. La base de connaissances est petite et vit très bien à part : le risque ne valait pas l'économie d'un conteneur.
 
-```
-curl -s -X POST http://127.0.0.1:5678/webhook/isaac-index-kb -H 'Content-Type: application/json' -d '{}'
-```
+**Vérifié.** 60 fragments indexés, puis `docker restart n8n` **sans réindexation** : les 60 fragments sont toujours en base et Isaac répond correctement sur les horaires, l'adresse du Datacenter, et refuse d'inventer un tarif absent de la base.
 
-puis d'une question de contrôle dont la réponse est connue, par exemple les horaires d'accueil.
+Deux conséquences sur l'indexation :
+
+- le nœud pgvector n'a pas d'équivalent de `clearStore`. Un nœud `Vider l index` a donc été ajouté avant l'insertion, faute de quoi chaque réindexation empilerait un exemplaire de plus de toute la base ;
+- le déclencheur toutes les trente minutes, posé le matin même comme pis-aller, n'a plus de raison d'être. Il est ramené à **un passage quotidien à 3h00**, pour que l'index suive les modifications du fichier de la base de connaissances sans ouvrir de fenêtre de vidage en pleine journée.
+
+Le secret d'accès à `isaac-pgvector` est conservé sur la tour dans `/home/aminta/isaac-pgvector.acces`, en droits 600.
 
 ## 6. Canal de notification officiel
 
@@ -92,10 +95,21 @@ Corrigé au passage : `visitor_arrival_confirmed` remettait le rendez-vous à `c
 
 **Reste ouvert.** Le code demeure réutilisable autant de fois qu'on le présente dans sa journée de validité. Un usage unique, ou un jeton renouvelé à chaque passage, reste à décider.
 
-## 11. Registre des visites — posé le 27/09/2026
+## 11. Registre des visites — complété le 27/09/2026
 
-Les entrées et sorties sont désormais horodatées : `visitor_arrival_confirmed` ouvre la visite, `visitor_departure` la ferme et calcule sa durée, `admin_list_visits` la restitue au back-office. La borne propose un parcours « Signaler mon départ » qui reprend le même code.
+Les entrées et sorties sont horodatées : `visitor_arrival_confirmed` ouvre la visite, `visitor_departure` la ferme et calcule sa durée, `admin_list_visits` la restitue au back-office. La borne propose un parcours « Signaler mon départ » qui reprend le même code.
 
 Ce registre répond à une obligation de procédure sur les sites ST Digital, et à une question que le système ne savait pas traiter : **qui se trouve dans le bâtiment en ce moment**, ce qu'une évacuation exige de savoir immédiatement.
 
-**Limite connue.** Rien n'oblige un visiteur à signaler son départ. Une visite jamais close reste indéfiniment ouverte et fausse le compteur des présents. Il faut prévoir une clôture automatique en fin de journée, ou une clôture manuelle depuis le back-office. Aucune des deux n'existe aujourd'hui.
+**La faille comblée.** Rien n'oblige un visiteur à signaler son départ, et une visite jamais close restait ouverte indéfiniment, faussant précisément ce compteur. Deux réponses ont été posées :
+
+- `admin_close_visit` : clôture manuelle depuis le registre du back-office, avec confirmation, sur les seules lignes encore ouvertes ;
+- `visits_autoclose` : clôture de nuit, déclenchée à 20h30 heure de Libreville par le workflow `Isaac - Cloture des visites`. Toute visite dont le jour d'entrée a déjà vu la fermeture du site est soldée à l'heure de fermeture, pas à l'heure courante. Les responsables de site reçoivent la liste des visites ainsi closes : une clôture d'office est un défaut de procédure, quelqu'un est entré sans jamais ressortir du registre.
+
+> **Une première version de la règle épargnait les visites du jour même.** Elle laissait donc le compteur des présents faux toute la nuit, alors que la tâche tourne justement après la fermeture. Corrigée : la condition porte sur l'heure de fermeture du jour d'entrée, pas sur la date.
+
+**Le principe qui gouverne les deux.** Une visite close sans que le départ ait été constaté **n'est pas un départ**. Les deux mécanismes posent `clotureConstatee: false` et un `clotureMotif`, et le registre affiche la mention « clôture d'office » ou « clôture manuelle » sur la ligne elle-même, en couleur d'alerte. La durée affichée n'est alors pas une durée observée, et le tableau le dit. Un registre qui ne distinguerait pas les deux cas ne vaudrait rien comme pièce de traçabilité.
+
+L'événement `visits_autoclose` modifie le registre sans authentification d'administrateur : il est protégé par un secret partagé avec le seul workflow planifié, et refusé sans lui. Le point d'entrée `isaac-rdv` n'est de toute façon pas exposé sur la surface publique.
+
+**Reste ouvert.** Un visiteur peut encore présenter son code plusieurs fois dans sa journée de validité, voir le point 10.
