@@ -196,7 +196,9 @@ Reste également à mesurer en **environnement bruyant** : les dix enregistremen
 
 ## Lire aussi
 
-`ECHECS_SILENCIEUX.md` recense les seize pannes qui n'ont produit **aucune erreur** au cours du projet, avec pour chacune comment elle a été trouvée et ce qui l'empêche aujourd'hui. Deux d'entre elles se sont produites **deux fois**, faute d'avoir été consignées la première : c'est la raison d'être de ce document.
+`ECHECS_SILENCIEUX.md` recense les dix-neuf pannes qui n'ont produit **aucune erreur** au cours du projet, avec pour chacune comment elle a été trouvée et ce qui l'empêche aujourd'hui. Trois d'entre elles se sont produites **deux fois**, faute d'avoir été consignées la première : c'est la raison d'être de ce document.
+
+Le dix-huitième cas est le seul qu'aucun essai automatique n'aurait pu attraper : la reconnaissance vocale rend une phrase inventée aussi bien formée qu'une phrase entendue. Les filtres posés le 28/09 en écartent les formes connues et les transcriptions peu sûres ; ils n'écartent pas une phrase plausible mais fausse. C'est une limite de la chaîne, pas un défaut à corriger : elle est traitée en rendant la main au visiteur, qui peut interrompre et reprendre.
 
 ## 13. Ne pas décrire l'architecture dans l'interface — corrigé le 28/09/2026
 

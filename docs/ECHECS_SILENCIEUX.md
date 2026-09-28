@@ -1,12 +1,12 @@
 # Catalogue des échecs silencieux
 
-**Dernière mise à jour : 27/09/2026.**
+**Dernière mise à jour : 28/09/2026.**
 
 Un échec silencieux est une panne qui ne produit **aucune erreur**. Le système répond, le code de retour est bon, l'interface ne clignote pas — et le résultat est faux. C'est la catégorie de défaut la plus coûteuse d'un projet comme celui-ci, parce que rien ne la signale : elle se découvre par hasard, ou par une vérification qu'on avait décidé de faire.
 
 Ce document recense tous ceux rencontrés sur Isaac Ahmed, avec pour chacun : comment il se manifestait, pourquoi rien ne l'annonçait, comment il a été trouvé, et ce qui l'empêche aujourd'hui.
 
-Il n'est pas écrit pour la forme. Plusieurs de ces défauts ont coûté des heures, et deux d'entre eux se sont produits **deux fois**, faute d'avoir été consignés la première.
+Il n'est pas écrit pour la forme. Plusieurs de ces défauts ont coûté des heures, et trois d'entre eux se sont produits **deux fois**, faute d'avoir été consignés la première — ou, pour le dernier, faute d'avoir cherché le même piège ailleurs après l'avoir corrigé une fois.
 
 ---
 
@@ -220,12 +220,49 @@ Trois fois, une mesure a donné un chiffre faux **sans se tromper de calcul**.
 
 ---
 
-## Ce que ces dix-sept cas ont en commun
+## 18. La reconnaissance invente une phrase, et rien ne la distingue d'une vraie
 
-Un seul mécanisme les explique tous : **quelque part, une opération qui échoue renvoie le même signal qu'une opération qui réussit**. Un `200` sur un texte vide. Un fichier écrit que personne ne lit. Un paramètre ignoré. Un magasin vectoriel vide qui répond quand même.
+**Ce qui se passait.** Sur la borne, en conversation parlee, la phrase entendue affichee etait : « Sous-titres realises par la communaute d'Amara.org ». Personne ne l'avait prononcee. Elle est partie au modele comme une question, qui a passe pres de deux minutes a y repondre.
+
+**Pourquoi rien ne le signalait.** La reponse du service est valide de bout en bout : code 200, champ `text` rempli, phrase francaise bien formee, ponctuee, plausible. Aucun champ ne dit « je n'ai rien entendu ». Le modele de reconnaissance a ete entraine sur des sous-titres de video : quand le son ne porte pas de parole exploitable, il ne rend pas une erreur, il rend **la phrase la plus frequente de ce corpus**, c'est-a-dire un credit de sous-titrage. C'est exactement le mecanisme commun a tous les cas de ce document : l'echec et la reussite rendent le meme signal.
+
+**Ce qui aggravait l'affaire.** La lenteur de la borne. Deux minutes d'attente pour une reponse a une phrase que personne n'a dite, sans aucun moyen d'interrompre.
+
+**Comment il a ete trouve.** Par l'usage, pas par les essais. Aucun essai automatique ne pouvait l'attraper : la valeur renvoyee etait correcte du point de vue du code.
+
+**Ce qui l'empeche, en trois filets de portee decroissante.**
+
+1. **Les signatures du corpus de sous-titres** sont refusees avant tout envoi au modele. Elles ne sont jamais une question d'accueil.
+2. **Les indices de confiance que le service renvoyait deja et qu'on jetait** : `no_speech_prob` et `avg_logprob`, par segment. Dix-huit mesures de parole reelle nette, attenuee et bruitee, faites le 28/09, fixent la marge : `no_speech_prob` n'y a jamais depasse **0,441** et `avg_logprob` n'est jamais descendu sous **-0,872**. Les seuils sont poses au-dela (0,6 et -0,95), parce que renvoyer un visiteur repeter une question qu'il a bien posee coute plus cher que laisser passer une phrase douteuse. On retient le pire segment et non la moyenne : une phrase a moitie inventee est inutilisable meme si l'autre moitie est nette.
+3. **Ce que les deux premiers ne peuvent pas attraper.** Dans ces memes mesures, un enregistrement bruite de « Comment vous contacter » est devenu « Je vous remercie. », avec des indices parfaitement normaux. Aucun seuil ne separe cela d'une vraie phrase. La seule instance qui sache que ce n'est pas ce qui a ete dit est **la personne qui l'a dit** : elle dispose desormais, pendant la recherche, d'un bouton « ce n'est pas ce que j'ai dit » qui interrompt la requete et rouvre le micro immediatement.
+
+> **Ce que cela apprend.** Un modele generatif ne signale pas son incertitude en echouant : il produit sa sortie la plus probable, et celle-ci reste bien formee meme quand l'entree ne contenait rien. Les filtres automatiques reduisent le probleme, ils ne le ferment pas ; au-dela, la seule issue honnete est de rendre la main a l'utilisateur au lieu de pretendre trancher a sa place. C'est aussi la premiere fois qu'un defaut de ce catalogue **n'aurait pas pu** etre attrape par un essai automatique.
+
+---
+
+## 19. Le meme piege, ailleurs — la rechute du dix-septieme
+
+**Ce qui se passait.** Le cercle qui tourne pendant qu'Isaac cherche, et la jauge de progression sous les etapes, restaient figes. La jauge, pire, se remplissait **d'un coup** : l'ecran affirmait que la reponse etait ecrite alors qu'elle commencait a peine.
+
+**Pourquoi c'est le meme cas.** La cause est identique au cas 17 : la regle generale de mouvement reduit. La sphere avait ete exemptee ; la sequence d'attente ne l'avait pas ete.
+
+**Pourquoi il faut le compter separement.** Parce que la lecon du cas 17 avait ete tiree au singulier — « la sphere est un indicateur » — alors qu'elle valait au pluriel. Sur une borne qui demande une a deux minutes, ce cercle est **le seul signe que la demande est vivante**. Immobile, il fait croire a une panne.
+
+**Ce qui l'empeche.** La sequence d'attente est exemptee comme la sphere, et la jauge garde sa duree reelle de 100 s. Verification faite dans un navigateur reellement en mouvement reduit, en relevant la transformation calculee a 600 ms d'intervalle : elle change.
+
+> **Ce que cela apprend.** Corriger un cas ne corrige pas sa classe. Apres toute correction, la question utile n'est pas « est-ce repare ? » mais « ou ailleurs le meme piege attend-il ? ». Ici, une recherche des animations declarees dans le projet aurait donne la reponse en une minute.
+
+---
+
+## Ce que ces dix-neuf cas ont en commun
+
+Un seul mécanisme les explique tous : **quelque part, une opération qui échoue renvoie le même signal qu'une opération qui réussit**. Un `200` sur un texte vide. Un fichier écrit que personne ne lit. Un paramètre ignoré. Un magasin vectoriel vide qui répond quand même. Une animation qui existe et ne dure rien.
+
+Le dix-huitième cas en est la forme la plus difficile, et il mérite d'être distingué : la reconnaissance vocale ne renvoie pas seulement le même signal, elle renvoie un **contenu plausible**. Il n'existe pas de vérification interne qui sépare une phrase entendue d'une phrase inventée, parce que les deux sont, pour la machine, la sortie la plus probable de son entrée. C'est la limite de ces trois habitudes, et la raison pour laquelle la dernière issue est une commande rendue à l'utilisateur.
 
 Trois habitudes les attrapent, et elles sont plus efficaces que n'importe quel outillage :
 
 1. **Vérifier par le canal réel**, pas par relecture. Une requête HTTP plutôt qu'une lecture de configuration. Un décodeur indépendant plutôt que le sien.
 2. **Se méfier de ce qui est trop rapide, ou trop identique.** Dix millisecondes pour cinq secondes d'audio. Deux réglages qui rendent le même texte au caractère près. Une ligne de base figée depuis trois semaines.
 3. **Poser une question dont on connaît la réponse**, après toute intervention. C'est ce qui a rattrapé Isaac en train d'inventer des horaires, deux fois.
+4. **Après une correction, chercher la classe et non le cas.** Le dix-neuvième défaut est le dix-septième, au même endroit du code, trouvé trois jours plus tard parce que la leçon avait été tirée au singulier.

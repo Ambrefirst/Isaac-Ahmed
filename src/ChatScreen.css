@@ -308,3 +308,25 @@
   border-color: rgba(122, 175, 201, .75);
 }
 .screen-header .chat-orb-parler svg { width: 16px; height: 16px; }
+
+/* --- Mouvement reduit : la sequence d'attente ------------------------------
+   Meme contresens que pour la sphere, et repere au meme endroit. La regle
+   generale de index.css ramene toute animation a 0,01 ms quand le systeme
+   demande le mouvement reduit. Appliquee ici, elle fige le cercle qui tourne
+   et remplit la jauge d'un coup : l'ecran affirme alors que la reponse est
+   ecrite alors qu'elle commence a peine.
+
+   Sur cette borne une reponse demande une a deux minutes. Ce cercle est le
+   seul signe que la demande est vivante ; immobile, il fait croire a une
+   panne. On lui rend donc son tour, plus lent, et la jauge garde sa duree
+   reelle : ce que le reglage evite, c'est l'agitation, pas l'information. */
+@media (prefers-reduced-motion: reduce) {
+  .attente-rot {
+    animation-duration: 2.2s !important;
+    animation-iteration-count: infinite !important;
+  }
+  .attente-jauge i {
+    animation-duration: 100s !important;
+    animation-iteration-count: 1 !important;
+  }
+}

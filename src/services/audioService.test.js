@@ -27,6 +27,67 @@ describe("chaine audio de la borne", () => {
     delete global.fetch;
   });
 
+  /* Le 28/09, la borne a affiche « Sous-titres realises par la communaute
+     d'Amara.org » comme si le visiteur l'avait prononce, puis a passe deux
+     minutes a y repondre. La reconnaissance a ete entrainee sur des sous-titres
+     de video : quand le son ne porte pas de parole, elle rend la phrase la plus
+     frequente de ce corpus, avec l'assurance d'une vraie transcription.
+
+     Les seuils de confiance viennent de dix-huit mesures de parole reelle
+     degradee faites le meme jour : no_speech_prob n'y a jamais depasse 0,441 et
+     avg_logprob n'est jamais descendu sous -0,872. Refuser une vraie question
+     coute plus cher que laisser passer une fausse, donc les seuils sont poses
+     au-dela du pire cas observe. Ces essais gardent cette marge. */
+  describe("ce que la reconnaissance rend quand elle n'a pas entendu de parole", () => {
+    it("reconnait les generiques de sous-titrage, y compris celui vu sur la borne", () => {
+      [
+        "Sous-titres realises par la communaute d'Amara.org",
+        "Sous-titres r\u00e9alis\u00e9s par la communaut\u00e9 d\u2019Amara.org",
+        "Sous-titrage Societe Radio-Canada",
+        "Merci d'avoir regarde cette video",
+        "Abonnez-vous !",
+      ].forEach((artefact) => {
+        expect(service.estArtefact(artefact)).toBe(true);
+      });
+    });
+
+    it("ne prend pas une vraie question pour un generique", () => {
+      [
+        "Quels sont vos horaires d'ouverture ?",
+        "Ou se trouve le datacenter de Nkok ?",
+        "Je voudrais prendre rendez-vous avec le service commercial",
+        "Merci beaucoup, au revoir",
+      ].forEach((question) => {
+        expect(service.estArtefact(question)).toBe(false);
+      });
+    });
+
+    it("refuse un segment dont les indices sortent de ce qu'on a mesure", () => {
+      expect(service.confianceInsuffisante([{ no_speech_prob: 0.82, avg_logprob: -0.4 }])).toBe(true);
+      expect(service.confianceInsuffisante([{ no_speech_prob: 0.1, avg_logprob: -1.6 }])).toBe(true);
+    });
+
+    it("laisse passer la parole reelle la plus degradee qu'on ait mesuree", () => {
+      /* Pire cas des dix-huit mesures du 28/09 : ce sont de vraies phrases,
+         correctement transcrites. Si un essai casse ici, c'est le seuil qui est
+         trop serre, et ce sont des visiteurs qu'on renvoie repeter. */
+      expect(service.confianceInsuffisante([{ no_speech_prob: 0.441, avg_logprob: -0.872 }])).toBe(false);
+      expect(service.confianceInsuffisante([])).toBe(false);
+      expect(service.confianceInsuffisante(undefined)).toBe(false);
+    });
+
+    it("retient le pire segment et non la moyenne", () => {
+      /* Une phrase a moitie inventee est inutilisable meme si l'autre moitie
+         est nette : une moyenne diluerait exactement le cas qu'on cherche. */
+      expect(
+        service.confianceInsuffisante([
+          { no_speech_prob: 0.02, avg_logprob: -0.3 },
+          { no_speech_prob: 0.95, avg_logprob: -0.3 },
+        ])
+      ).toBe(true);
+    });
+  });
+
   describe("corrections du vocabulaire du site", () => {
     const cas = [
       /* Le cas de l'elision : corriger le nom sans corriger le « d' » qui le
@@ -96,6 +157,42 @@ describe("chaine audio de la borne", () => {
     test("un service indisponible est distingue d'un silence", async () => {
       global.fetch = () => reponse({}, false);
       await expect(service.transcrire(blobFactice())).rejects.toThrow(/indisponible/i);
+    });
+
+    /* Ce qui a ete vu sur la borne le 28/09 : un generique de sous-titrage
+       affiche comme une question, et deux minutes de recherche pour y repondre.
+       Il doit desormais etre refuse avant de partir au modele. */
+    test("un generique de sous-titrage ne part pas au modele", async () => {
+      global.fetch = () => reponse({
+        text: "Sous-titres realises par la communaute d'Amara.org",
+        segments: [{ no_speech_prob: 0.2, avg_logprob: -0.5 }],
+      });
+      await expect(service.transcrire(blobFactice())).rejects.toMatchObject({ repeter: true });
+    });
+
+    test("une transcription sans confiance fait repeter, sans annoncer de panne", async () => {
+      global.fetch = () => reponse({
+        text: "peut-etre quelque chose",
+        segments: [{ no_speech_prob: 0.91, avg_logprob: -1.4 }],
+      });
+      await expect(service.transcrire(blobFactice())).rejects.toMatchObject({ repeter: true });
+    });
+
+    /* La distinction qui compte : une chaine tombee ne doit PAS demander de
+       repeter, sans quoi on envoie le visiteur articuler devant une panne. */
+    test("une panne n'est pas un malentendu", async () => {
+      global.fetch = () => reponse({}, false);
+      const echec = await service.transcrire(blobFactice()).catch((e) => e);
+      expect(echec.repeter).toBeFalsy();
+      expect(echec.message).toMatch(/indisponible/i);
+    });
+
+    test("une phrase nette et sure passe normalement", async () => {
+      global.fetch = () => reponse({
+        text: "Quels sont vos horaires ?",
+        segments: [{ no_speech_prob: 0.07, avg_logprob: -0.43 }],
+      });
+      await expect(service.transcrire(blobFactice())).resolves.toBe("Quels sont vos horaires ?");
     });
   });
 

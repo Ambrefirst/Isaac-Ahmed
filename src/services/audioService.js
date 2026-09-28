@@ -41,6 +41,47 @@ const CORRECTIONS = [
   [/\btier\s*(?:3|iii)\b/gi, "Tier III"],
 ];
 
+/* Signatures du corpus de sous-titres sur lequel la reconnaissance a ete
+   entrainee. Elle les rend quand le son ne porte pas de parole : ce sont des
+   generiques de fin, pas des questions d'accueil. */
+const ARTEFACTS = [
+  /amara\.org/i,
+  /sous[- ]?titr(?:es?|age|eur)/i,
+  /subtitl/i,
+  /abonnez[- ]vous/i,
+  /merci d['\u2019]avoir regard/i,
+  /merci de votre attention/i,
+];
+
+/* Mesures du 28/09 sur dix-huit enregistrements de parole reelle degradee.
+   Voir l'en-tete : les seuils sont volontairement au-dela du pire cas observe. */
+const SEUIL_NON_PAROLE = 0.6;
+const SEUIL_VRAISEMBLANCE = -0.95;
+
+/* Une erreur que l'appelant doit traiter autrement qu'une panne : la chaine
+   fonctionne, c'est le son qui n'etait pas exploitable. Dans un cas on demande
+   de repeter, dans l'autre on arrete la conversation. */
+function malEntendu(message) {
+  const e = new Error(message);
+  e.repeter = true;
+  return e;
+}
+
+export function estArtefact(texte) {
+  return ARTEFACTS.some((motif) => motif.test(texte || ""));
+}
+
+/* On retient le pire segment, pas la moyenne : une phrase dont la moitie est
+   inventee est inutilisable meme si l'autre moitie est nette. */
+export function confianceInsuffisante(segments) {
+  if (!Array.isArray(segments) || !segments.length) return false;
+  return segments.some(
+    (seg) =>
+      (typeof seg.no_speech_prob === "number" && seg.no_speech_prob > SEUIL_NON_PAROLE) ||
+      (typeof seg.avg_logprob === "number" && seg.avg_logprob < SEUIL_VRAISEMBLANCE)
+  );
+}
+
 export function corrigeTranscription(texte) {
   let t = texte;
   for (const [motif, remplacement] of CORRECTIONS) t = t.replace(motif, remplacement);
@@ -162,7 +203,18 @@ export async function transcrire(blobAudio) {
   /* Un texte vide n'est PAS un silence du visiteur : c'est le signal que le
      service n'a rien pu décoder. Les deux cas ne se ressemblent que pour la
      machine, et les confondre ferait passer une panne pour de la timidité. */
-  if (!texte) throw new Error("Je n'ai rien entendu. Rapprochez-vous du micro et réessayez.");
+  if (!texte) throw malEntendu("Je n'ai rien entendu. Rapprochez-vous du micro et réessayez.");
+
+  /* Un générique de sous-titrage n'est pas une question : c'est ce que rend la
+     reconnaissance quand elle n'a pas entendu de parole. Le laisser passer
+     coûte deux minutes de recherche pour une phrase que personne n'a dite. */
+  if (estArtefact(texte)) {
+    throw malEntendu("Je n'ai pas entendu de parole. Rapprochez-vous du micro et réessayez.");
+  }
+
+  if (confianceInsuffisante(donnees.segments)) {
+    throw malEntendu("Je n'ai pas bien entendu. Pouvez-vous répéter, un peu plus près du micro ?");
+  }
 
   return corrigeTranscription(texte);
 }

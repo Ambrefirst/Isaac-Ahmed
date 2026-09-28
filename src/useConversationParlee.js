@@ -29,7 +29,14 @@ export const ETATS = {
   PARLE: "parle",
   ECOUTE: "ecoute",
   REFLECHIT: "reflechit",
+  /* Micro coupe, conversation gardee. Ce n'est pas ARRET : l'historique reste,
+     et reprendre ne refait pas la salutation. */
+  PAUSE: "pause",
 };
+
+/* Au-dela, on cesse de demander de repeter : insister ne sert plus a rien, et
+   la borne doit proposer autre chose plutot que de tourner en rond. */
+const ESSAIS_AVANT_ABANDON = 2;
 
 export default function useConversationParlee({ salutation, langue = "fr" }) {
   const [etat, setEtat] = useState(ETATS.ARRET);
@@ -57,6 +64,14 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
   const sonRef = useRef(null);
   const vivantRef = useRef(false);
   const historiqueRef = useRef([]);
+  /* Numero du tour d'ecoute en cours. Quand on reprend la parole ou qu'on
+     corrige, l'ancien tour peut encore avoir une transcription ou une reponse
+     en vol : sans ce compteur, elle revient ecraser le nouvel etat. */
+  const tourRef = useRef(0);
+  /* De quoi interrompre la recherche en cours : c'est ce qui rend le bouton
+     « ce n'est pas ce que j'ai dit » immediat plutot que decoratif. */
+  const requeteRef = useRef(null);
+  const malEntenduRef = useRef(0);
 
   /* --- parler ------------------------------------------------------------ */
   const dire = useCallback(async (texte) => {
@@ -129,6 +144,9 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
   /* --- ecouter, et rendre la parole au silence --------------------------- */
   const ecouter = useCallback(async () => {
     if (!vivantRef.current) return;
+    const monTour = tourRef.current + 1;
+    tourRef.current = monTour;
+    const courant = () => vivantRef.current && tourRef.current === monTour;
     /* On n'efface PAS ce qui vient d'etre entendu en rouvrant le micro : le
        visiteur doit pouvoir relire le dernier echange pendant qu'il prepare sa
        phrase suivante. Il sera remplace quand la prochaine sera transcrite. */
@@ -180,20 +198,27 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
       analyseRef.current = null;
 
       const blob = await enregistreur.arreter();
-      if (!vivantRef.current) return;
-      if (!aParle) { setEtat(ETATS.ARRET); return; }
+      if (!courant()) return;
+      /* Personne n'a parle : on ne coupe pas la conversation, on met le micro
+         en pause. Terminer pour un silence de douze secondes obligerait a tout
+         reprendre depuis la salutation. */
+      if (!aParle) { setEtat(ETATS.PAUSE); return; }
 
       setNiveau(0);
       setEtat(ETATS.REFLECHIT);
       setAttenteDepuis(Date.now());
       const question = await transcrire(blob);
-      if (!vivantRef.current) return;
+      if (!courant()) return;
+      malEntenduRef.current = 0;
       setEntendu(question);
 
       /* "vocal" : le workflow ajoute alors une consigne de brievete, parce que
          cette reponse sera lue a voix haute et qu'on ne survole pas une parole. */
-      const dit = await askIsaac(question, historiqueRef.current, langue, undefined, "vocal");
-      if (!vivantRef.current) return;
+      const controleur = new AbortController();
+      requeteRef.current = controleur;
+      const dit = await askIsaac(question, historiqueRef.current, langue, controleur.signal, "vocal");
+      requeteRef.current = null;
+      if (!courant()) return;
       historiqueRef.current = [
         ...historiqueRef.current,
         { sender: "visitor", text: question },
@@ -203,9 +228,30 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
       setAttenteDepuis(null);
 
       await dire(dit);
-      if (vivantRef.current) ecouter();
+      if (courant()) ecouter();
     } catch (e) {
-      if (!vivantRef.current) return;
+      /* Une recherche interrompue volontairement n'est pas une panne : c'est le
+         visiteur qui a dit « ce n'est pas ca ». On ne lui affiche pas d'erreur. */
+      if (e && e.name === "AbortError") return;
+      if (!courant()) return;
+
+      /* Mal entendu n'est pas en panne. La chaine repond, c'est le son qui
+         n'etait pas exploitable : on redonne la parole au lieu de raccrocher. */
+      if (e && e.repeter) {
+        malEntenduRef.current += 1;
+        setEntendu("");
+        setAttenteDepuis(null);
+        if (malEntenduRef.current <= ESSAIS_AVANT_ABANDON) {
+          setErreur(e.message);
+          ecouter();
+          return;
+        }
+        malEntenduRef.current = 0;
+        setErreur("Je n'arrive pas a vous entendre d'ici. Vous pouvez ecrire votre question a Isaac.");
+        setEtat(ETATS.PAUSE);
+        return;
+      }
+
       setErreur(e.message);
       setEtat(ETATS.ARRET);
     }
@@ -214,6 +260,7 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
   /* --- ouverture et fermeture -------------------------------------------- */
   const demarrer = useCallback(async () => {
     vivantRef.current = true;
+    malEntenduRef.current = 0;
     setEntendu("");
     setReponse("");
     setErreur("");
@@ -226,12 +273,45 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
      salutation, qui n'aurait aucun sens au milieu d'une conversation. */
   const reprendre = useCallback(() => {
     vivantRef.current = true;
+    malEntenduRef.current = 0;
     setErreur("");
     ecouter();
   }, [ecouter]);
 
+  /* --- reprendre la main ------------------------------------------------- */
+
+  /* « Ce n'est pas ce que j'ai dit ». On abandonne la recherche en cours et on
+     rouvre le micro tout de suite, sans attendre une reponse a une question qui
+     n'a pas ete posee. */
+  const corriger = useCallback(() => {
+    if (requeteRef.current) { requeteRef.current.abort(); requeteRef.current = null; }
+    tourRef.current += 1;
+    setEntendu("");
+    setReponse("");
+    setErreur("");
+    setAttenteDepuis(null);
+    malEntenduRef.current = 0;
+    if (vivantRef.current) ecouter();
+  }, [ecouter]);
+
+  /* Couper le micro sans quitter la conversation : on referme la piste — la
+     diode s'eteint, ce qui est le seul signe visible qu'on n'est plus ecoute —
+     et on garde l'historique pour la suite. */
+  const couper = useCallback(() => {
+    tourRef.current += 1;
+    if (requeteRef.current) { requeteRef.current.abort(); requeteRef.current = null; }
+    if (enregistreurRef.current) { enregistreurRef.current.liberer(); enregistreurRef.current = null; }
+    if (analyseRef.current) { try { analyseRef.current.contexte.close(); } catch (e) {} }
+    analyseRef.current = null;
+    setNiveau(0);
+    setAttenteDepuis(null);
+    setEtat(ETATS.PAUSE);
+  }, []);
+
   const arreter = useCallback(() => {
     vivantRef.current = false;
+    tourRef.current += 1;
+    if (requeteRef.current) { requeteRef.current.abort(); requeteRef.current = null; }
     if (enregistreurRef.current) enregistreurRef.current.liberer();
     if (lecteurRef.current) lecteurRef.current.pause();
     if (analyseRef.current) { try { analyseRef.current.contexte.close(); } catch (e) {} }
@@ -252,5 +332,5 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
     : "repos";
 
   return { etat, etatOrbe, entendu, reponse, erreur, niveau, niveaux, attenteDepuis,
-           demarrer, reprendre, arreter, actif: etat !== ETATS.ARRET };
+           demarrer, reprendre, corriger, couper, arreter, actif: etat !== ETATS.ARRET };
 }

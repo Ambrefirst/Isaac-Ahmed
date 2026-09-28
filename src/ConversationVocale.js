@@ -67,10 +67,21 @@ export default function ConversationVocale({ onFermer }) {
             plutot que de garder le micro ouvert. Il faut alors pouvoir la
             reprendre : sans ce bouton, la fenetre restait muette et sans issue
             autre que la fermer. */}
-        {vocal.etat === "arret" && (
+        {(vocal.etat === "arret" || vocal.etat === "pause") && (
           <button type="button" className="voix-bouton" onClick={vocal.reprendre}>
-            {t("voix.bouton.parler")}
+            {vocal.etat === "pause" ? t("voix.reprendre") : t("voix.bouton.parler")}
           </button>
+        )}
+
+        {/* Reprendre la main : dire que ce n'est pas ce qu'on a prononce, pendant
+            que la recherche tourne encore, et couper le micro pendant qu'il
+            ecoute. Sans le premier, une phrase mal comprise coutait deux minutes
+            d'attente avant de pouvoir recommencer. */}
+        {vocal.etat === "reflechit" && vocal.entendu && (
+          <button type="button" className="voix-reprise" onClick={vocal.corriger}>{t("voix.corriger")}</button>
+        )}
+        {vocal.etat === "ecoute" && (
+          <button type="button" className="voix-reprise" onClick={vocal.couper}>{t("voix.couper")}</button>
         )}
 
         <button type="button" className="voix-terminer" onClick={fermer}>{t("voix.terminer")}</button>

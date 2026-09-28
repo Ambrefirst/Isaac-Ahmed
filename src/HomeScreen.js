@@ -182,7 +182,28 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
                 {vocal.entendu && <p className="home-transcript">{vocal.entendu}</p>}
                 {vocal.reponse && <p className="home-vocal-reponse">{vocal.reponse}</p>}
                 {vocal.erreur && <p className="home-vocal-erreur" role="alert">{vocal.erreur}</p>}
-                <button className="home-terminer" onClick={vocal.arreter}>{t("voix.terminer")}</button>
+
+                {/* Les deux facons de reprendre la main.
+
+                    Pendant la recherche : ce qui a ete compris est affiche, et
+                    s'il est faux il ne sert a rien d'attendre la reponse. La
+                    lenteur de la borne, qui est son pire defaut, laisse ici tout
+                    le temps de le voir et de recommencer.
+
+                    Pendant l'ecoute : couper le micro sans quitter. Sinon, dans
+                    un hall, il reste ouvert tant que la conversation dure. */}
+                <div className="home-vocal-actions">
+                  {vocal.etat === "reflechit" && vocal.entendu && (
+                    <button className="home-reprise" onClick={vocal.corriger}>{t("voix.corriger")}</button>
+                  )}
+                  {vocal.etat === "ecoute" && (
+                    <button className="home-reprise" onClick={vocal.couper}>{t("voix.couper")}</button>
+                  )}
+                  {vocal.etat === "pause" && (
+                    <button className="home-reprise reprise-forte" onClick={vocal.reprendre}>{t("voix.reprendre")}</button>
+                  )}
+                  <button className="home-terminer" onClick={vocal.arreter}>{t("voix.terminer")}</button>
+                </div>
               </>
             ) : (
               audioDisponible && (
