@@ -167,3 +167,15 @@ Reste également à mesurer en **environnement bruyant** : les dix enregistremen
 ## Lire aussi
 
 `ECHECS_SILENCIEUX.md` recense les seize pannes qui n'ont produit **aucune erreur** au cours du projet, avec pour chacune comment elle a été trouvée et ce qui l'empêche aujourd'hui. Deux d'entre elles se sont produites **deux fois**, faute d'avoir été consignées la première : c'est la raison d'être de ce document.
+
+## 13. Ne pas décrire l'architecture dans l'interface — corrigé le 28/09/2026
+
+Les messages d'attente de la conversation nommaient les rouages : « Isaac consulte la base de connaissances ST DIGITAL », et, pendant quelques heures, « Isaac répond directement, sans consulter la base ». La confirmation de rendez-vous annonçait de son côté que la demande avait été « transmise au workflow d'accueil ».
+
+**Pourquoi cela compte.** Un visiteur n'a rien à faire de ces informations. Quelqu'un qui cherche une faille, si : savoir qu'il existe deux chemins de traitement, et surtout **lequel a été emprunté pour une entrée donnée**, permet de déterminer par essais successifs quelles formulations contournent la recherche documentaire. C'est le premier pas d'une injection de consigne, et l'interface le donnait gratuitement.
+
+**Corrigé.** Le chemin rapide et la recherche documentaire affichent désormais **le même texte**, « Isaac prépare votre réponse » : de l'extérieur, les deux sont indistinguables. Les étapes détaillées décrivent une progression, plus un mécanisme. La confirmation de rendez-vous ne nomme plus l'orchestrateur.
+
+Vérifié sur le bundle réellement servi par la tour : zéro occurrence de « base de connaissances », « knowledge base » et « workflow ».
+
+> **Règle qui en découle.** Un message d'interface décrit ce que le visiteur attend, jamais comment le système s'y prend. Cela vaut pour les messages d'erreur autant que pour les messages d'attente : nommer le composant qui a échoué aide à le viser.
