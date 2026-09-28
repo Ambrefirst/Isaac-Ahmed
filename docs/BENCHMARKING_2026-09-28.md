@@ -1,0 +1,325 @@
+# Banc de mesure — performances de la borne Isaac
+
+**Date : 28 septembre 2026.**
+**Machine : tour auto-hébergée ST DIGITAL.**
+
+Ce document rassemble les mesures de performance de la borne et les décisions
+qu'elles permettent. Il remplace les suppositions par des chiffres, y compris
+quand ces chiffres contredisent ce qu'on espérait.
+
+Il complète deux documents antérieurs : `MESURE_PERFORMANCE_2026-09-24.md`
+(décomposition lecture / génération) et `MESURE_AUDIO_2026-09-27.md` (qualité
+de la reconnaissance vocale). Ce qui est repris d'eux est signalé comme tel.
+
+---
+
+## 1. Ce qu'on cherche
+
+Le temps de réponse observé est de 60 à 175 secondes selon la question. Une
+borne d'accueil devrait répondre en quelques secondes. Trois questions se
+posent, dans cet ordre :
+
+1. Où passe réellement le temps ?
+2. Quels leviers existent, et combien rapporte chacun ?
+3. Lesquels coûtent en exactitude, et lesquels non ?
+
+La troisième question est la plus importante. Une borne rapide qui annonce de
+faux horaires est pire qu'une borne lente.
+
+---
+
+## 2. Matériel
+
+```
+Processeur   Intel Core i5-6500 @ 3,20 GHz — 4 cœurs, 4 fils (pas de SMT)
+Mémoire      62 Go (52 Go disponibles)
+Graphique    Intel HD Graphics 530 (intégré)
+Exécution    Ollama, « 100% CPU »
+```
+
+Le modèle tourne **entièrement sur le processeur**. Le graphique intégré n'est
+pas utilisé, et ne le serait pas utilement.
+
+La mémoire n'est pas en cause : 52 Go disponibles pour un modèle de 5,5 Go.
+**Le goulet est le calcul.**
+
+### Format du modèle
+
+```
+qwen2.5:7b-instruct-q4_K_M    5,5 Go    numCtx 8192    numPredict 250
+keepAlive -1s (le modèle reste chargé entre les questions)
+```
+
+Le modèle est **déjà quantifié en Q4_K_M** et servi en GGUF. Aucun gain n'est
+à attendre d'un changement de format : passer en Q5_K_M serait plus lent.
+Ce levier est épuisé avant d'avoir commencé.
+
+---
+
+## 3. Où passe le temps
+
+*Source : `MESURE_PERFORMANCE_2026-09-24.md`, confirmé le 28/09.*
+
+| Étape | Temps | Part |
+|---|---|---|
+| Lecture du prompt | 117 s | **88 %** |
+| Génération | 16 s | 12 % |
+
+| Mesure | Valeur |
+|---|---|
+| Lecture du prompt | 18,4 jetons/seconde |
+| Génération, contexte long | 4,1 jetons/seconde |
+| Génération, contexte court | 8,2 jetons/seconde |
+
+**Le modèle n'est pas lent à écrire. Il est lent à lire.** Toute optimisation
+portant sur la longueur des réponses se trompe de cible ; celles qui portent
+sur la longueur du contexte visent juste.
+
+### Effet du volume de contexte
+
+| Fragments | Jetons du prompt | Lecture | Génération | Total |
+|---|---|---|---|---|
+| 8 × 1000 caractères | 3 517 | 116,7 s | 13,7 s | **130,4 s** |
+| 4 × 1000 caractères | 2 400 | 56,0 s | 11,3 s | **67,5 s** |
+| 2 × 1000 caractères | 1 847 | 26,0 s | 10,9 s | **36,9 s** |
+
+La relation est linéaire : **mille jetons retirés font gagner environ 55
+secondes.**
+
+### Ce qui ne coûte rien
+
+| Situation | Total |
+|---|---|
+| Question nouvelle | 110,6 s |
+| Même question rejouée aussitôt | 14,6 s |
+
+La consigne système est en tête du prompt et ne change jamais : le cache de
+préfixe d'Ollama la conserve. **Elle est gratuite en régime établi.**
+
+Ce résultat invalide rétroactivement une optimisation tentée le 21/09 :
+condenser les règles de comportement avait fait perdre **six questions sur
+vingt** en recette, pour un gain de temps qui n'existait pas.
+
+Le coût par question est donc **entièrement imputable aux fragments
+documentaires**, parce qu'eux changent à chaque question.
+
+---
+
+## 4. Comparaison des modèles
+
+Mesure du 28/09, prompt identique, 3 221 jetons de contexte, `num_predict 250`.
+
+### Premier passage, à froid
+
+| Modèle | Lecture | Génération | Total |
+|---|---|---|---|
+| `qwen2.5:7b-instruct-q4_K_M` | 167,2 s | 8,5 s | **175,9 s** |
+| `qwen2.5:3b-instruct-q4_K_M` | 76,4 s | 4,7 s | **103,8 s** |
+
+**Le 3B lit 2,2 fois plus vite. Gain total : 41 %.**
+
+### Le cas qui ne marche pas
+
+| Modèle | Budget 250 jetons | Réponse rendue |
+|---|---|---|
+| `qwen3.5:4b` | 40,5 s de génération | **vide** |
+| `qwen3.5:4b` (budget 800) | 80,9 s | 152 caractères |
+| `qwen2.5:7b` | 8,5 s | 194 caractères |
+
+`qwen3.5:4b` est un **modèle à raisonnement** : il dépense son budget de jetons
+en réflexion avant d'écrire, et rend une réponse vide à 250 jetons. Le « petit »
+modèle était **quatre fois plus lent** que le grand.
+
+> **La taille d'un modèle ne dit rien de sa vitesse utile.** Il faut regarder
+> la famille avant le nombre de paramètres.
+
+---
+
+## 5. Cache de préfixe
+
+| Modèle | 1er passage | 2e passage | Rapport |
+|---|---|---|---|
+| 7B | 2,8 s | 0,3 s | 11 × |
+| 3B | 1,2 s | 0,1 s | 10 × |
+
+Le gain est réel et important. Il ne s'applique qu'à la partie **identique** du
+prompt — donc à la consigne système, jamais aux fragments documentaires, qui
+changent à chaque question.
+
+---
+
+## 6. Chaîne audio
+
+Mesure sur un énoncé réel de 6,2 secondes de parole.
+
+| Étape | Temps | Rapport au temps réel |
+|---|---|---|
+| Synthèse (Piper, `fr_FR-upmc-medium`) | **0,62 s** | 0,10 × |
+| Reconnaissance (Whisper `small`) | **2,10 s** | 0,34 × |
+
+| Échange vocal complet | Total | Part du modèle | Part de l'audio |
+|---|---|---|---|
+| avec le 7B | 67,5 s | 96 % | **4 %** |
+| avec le 3B | 40,9 s | 93 % | **7 %** |
+
+**La chaîne audio n'est pas un problème de performance.** L'hypothèse courante
+selon laquelle « le vocal est plus lent » est fausse : le vocal ajoute environ
+2,7 secondes à une réponse qui en prend cent.
+
+Passer Whisper en `tiny` ou `base` ferait gagner environ une seconde et
+dégraderait la reconnaissance, dont le réglage a coûté cher : taux d'erreur mot
+ramené de 32,8 % à 6,0 % par l'amorce de vocabulaire (`MESURE_AUDIO_2026-09-27.md`).
+**Ce serait un mauvais échange.**
+
+---
+
+## 7. Taux de répétition réel des questions
+
+Une proposition d'optimisation courante repose sur l'idée que « 70 à 80 % des
+questions d'une borne d'accueil sont répétitives ». Nous disposons de 273
+conversations enregistrées depuis le 04/09 : l'hypothèse est vérifiable.
+
+| Mesure | Valeur |
+|---|---|
+| Questions enregistrées | 273 |
+| Répétition brute | 69 % |
+| **dont issues du jeu de 20 questions de recette** | **154, soit 56 %** |
+| Questions hors essais | 119 |
+| **Répétition réelle hors essais** | **45 %** |
+
+Les huit questions les plus fréquentes de la base sont exactement Q7, Q1, Q11,
+Q2, Q3, Q5, Q6 et Q17 du jeu de référence : **c'est notre propre trafic d'essai
+qui gonfle le taux.**
+
+Et une fois les essais retirés, ce qui se répète le plus est `merci beaucoup`,
+`comment vas-tu`, `hello`, `salut ça va` — or ces questions **ne passent déjà
+pas par la recherche documentaire** : la fonction `looksSimple` les envoie sur
+une passe modèle unique, sans RAG. Elles sont déjà rapides.
+
+> Un cache de réponses économiserait donc surtout le chemin qui ne coûte pas
+> cher. Cela ne condamne pas l'idée — le jeu de référence a été construit pour
+> représenter ce que demandera un visiteur réel, et ces questions-là se
+> répéteront — mais **c'est une hypothèse de conception, pas une mesure.**
+
+---
+
+## 8. Recette des 20 questions, quatre configurations
+
+*En cours d'exécution au moment de la rédaction. Les résultats seront reportés
+ici.*
+
+| Passage | Modèle | Morceaux | Ce qu'il isole |
+|---|---|---|---|
+| A | 7B | 1000 | Référence du jour |
+| B | 3B | 1000 | Effet du modèle seul |
+| C | 3B | 500 | Les deux ensemble |
+| D | 7B | 500 | Effet de la découpe seule |
+
+**Méthode.** Chaque question part au workflow réel avec un `sessionId` distinct,
+comme aux passages du 24/08 et du 21/09, pour qu'aucune réponse ne contamine la
+suivante et que les résultats restent comparables.
+
+**Notation.** Douze questions ont des critères mécaniquement vérifiables et sont
+notées automatiquement : adresse exacte du bureau, `info@st.digital` et le
+numéro validé, horaires 8h-17h sans dérive, Nkok sans confusion avec Douala ou
+Grand-Bassam, aucun prix inventé (Q12, Q13), aucune date inventée (Q11), refus
+du détournement de rôle (Q19), aveu d'ignorance (Q20).
+
+Les huit autres portent sur la posture et le ton. Elles sont marquées d'une
+étoile et **doivent être relues à la main**. Les noter par expression régulière
+donnerait un score rassurant et faux.
+
+| # | Passage A | Passage B | Passage C | Passage D |
+|---|---|---|---|---|
+| *à compléter* | | | | |
+
+---
+
+## 9. Artefacts de mesure rencontrés
+
+Cette section existe parce que deux de mes propres mesures étaient fausses, et
+que les chiffres faux étaient plus flatteurs que les vrais.
+
+### Le cache de préfixe fausse toute comparaison de modèles
+
+Première version de la mesure du §4 : trois questions différentes, mais les
+**mêmes huit fragments** de contexte. Résultat apparent : 167 s, puis 2,2 s,
+puis 3,0 s — soit une « moyenne » de 64,8 s.
+
+Ce n'était pas le modèle qui s'échauffait. Le préfixe de 3 200 jetons était
+identique d'une question à l'autre, donc conservé ; seule la question finale
+était recalculée. En production, les fragments changent à chaque question et ce
+cache n'intervient pas.
+
+**Seuls les premiers passages à froid sont valides.** Une moyenne calculée sur
+des passages mis en cache annonce une performance qui n'existera jamais devant
+un visiteur.
+
+### Une mesure du nombre de fragments qui ne mesurait rien
+
+Dans la même série, la variante « 8 fragments » affichait 0,1 seconde de lecture
+pour 3 221 jetons. Ce n'est pas une performance, c'est du cache : le prompt était
+identique à celui de l'essai précédent.
+
+Le temps trop court est le signal. **Une mesure anormalement bonne doit être
+suspectée avant d'être publiée** — c'est la même règle qui avait permis de
+détecter, le 27/09, que Whisper répondait en dix millisecondes parce qu'il ne
+décodait rien.
+
+---
+
+## 10. Leviers, par gain mesuré
+
+| Levier | Gain | Coût en exactitude | État |
+|---|---|---|---|
+| Format quantifié | 0 | — | **déjà fait** |
+| Alléger la chaîne audio | ~1 s | dégrade la reconnaissance | **à ne pas faire** |
+| Raccourcir les réponses | ~7 s sur 109 | aucun | fait (mode vocal) |
+| Modèle 3B | **−41 %** | à vérifier en recette | mesuré, non décidé |
+| Morceaux de 500 caractères | estimé −50 % du prefill | à vérifier | en cours |
+| Baisser `topK` de 8 à 6 | −25 % environ | **perte de rappel constatée le 21/09** | rejeté |
+| Réponses validées servies directement | 100 à 175 s par question concernée | **aucun, il améliore l'exactitude** | à faire |
+| Carte graphique | prefill de ~170 s à quelques secondes | aucun | non tranché |
+
+### La seule chose qui règle le pire cas
+
+Tous les leviers logiciels améliorent le **cas courant**. Une question réellement
+nouvelle coûtera toujours 100 à 175 secondes sur ce processeur, parce que la
+lecture plafonne à 18 jetons par seconde (42 avec le 3B) et qu'aucun réglage ne
+fait lire 3 200 jetons en trois secondes à cette vitesse.
+
+Le calcul de lecture d'un prompt est une multiplication de matrices dense — le
+travail pour lequel les cartes graphiques existent. **C'est le seul changement
+qui atteint l'objectif annoncé de « quelques secondes » sur une question
+nouvelle.**
+
+---
+
+## 11. Décision recommandée
+
+Par ordre, et en commençant par celui qui ne coûte rien en exactitude :
+
+1. **Servir les faits validés depuis une table**, sans passer par le modèle.
+   Horaires, adresse du bureau, adresse du Datacenter, téléphone, courriel :
+   ce sont les questions les plus posées, ils portent la mention « validé par
+   ST DIGITAL le 24/08/2026 », et ils ont une valeur unique. Une phrase fixe
+   est exacte et instantanée. **Ne pas faire reformuler par le modèle** :
+   reformuler un fait validé réintroduit le seul risque que ce projet a passé
+   des semaines à éliminer, pour aucun gain.
+
+2. **Découpe à 500 caractères**, si la recette confirme le rappel.
+
+3. **Modèle 3B**, si la recette confirme la qualité.
+
+4. **Carte graphique**, si l'objectif « quelques secondes » est maintenu pour
+   les questions nouvelles.
+
+### Un point à trancher avec la tutrice
+
+Si une couche de réponses directes répond à douze des vingt questions de
+référence, **la recette ne teste plus l'assistant documentaire** : elle teste la
+couche de réponses directes.
+
+Elle devra alors être jouée dans les deux sens, et le rapport devra indiquer
+quelle question a été servie par quel chemin. Sans cela, on présenterait un
+score qui ne mesure pas ce qu'il prétend mesurer.
