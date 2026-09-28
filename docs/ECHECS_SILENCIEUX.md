@@ -332,7 +332,43 @@ pour tout le monde.
 
 ---
 
-## Ce que ces vingt-et-un cas ont en commun
+## 22. Une reponse coupee en plein mot
+
+**Ce qui se passait.** A « Bonjour, quel est le nom de la DG de ST Digital
+Gabon ? », la borne affichait : « Je n'ai pas cette information confirmee en
+interne a vous communiquer avec certitude. Je peux toutefois vous orienter vers
+notre e »
+
+**Pourquoi.** Une heure plus tot, j'avais ajoute un budget de generation court
+pour les politesses — trente jetons suffisent pour « je vous en prie ». Mais le
+test regardait si le message COMMENCE par une formule de politesse. Une
+question precedee d'un bonjour, c'est-a-dire la maniere normale de s'adresser a
+quelqu'un, recevait donc le budget d'une salutation.
+
+**Pourquoi rien ne le signalait.** La requete reussit. Le modele repond. Le
+texte est bien forme jusqu'a l'endroit ou il s'arrete. Rien, dans la chaine, ne
+distingue une reponse terminee d'une reponse interrompue — sauf un champ
+qu'Ollama renvoie et que personne ne lisait : `done_reason`, qui vaut `length`
+quand le budget est atteint.
+
+**Ce qui l'empeche, en deux temps.** La politesse doit etre TOUTE la phrase et
+non son debut, le motif est ancre aux deux bouts. Et surtout, une reponse
+interrompue n'est plus jamais affichee telle quelle : on revient a la derniere
+phrase complete. Cette seconde regle vaut pour toutes les reponses, pas
+seulement les politesses — une reponse longue atteignant la limite se coupait
+deja de la meme facon, en silence.
+
+> **Ce que cela apprend.** Le service disait pourquoi il s'etait arrete, et nous
+> ne l'ecoutions pas. Avant d'ajouter une detection, il vaut la peine de
+> regarder ce que la reponse contient deja : `done_reason` etait la depuis le
+> premier jour. C'est aussi le troisieme defaut de la journee cause par une
+> heuristique qui teste le DEBUT d'un message — apres l'aiguillage du chemin
+> rapide et la detection de politesse. Un prefixe ne dit pas ce qu'est une
+> phrase.
+
+---
+
+## Ce que ces vingt-deux cas ont en commun
 
 Un seul mécanisme les explique tous : **quelque part, une opération qui échoue renvoie le même signal qu'une opération qui réussit**. Un `200` sur un texte vide. Un fichier écrit que personne ne lit. Un paramètre ignoré. Un magasin vectoriel vide qui répond quand même. Une animation qui existe et ne dure rien.
 
