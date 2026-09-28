@@ -411,13 +411,68 @@ faute d'un « non » explicite.
 
 ### Tableau comparatif
 
+### Passage D — 7B, morceaux de 500 (effet de la découpe seule)
+
+| | |
+|---|---|
+| Conformes | 16/20 |
+| Temps moyen | 62,8 s |
+
+Q7 y donne, mot pour mot :
+
+> « Nos horaires d'ouverture sont les suivants :
+> - Du lundi au vendredi : de **8h00 à 18h00**
+> - **Le samedi : de 8h00 à 12h00** »
+
+C'est **la phrase exacte** produite le 27/09 lorsque le magasin vectoriel était
+entièrement vide (cas n° 1 du catalogue des échecs silencieux). Le fragment
+portant l'horaire validé n'est donc pas seulement moins bien classé : il n'est
+plus retrouvé du tout, et le modèle répond de sa mémoire.
+
+### Les quatre passages, notés avec la même grille
+
+Trois contrôles ont été corrigés en cours de route (Q6 et Q19 après A, Q10
+après C). Comparer des passages notés avec des règles différentes ne veut rien
+dire : les quatre ont donc été **renotés depuis les réponses conservées**.
+
 | | A — 7B/1000 | B — 3B/1000 | C — 3B/500 | D — 7B/500 |
 |---|---|---|---|---|
-| Contrôle automatique | 19/20 | 17/20 | 15/20 | *en cours* |
-| **Après relecture** | **18/20** | **15/20** | à relire | |
-| Temps moyen | 105,1 s | 48,3 s | **28,8 s** | |
-| Gain de vitesse | référence | −54 % | −73 % | |
-| Défaut caractéristique | invente un fait | perd des règles | **horaires faux** | |
+| **Conformes** | **18/20** | 15/20 | 15/20 | 16/20 |
+| Temps moyen | 105,1 s | 48,3 s | **28,8 s** | 62,8 s |
+| Gain de vitesse | référence | −54 % | −73 % | −40 % |
+| Perd par rapport à A | — | Q1, Q3, Q15, Q17, Q18 | Q1, Q7, Q11, Q16, Q17 | Q1, Q7, Q11, Q13 |
+| Gagne par rapport à A | — | Q6, Q19 | Q6, Q19 | Q6, Q19 |
+
+Trois lectures.
+
+**Q7 et Q11 tombent sur les DEUX configurations à 500 caractères, quel que soit
+le modèle.** La découpe est la cause, pas la taille du modèle. Hypothèse
+tranchée.
+
+**La configuration de production reste la meilleure en qualité**, et de loin.
+Ses deux défauts — la province inventée sur Q6, le refus mou sur Q19 — sont
+réussis par les trois autres passages, ce qui suggère qu'ils se corrigent par
+la consigne système et non par un changement d'architecture.
+
+**Le 3B perd des règles de posture, pas des faits.** C'est cohérent avec le
+21/09 : plus le modèle est petit, plus il abandonne de règles quand la consigne
+en contient beaucoup.
+
+### Ce qui a été déployé ensuite
+
+Retour à 7B / 1000, plus les deux raccourcis mesurés au §7.
+
+| Question | Avant | Après | Chemin |
+|---|---|---|---|
+| Quels sont vos horaires ? | 105 s | **0,2 s** | table des faits |
+| Où se trouve votre Datacenter ? | 105 s | **0,2 s** | table des faits |
+| Bonjour | 105 s | 5 s | chemin rapide |
+| Merci beaucoup | 105 s | 5 s | chemin rapide |
+| Que fait ST DIGITAL dans le Cloud ? | 110 s | 110 s | recherche documentaire |
+
+La réponse servie depuis la table est la formulation validée, mot pour mot :
+« Le bureau de Libreville est ouvert du lundi au vendredi, de 8h00 à 17h00. Il
+est fermé le samedi et le dimanche. » Aucune dérive possible.
 
 ---
 

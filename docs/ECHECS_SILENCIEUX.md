@@ -1,6 +1,6 @@
 # Catalogue des échecs silencieux
 
-**Dernière mise à jour : 28/09/2026.**
+**Dernière mise à jour : 28/09/2026 (soir).**
 
 Un échec silencieux est une panne qui ne produit **aucune erreur**. Le système répond, le code de retour est bon, l'interface ne clignote pas — et le résultat est faux. C'est la catégorie de défaut la plus coûteuse d'un projet comme celui-ci, parce que rien ne la signale : elle se découvre par hasard, ou par une vérification qu'on avait décidé de faire.
 
@@ -254,7 +254,48 @@ Trois fois, une mesure a donné un chiffre faux **sans se tromper de calcul**.
 
 ---
 
-## Ce que ces dix-neuf cas ont en commun
+## 20. Du code mort qui cachait son propre defaut
+
+**Ce qui se passait.** Le flux de discussion possede un « chemin rapide » : une
+salutation, un remerciement ou une phrase de politesse ne declenchent pas de
+recherche documentaire, mais un seul appel modele, bref. Ce chemin n'a jamais
+servi.
+
+Le noeud qui decide produit un champ `isSimple`. Le test qui suit interroge
+`isGreeting` — un champ qui n'apparait **nulle part ailleurs** dans le flux. La
+condition ne pouvait donc jamais etre vraie, et **chaque salutation traversait
+la recherche documentaire complete** : environ cent secondes pour repondre
+« bonjour ».
+
+**Pourquoi rien ne le signalait.** Tout repondait. La borne etait simplement
+lente, et elle l'etait de toute facon sur les vraies questions : personne
+n'avait de raison de soupconner qu'un raccourci prevu ne servait pas. Mesure
+sur les questions reellement posees : **41 % du trafic** aurait du emprunter ce
+chemin.
+
+**Comment il a ete trouve.** En lisant le flux pour y greffer autre chose, pas
+en cherchant un defaut.
+
+**Et le second defaut, cache derriere le premier.** Une fois la condition
+corrigee, la branche s'est enfin executee — et a leve `ReferenceError: fetch is
+not defined` a chaque salutation. Le visiteur recevait une reponse **vide**, en
+deux dixiemes de seconde. Le noeud appelait `fetch`, qui n'existe pas dans le
+bac a sable d'un noeud Code de n8n : **il n'avait jamais pu fonctionner**.
+
+**Ce qui l'empeche.** Le test porte desormais sur le champ reellement produit ;
+l'appel passe par l'assistant HTTP de n8n ; et si le modele ne repond pas, le
+visiteur recoit une phrase d'accueil plutot que le vide — une salutation sans
+reponse donne l'impression que la borne est morte des le premier mot.
+
+> **Ce que cela apprend.** Du code mort cache ses propres defauts. Tant qu'une
+> branche n'est pas parcourue, ce n'est pas du code : c'est une intention. Ici
+> deux defauts etaient empiles, et le premier rendait le second invisible —
+> corriger l'aiguillage n'a pas repare le chemin rapide, il a seulement rendu
+> sa panne visible.
+
+---
+
+## Ce que ces vingt cas ont en commun
 
 Un seul mécanisme les explique tous : **quelque part, une opération qui échoue renvoie le même signal qu'une opération qui réussit**. Un `200` sur un texte vide. Un fichier écrit que personne ne lit. Un paramètre ignoré. Un magasin vectoriel vide qui répond quand même. Une animation qui existe et ne dure rien.
 
