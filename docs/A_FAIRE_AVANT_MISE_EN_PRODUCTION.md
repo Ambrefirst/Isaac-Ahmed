@@ -64,9 +64,18 @@ Deux conséquences sur l'indexation :
 
 Le secret d'accès à `isaac-pgvector` est conservé sur la tour dans `/home/aminta/isaac-pgvector.acces`, en droits 600.
 
-## 6. Canal de notification officiel
+## 6. Canal de notification officiel — reporté à la mise en service réelle
 
-Les notifications passent aujourd'hui par un compte Gmail avec mot de passe d'application, choisi comme solution de contournement. Le canal cible reste Outlook et Teams via l'API Graph, bloqué par l'absence d'enregistrement d'application Azure AD côté ST Digital, et par la politique du locataire Microsoft qui désactive aussi l'authentification SMTP.
+Les notifications passent aujourd'hui par un compte Gmail avec mot de passe d'application, choisi comme solution de contournement. Le canal cible reste Outlook et Teams via l'API Graph.
+
+**Ce blocage n'est pas technique, et ne peut pas être levé depuis le projet.** Il tient à deux décisions qui appartiennent à l'administration Microsoft de ST Digital :
+
+- l'absence d'**enregistrement d'application Azure AD**, sans lequel l'API Graph est inaccessible ;
+- la **politique du locataire** qui désactive l'authentification SMTP, et ferme donc aussi la voie de repli.
+
+**Décision prise le 28/09/2026 : traiter ce point au moment où l'application sera réellement exploitée par l'entreprise**, et non pendant le stage. Le contournement Gmail tient son rôle de démonstrateur, et le remplacer maintenant n'apporterait rien tant que les adresses d'expédition restent celles de test, voir le point 4.
+
+> **Ce qu'il faut demander, et à qui.** Un enregistrement d'application Azure AD dans le locataire ST Digital, avec les autorisations `Mail.Send` et, si les notifications Teams sont retenues, `ChannelMessage.Send`. La demande doit être écrite et adressée à l'administrateur du locataire : c'est le genre de dépendance qui dure des mois faute d'avoir été posée noir sur blanc. Tant qu'elle n'est pas obtenue, aucune ligne de code ne peut avancer sur ce point.
 
 ## 7. Rotation des secrets exposés
 
@@ -136,7 +145,13 @@ L'événement `visits_autoclose` modifie le registre sans authentification d'adm
 
 Whisper et Piper tournent sur la tour, conteneurs `isaac-whisper` et `isaac-piper`. Rien ne sort de l'infrastructure. Mesuré sur dix enregistrements réels : **12,8 % de taux d'erreur mot**, transcription en 1,8 s pour 4,5 s de parole, synthèse en 0,19 s.
 
-**Raccordée le 27/09/2026.** Deux routes nginx, `/audio/transcription` et `/audio/synthese`, relayées **sur le réseau privé uniquement** : la surface publique répond 404. Une transcription coûte plusieurs secondes de processeur sur une machine qui n'en a que quatre cœurs ; l'exposer sans authentification en ferait un service de calcul gratuit pour n'importe qui.
+**Raccordée le 27/09/2026, ouverte au public le 28/09/2026.** Deux routes nginx, `/audio/transcription` et `/audio/synthese`, servies sur les deux surfaces.
+
+Elles avaient d'abord été fermées côté public, par prudence. C'était une erreur d'appréciation : le dialogue avec le modèle, qui coûte **une à deux minutes** de processeur, y est ouvert depuis toujours, quand une transcription en coûte **deux secondes**. Fermer l'audio ne protégeait donc rien, et rendait le microphone inutilisable pour qui ouvre la borne par le lien public — c'est-à-dire le cas courant.
+
+**La protection est la limitation de débit**, pas la fermeture : 24 requêtes par minute et par adresse, rafale de 10, refus en `429` et non en `503` pour que « trop de requêtes » se distingue d'une panne. Le seuil a été calculé sur l'usage réel : un aperçu de dictée part toutes les trois secondes, soit vingt par minute en dictée continue. Une limite plus basse aurait coupé l'usage normal au lieu de l'abus.
+
+Vérifié : quatorze aperçus consécutifs passent tous, une rafale de trente appels immédiats en voit dix-neuf refusés.
 
 Dans la borne : un bouton micro et un bouton haut-parleur, volontairement **indépendants** — dicter sa question n'oblige pas à subir la réponse à voix haute.
 

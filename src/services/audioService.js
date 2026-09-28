@@ -142,6 +142,12 @@ export async function transcrire(blobAudio) {
        chaine audio n'est pas servie sur cette adresse. Le cas s'est produit en
        vrai, et « indisponible pour le moment » envoyait chercher du cote d'une
        panne passagere alors qu'il fallait changer de lien. */
+    if (reponse.status === 429) {
+      /* Trop de requetes : la surface publique limite le debit. Ce n'est pas
+         une panne, et le message doit le dire pour ne pas envoyer chercher
+         ailleurs. */
+      throw new Error("Trop de demandes en peu de temps. Patientez quelques secondes et reessayez.");
+    }
     if (reponse.status === 404) {
       throw new Error(
         "La voix n'est pas disponible depuis ce lien. Ouvrez la borne par son adresse du reseau interne."
@@ -187,7 +193,7 @@ export async function synthetiser(texte) {
    il faut pouvoir libérer le micro même si l'utilisateur quitte l'écran en
    cours de route. Une piste laissée ouverte garde la diode du micro allumée,
    ce qui est inacceptable sur une borne d'accueil. */
-export function creerEnregistreur({ surApercu, intervalleApercu = 2500 } = {}) {
+export function creerEnregistreur({ surApercu, intervalleApercu = 3000 } = {}) {
   let flux = null;
   let enregistreur = null;
   let morceaux = [];
