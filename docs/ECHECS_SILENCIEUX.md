@@ -295,7 +295,44 @@ reponse donne l'impression que la borne est morte des le premier mot.
 
 ---
 
-## Ce que ces vingt cas ont en commun
+## 21. Un raccourci qui coutait dix fois ce qu'il economisait
+
+**Ce qui se passait.** Apres la mise en place de la fiche de reference, une
+question repondait en 15 secondes. Mais une question posee JUSTE APRES une
+salutation en demandait **145**.
+
+**Pourquoi.** Ollama ne garde en memoire qu'un seul debut de prompt par modele
+charge. Le chemin rapide, reserve aux politesses, envoyait un contexte court et
+different de la fiche : chaque « bonjour » chassait donc la fiche de la
+memoire, et la question suivante devait la relire entierement.
+
+Le raccourci cense faire gagner dix secondes en faisait perdre cent trente a la
+question d'apres — et c'est le cas le plus courant sur une borne d'accueil,
+puisqu'on dit bonjour avant de demander quelque chose.
+
+**Pourquoi rien ne le signalait.** Chaque chemin, mesure seul, etait rapide. La
+salutation : 14 secondes. La question : 15 secondes. C'est leur ENCHAINEMENT
+qui coutait, et personne ne mesure un enchainement — on mesure des appels.
+
+**Comment il a ete trouve.** En se demandant, avant d'annoncer que tout allait
+bien, si deux contextes differents pouvaient coexister en memoire. La reponse
+etait non, et l'essai a pris trois requetes.
+
+**Ce qui l'empeche.** Un seul contexte pour tout ce qui passe par le modele :
+les politesses sont traitees par la fiche comme le reste, avec un budget de
+generation plus court. Le chemin rapide est debranche — il existait pour eviter
+de lire huit fragments documentaires, un probleme que la fiche resout mieux et
+pour tout le monde.
+
+> **Ce que cela apprend.** Une optimisation qui ajoute un second chemin ajoute
+> aussi un cout de bascule, et ce cout ne se voit dans aucune mesure des deux
+> chemins pris separement. Il faut mesurer les SEQUENCES, pas les appels —
+> surtout quand la performance repose sur un cache, qui est par definition ce
+> qui se perd quand on change d'avis.
+
+---
+
+## Ce que ces vingt-et-un cas ont en commun
 
 Un seul mécanisme les explique tous : **quelque part, une opération qui échoue renvoie le même signal qu'une opération qui réussit**. Un `200` sur un texte vide. Un fichier écrit que personne ne lit. Un paramètre ignoré. Un magasin vectoriel vide qui répond quand même. Une animation qui existe et ne dure rien.
 
