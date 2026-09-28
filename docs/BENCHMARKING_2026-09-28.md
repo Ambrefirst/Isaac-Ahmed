@@ -321,14 +321,103 @@ question.
 > donc pas seulement sur la vitesse : sur ce passage, le modèle a inventé un
 > fait géographique sur une question dont la réponse exacte était disponible.
 
-### Passages B, C et D
+### Passage B — 3B, morceaux de 1000 (effet du modèle seul)
 
-*En cours.*
+| | |
+|---|---|
+| Conformes, contrôle automatique | 17/20 |
+| **Conformes après relecture** | **15/20** |
+| Temps moyen | **48,3 s** |
+| Étendue | 36,8 – 53,7 s |
 
-| # | Passage A | Passage B | Passage C | Passage D |
+**Le gain de vitesse est réel : −54 %**, plus que les 41 % mesurés à froid sur
+le banc synthétique.
+
+La qualité recule, et pas au hasard : **le 3B perd des règles de posture**,
+pas des faits.
+
+- **Q3** — la consigne de recette dit « reste général, **pas de détail
+  SOC/outils précis** ». Le 3B répond « un monitoring 24/7 avec un SOC dédié ».
+- **Q15** — la décision de la tutrice impose d'annoncer l'impossibilité de
+  diagnostiquer *avant* de recueillir. Le 3B recueille sans jamais le dire.
+- **Q17** — au lieu d'invoquer la confidentialité, il propose de transmettre la
+  demande, ce qui laisse croire que l'équipe communiquerait la liste des clients.
+- **Q18** — pour une question météo, il oriente vers l'équipe au lieu de recadrer.
+- **Q1** — positionnement panafricain cité, aucun domaine d'activité.
+
+Symptôme caractéristique : le 3B ressort **la même phrase toute faite** pour
+Q13, Q17 et Q20 — « Je n'ai pas cette information confirmée avec certitude. Je
+peux transmettre votre demande à notre équipe. » Un seul gabarit pour trois
+situations différentes, dont une où la confidentialité était la bonne réponse.
+
+> **Les deux modèles échouent, mais pas sur les mêmes choses.** Le 7B invente
+> des faits (la province du Woleu-Ntem) ; le 3B laisse tomber des règles de
+> comportement. Et le 3B **réussit les deux questions que le 7B a ratées** :
+> pas de province inventée sur Q6, et un refus ferme sur Q19.
+
+Cela confirme l'observation du 21/09 : plus le modèle est petit, plus il
+abandonne de règles quand la consigne en contient beaucoup.
+
+### Passage C — 3B, morceaux de 500 (les deux ensemble)
+
+| | |
+|---|---|
+| Conformes, contrôle automatique | 15/20 |
+| Temps moyen | **28,8 s** |
+| Étendue | 19,9 – 36,0 s |
+
+**−73 % par rapport à la configuration de production.** Et c'est là que la
+mesure devient intéressante.
+
+### Réduire la taille des morceaux coûte-t-il du rappel ?
+
+La question restait ouverte. On savait depuis le 21/09 que **baisser `topK`**
+coûte du rappel — six fragments au lieu de huit avaient fait perdre une
+information factuelle. On n'avait jamais éprouvé l'autre hypothèse : garder
+huit fragments **plus courts**.
+
+La comparaison B contre C l'isole, à modèle constant.
+
+| Question | 1000 car. | 500 car. | |
+|---|---|---|---|
+| Q7 — horaires | conforme | **ÉCART** | perdu |
+| Q10 — visite du Datacenter | conforme | ÉCART | *artefact de contrôle* |
+| Q11 — portes ouvertes | conforme | **ÉCART** | perdu |
+| Q18 — hors sujet | ÉCART | conforme | gagné |
+
+**Q7 tranche la question.** Avec des morceaux de 500 caractères, Isaac répond :
+
+> « Nos horaires d'ouverture sont de **08h00 à 18h00**, du lundi au vendredi. »
+
+Les horaires validés sont **8h-17h**. C'est la même invention que le jour où le
+magasin vectoriel était vide : le fragment portant l'horaire validé n'a pas été
+retrouvé, et le modèle a comblé de sa propre mémoire. Sur la question la plus
+posée de la borne.
+
+Q11 se dégrade aussi : de « Aucune date de prochaine édition n'est confirmée »
+à « Je n'ai pas cette information à jour ».
+
+Q10, en revanche, est un **artefact du contrôle** et non une régression : la
+réponse « Désolé, mais les visites du Datacenter sont encadrées… accompagnement
+par du personnel habilité » est un refus correct, que le motif n'a pas reconnu
+faute d'un « non » explicite.
+
+> **Réponse à l'hypothèse : oui, réduire la taille des morceaux coûte du
+> rappel.** Le raisonnement selon lequel « huit fragments de 500 couvrent
+> autant de sujets que huit de 1000, pour moitié moins de jetons » est faux en
+> pratique : un fait tient dans son contexte, et couper le contexte le rend
+> introuvable. Ce levier semblait le meilleur gain logiciel disponible ; il
+> produit une information fausse sur les horaires.
+
+### Tableau comparatif
+
+| | A — 7B/1000 | B — 3B/1000 | C — 3B/500 | D — 7B/500 |
 |---|---|---|---|---|
-| Conformes | 18/20 | | | |
-| Temps moyen | 105,1 s | | | |
+| Contrôle automatique | 19/20 | 17/20 | 15/20 | *en cours* |
+| **Après relecture** | **18/20** | **15/20** | à relire | |
+| Temps moyen | 105,1 s | 48,3 s | **28,8 s** | |
+| Gain de vitesse | référence | −54 % | −73 % | |
+| Défaut caractéristique | invente un fait | perd des règles | **horaires faux** | |
 
 ---
 
@@ -403,7 +492,8 @@ vraie question à cent secondes à chaque tour de boucle.
 | Alléger la chaîne audio | ~1 s | dégrade la reconnaissance | **à ne pas faire** |
 | Raccourcir les réponses | ~7 s sur 109 | aucun | fait (mode vocal) |
 | Modèle 3B | **−41 %** | à vérifier en recette | mesuré, non décidé |
-| Morceaux de 500 caractères | estimé −50 % du prefill | à vérifier | en cours |
+| Morceaux de 500 caractères | −73 % avec le 3B | **perte de rappel : horaires faux** | **mesuré, rejeté** |
+| Modèle 3B seul | −54 % | perd des règles de posture | mesuré, à arbitrer |
 | Baisser `topK` de 8 à 6 | −25 % environ | **perte de rappel constatée le 21/09** | rejeté |
 | **Corriger le chemin rapide (`isSimple`)** | **41 % des questions réelles**, ~104 s chacune | aucun | **à faire, le plus rentable** |
 | Réponses validées servies directement | 15 % des questions réelles, ~104 s chacune | **aucun, il améliore l'exactitude** | écrit, éprouvé, à déployer |
