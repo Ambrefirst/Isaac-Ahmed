@@ -214,7 +214,12 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
               DESSOUS, comme sur la borne : c'est la meme sphere, donc le meme
               geste, et le visiteur n'a rien de nouveau a apprendre. */}
           <div className="chat-orb-zone">
-            <Orb className="chat-orb" state={phase ? "pense" : "repos"} size={54} />
+            {/* La sphere ne reagit PAS au traitement d'un message ecrit. Elle
+                appartient a la conversation parlee, et elle se tient juste
+                au-dessus du bouton qui l'ouvre : l'animer pendant un echange
+                au clavier laisserait croire que le micro est actif. Le suivi
+                d'un message ecrit se lit dans le fil, a sa place. */}
+            <Orb className="chat-orb" state="repos" size={54} />
             {audioDisponible && (
               <button
                 type="button"
