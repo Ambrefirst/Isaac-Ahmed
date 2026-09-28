@@ -249,7 +249,7 @@ See `docs/A_FAIRE_AVANT_MISE_EN_PRODUCTION.md` — eleven points, each naming wh
 
 ---
 
-**Stage Timeline:** 13/08 → 30/09/2026 (8 weeks) 
+**Stage Timeline:** 04/08 → 05/10/2026 (9 weeks) 
 **Tutrice:** MEBANG MBOUROUNOU Aminta 
 **Stagiaire:** MENGUE ME NANG Tatille Ambre 
-**Last updated:** 2026-09-27
+**Last updated:** 2026-09-28
