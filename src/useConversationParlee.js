@@ -190,7 +190,9 @@ export default function useConversationParlee({ salutation, langue = "fr" }) {
       if (!vivantRef.current) return;
       setEntendu(question);
 
-      const dit = await askIsaac(question, historiqueRef.current, langue);
+      /* "vocal" : le workflow ajoute alors une consigne de brievete, parce que
+         cette reponse sera lue a voix haute et qu'on ne survole pas une parole. */
+      const dit = await askIsaac(question, historiqueRef.current, langue, undefined, "vocal");
       if (!vivantRef.current) return;
       historiqueRef.current = [
         ...historiqueRef.current,

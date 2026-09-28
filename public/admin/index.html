@@ -562,6 +562,24 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
    d'office, un retrait d'equipe, un changement de mot de passe. */
 .journal-alerte{color:var(--warn);font-weight:700}
 
+
+/* Comptes du site. L'etat se lit d'un coup d'oeil : c'est ce qu'on vient
+   verifier quand quelqu'un quitte l'equipe. */
+.comptes-liste { margin-top: 14px; }
+.compte-actif { color: var(--ok); font-weight: 700; }
+.compte-inactif { color: var(--text-muted); }
+.moi {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: .62rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: rgba(46, 122, 181, .2);
+  color: var(--pale);
+}
+
 </style>
 </head>
 <body>
@@ -839,6 +857,12 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     return data;
   }
   function authedCall(extra) {
+    /* Un jeton quand il y en a un, le couple pays plus mot de passe sinon.
+       Le jeton ne voyage jamais avec le mot de passe : si la session expire,
+       il faut se reconnecter, ce qui est le comportement attendu. */
+    if (session && session.sessionToken) {
+      return callRdv({ sessionToken: session.sessionToken, ...extra });
+    }
     return callRdv({ adminCountry: session.country, adminPassword: session.password, ...extra });
   }
 
@@ -876,6 +900,31 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     loginBtn.disabled = true;
     loginBtn.textContent = "Connexion…";
     try {
+      /* On tente d'abord un compte nominatif. Le compte partage ne sert plus
+         que de repli, le temps que chaque personne ait le sien. */
+      if (email) {
+        try {
+          const nominatif = await callRdv({ event: "admin_login", email, password });
+          session = {
+            sessionToken: nominatif.sessionToken,
+            expire: nominatif.expire,
+            user: nominatif.user,
+            country: nominatif.user.pays,
+            email,
+            since: new Date().toISOString(),
+          };
+          setStoredSession(session);
+          const suite = await authedCall({ event: "admin_list_appointments" });
+          appointmentsCache = suite.appointments || [];
+          showDashboard(nominatif.country || "");
+          return;
+        } catch (e) {
+          /* Un blocage apres trop d'essais n'est pas un mauvais identifiant :
+             le dire, plutot que de retomber en silence sur le compte partage. */
+          if (/trop de tentatives/i.test(String(e && e.message))) throw e;
+        }
+      }
+
       /* Seule la connexion pose ce drapeau : l'evenement sert aussi a chaque
          actualisation, et le journal se remplirait d'entrees sans interet. */
       const data = await callRdv({ event: "admin_list_appointments", adminCountry: country, adminPassword: password,
@@ -1245,6 +1294,7 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     const onglets = [
       ["apparence", "Apparence"],
       ["securite", "Compte et securite"],
+      ["comptes", "Comptes"],
       ["session", "Session"],
       ["systeme", "Systeme"],
     ];
@@ -1288,6 +1338,32 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
           <p class="pwd-msg" id="pwdMsg"></p>
           <button type="submit" class="btn-primary" id="pwdBtn">Enregistrer</button>
         </form>`;
+    } else if (ongletReglages === "comptes") {
+      const partage = !(session && session.sessionToken);
+      corps = `
+        <h4>Comptes du site ${dc.name}</h4>
+        <p class="muted-note">Un compte par personne. C'est la seule facon de savoir qui a confirme
+        un rendez-vous, et de retirer l'acces a quelqu'un qui quitte l'equipe.</p>
+        ${partage ? `<div class="note-box">Vous etes connecte avec le mot de passe partage du site.
+        Creez votre compte nominatif, puis connectez-vous avec, et prevenez l'equipe technique
+        pour que le mot de passe partage soit retire.</div>` : ""}
+        <div id="comptesListe" class="comptes-liste">Chargement...</div>
+        <h4 style="margin-top:26px;">Ajouter un compte</h4>
+        <form id="userForm" autocomplete="off">
+          <label for="uNom">Nom et prenom</label>
+          <input type="text" id="uNom" required />
+          <label for="uEmail">Adresse electronique</label>
+          <input type="email" id="uEmail" required autocomplete="off" />
+          <label for="uMdp">Mot de passe provisoire</label>
+          <input type="password" id="uMdp" required minlength="10" autocomplete="new-password" />
+          <label for="uRole">Role</label>
+          <select id="uRole">
+            <option value="accueil">Accueil — consulte et traite les rendez-vous</option>
+            <option value="administrateur">Administrateur — gere aussi les comptes</option>
+          </select>
+          <p class="pwd-msg" id="uMsg"></p>
+          <button type="submit" class="btn-primary" id="uBtn">Creer le compte</button>
+        </form>`;
     } else if (ongletReglages === "session") {
       corps = `
         <h4>Session en cours</h4>
@@ -1321,6 +1397,7 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
       });
     });
     if (ongletReglages === "securite") branchePwd();
+    if (ongletReglages === "comptes") brancheComptes();
     if (ongletReglages === "session" || ongletReglages === "systeme") brancheReglages();
     if (ongletReglages === "apparence") brancheTheme();
   }
@@ -1507,6 +1584,74 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
       </div>`).join("")}</div>`;
   }
   document.getElementById("refreshConv").addEventListener("click", loadConversations);
+
+  /* ---------- Comptes du site ---------- */
+  async function brancheComptes() {
+    const liste = document.getElementById("comptesListe");
+    try {
+      const data = await authedCall({ event: "admin_list_users" });
+      const users = data.users || [];
+      if (!users.length) {
+        liste.innerHTML = '<div class="empty">Aucun compte nominatif. Creez le premier ci-dessous.</div>';
+      } else {
+        liste.innerHTML = `<table><thead><tr><th>Nom</th><th>Adresse</th><th>Role</th><th>Etat</th><th></th></tr></thead><tbody>${
+          users.map((u) => `<tr>
+            <td>${u.nom}${u.id === data.moi ? ' <span class="moi">vous</span>' : ""}</td>
+            <td>${u.email}</td>
+            <td>${u.role === "administrateur" ? "Administrateur" : "Accueil"}</td>
+            <td class="${u.actif ? "compte-actif" : "compte-inactif"}">${u.actif ? "actif" : "desactive"}</td>
+            <td>${u.id === data.moi ? "" : `<button class="btn-clore" data-bascule="${u.id}" data-actif="${u.actif}">${u.actif ? "Desactiver" : "Reactiver"}</button>`}</td>
+          </tr>`).join("")
+        }</tbody></table>`;
+        document.querySelectorAll("[data-bascule]").forEach((b) => {
+          b.addEventListener("click", async () => {
+            const actif = b.getAttribute("data-actif") !== "true";
+            b.disabled = true;
+            try {
+              await authedCall({ event: "admin_set_user_active", userId: b.getAttribute("data-bascule"), actif });
+              brancheComptes();
+            } catch (e) {
+              b.disabled = false;
+              window.alert("Echec : " + e.message);
+            }
+          });
+        });
+      }
+    } catch (e) {
+      liste.innerHTML = `<div class="error">Erreur : ${e.message}</div>`;
+    }
+
+    const form = document.getElementById("userForm");
+    if (!form) return;
+    const msg = document.getElementById("uMsg");
+    const btn = document.getElementById("uBtn");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.className = "pwd-msg";
+      msg.textContent = "";
+      btn.disabled = true;
+      btn.textContent = "Creation...";
+      try {
+        await authedCall({
+          event: "admin_add_user",
+          nom: document.getElementById("uNom").value,
+          email: document.getElementById("uEmail").value,
+          password: document.getElementById("uMdp").value,
+          role: document.getElementById("uRole").value,
+        });
+        msg.className = "pwd-msg succes";
+        msg.textContent = "Compte cree. Communiquez le mot de passe provisoire a la personne, et demandez-lui de le changer.";
+        form.reset();
+        brancheComptes();
+      } catch (err) {
+        msg.className = "pwd-msg erreur";
+        msg.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Creer le compte";
+      }
+    });
+  }
 
   /* ---------- Journal d'activite (lazy) ---------- */
   let journalCache = [];
@@ -1781,6 +1926,11 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
 
   /* ---------- Session bootstrap ---------- */
   lockBtn.addEventListener("click", () => {
+    /* Fermer la session cote serveur aussi : sans cela le jeton reste valable
+       douze heures pour qui le recupererait. */
+    if (session && session.sessionToken) {
+      callRdv({ event: "admin_logout", sessionToken: session.sessionToken }).catch(() => {});
+    }
     clearStoredSession();
     session = null;
     conversationsLoaded = notificationsLoaded = kbLoaded = visitsLoaded = journalLoaded = false;

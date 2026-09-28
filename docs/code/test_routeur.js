@@ -1,20 +1,8 @@
-/* COPIE DE REFERENCE — le banc d'essai du routeur.
-   L'original vit dans le repertoire de travail ; cette copie est versionnee pour
-   que les regles verifiees ne dependent pas d'un fichier temporaire.
-
-   Il charge le code du noeud `Router evenement` tel qu'il sera deploye, et ne
-   substitue que trois choses : le client PostgreSQL devient un magasin en
-   memoire, le journal ecrit dans ce meme magasin, et $input fournit le corps de
-   la requete. Tout le reste, regles de date, de statut, d'usage unique et de
-   cloture comprises, est le code de production.
-
-   Usage : placer le code du noeud dans routeur_patch.js a cote, puis
-     node test_routeur.js
-
-   ATTENTION : routeur_patch.js porte le mot de passe PostgreSQL en clair, comme
-   tout le code du noeud. Il ne doit jamais etre commite — le depot est public.
-   Il est pour cela ignore par git, voir .gitignore.
-*/
+/* Banc d'essai du routeur, hors n8n et hors PostgreSQL.
+   Le code du noeud est charge tel quel, avec trois seules substitutions :
+   le client PostgreSQL devient un magasin en memoire, et $input fournit le
+   corps de la requete. Tout le reste, y compris les regles de date et de
+   statut, est le code qui sera deploye. */
 const fs = require('fs');
 const path = require('path');
 
@@ -258,6 +246,97 @@ function verifie(nom, condition, detail) {
   r = await appel(ma, { event: 'visits_autoclose', secret: SECRET });
   verifie('second passage sans effet', r.response.closes === 0 && r.emails.length === 0,
     JSON.stringify({ closes: r.response.closes, courriels: r.emails.length }));
+
+  // ---------------------------------------------------------- comptes nominatifs
+  const mn = magasinDeBase();
+  const ADMIN = { adminCountry: 'gabon', adminPassword: 'motdepasse' };
+
+  /* Le premier compte se cree avec le compte partage : sans ce repli, personne
+     ne pourrait installer les comptes nominatifs. */
+  r = await appel(mn, { event: 'admin_add_user', ...ADMIN,
+    nom: 'Ambre Mengue', email: 'Ambre.Mengue@ST.digital', password: 'unMotDePasseLong', role: 'administrateur' });
+  verifie('premier compte cree depuis le compte partage', r.httpStatus === 200 && r.response.accepted,
+    r.httpStatus + ' ' + JSON.stringify(r.response).slice(0, 80));
+
+  const enregistre = mn.admin_users[0];
+  verifie('le mot de passe n est pas stocke en clair',
+    !JSON.stringify(mn.admin_users).includes('unMotDePasseLong'), 'aucune occurrence');
+  verifie('une empreinte et un sel sont poses',
+    !!enregistre.empreinte && !!enregistre.sel && enregistre.empreinte.length === 64,
+    'empreinte de ' + (enregistre.empreinte || '').length + ' caracteres');
+
+  r = await appel(mn, { event: 'admin_add_user', ...ADMIN,
+    nom: 'Court', email: 'court@st.digital', password: 'trop', role: 'accueil' });
+  verifie('mot de passe trop court refuse', r.httpStatus === 400, String(r.httpStatus));
+
+  r = await appel(mn, { event: 'admin_add_user', ...ADMIN,
+    nom: 'Doublon', email: 'AMBRE.MENGUE@st.digital', password: 'unAutreMotLong', role: 'accueil' });
+  verifie('adresse deja prise refusee, casse ignoree', r.httpStatus === 409, String(r.httpStatus));
+
+  // --- connexion
+  r = await appel(mn, { event: 'admin_login', email: 'ambre.mengue@st.digital', password: 'unMotDePasseLong' });
+  const jeton = r.response.sessionToken;
+  verifie('connexion nominative acceptee', r.httpStatus === 200 && !!jeton, String(r.httpStatus));
+  verifie('la reponse ne contient ni empreinte ni sel',
+    !JSON.stringify(r.response).match(/empreinte|sel"/), 'aucun secret renvoye');
+  verifie('la connexion est journalisee au nom de la personne',
+    mn.audit.some((e) => e.action === 'connexion' && e.auteur === 'Ambre Mengue'),
+    JSON.stringify(mn.audit[mn.audit.length - 1]));
+
+  r = await appel(mn, { event: 'admin_list_visits', sessionToken: jeton });
+  verifie('le jeton authentifie les autres appels', r.httpStatus === 200, String(r.httpStatus));
+
+  r = await appel(mn, { event: 'admin_list_visits', sessionToken: 'jeton-invente' });
+  verifie('un jeton invente est refuse', r.httpStatus === 401, String(r.httpStatus));
+
+  // --- une action portee au journal nomme son auteur
+  r = await appel(mn, { event: 'admin_update_status', sessionToken: jeton, id: 'a2', status: 'annule' });
+  const derniere = mn.audit[mn.audit.length - 1];
+  verifie('l action est attribuee a la personne',
+    derniere.auteur === 'Ambre Mengue' && derniere.action === 'rendez_vous_annule',
+    JSON.stringify({ a: derniere.auteur, act: derniere.action }));
+
+  // --- limitation des tentatives
+  const mb = magasinDeBase();
+  await appel(mb, { event: 'admin_add_user', ...ADMIN,
+    nom: 'Cible', email: 'cible@st.digital', password: 'unMotDePasseLong', role: 'accueil' });
+  let dernierEchec = null;
+  for (let i = 0; i < 5; i += 1) {
+    dernierEchec = await appel(mb, { event: 'admin_login', email: 'cible@st.digital', password: 'faux' });
+  }
+  verifie('cinq echecs restent des 401', dernierEchec.httpStatus === 401, String(dernierEchec.httpStatus));
+  r = await appel(mb, { event: 'admin_login', email: 'cible@st.digital', password: 'unMotDePasseLong' });
+  verifie('le bon mot de passe est refuse apres cinq echecs',
+    r.httpStatus === 429, r.httpStatus + ' ' + (r.response.error || ''));
+  verifie('les echecs sont journalises',
+    mb.audit.filter((e) => e.action === 'connexion_refusee').length === 5,
+    mb.audit.filter((e) => e.action === 'connexion_refusee').length + ' entrees');
+
+  // --- droits
+  const md = magasinDeBase();
+  await appel(md, { event: 'admin_add_user', ...ADMIN,
+    nom: 'Agent Accueil', email: 'agent@st.digital', password: 'unMotDePasseLong', role: 'accueil' });
+  r = await appel(md, { event: 'admin_login', email: 'agent@st.digital', password: 'unMotDePasseLong' });
+  const jetonAgent = r.response.sessionToken;
+  r = await appel(md, { event: 'admin_add_user', sessionToken: jetonAgent,
+    nom: 'X', email: 'x@st.digital', password: 'unMotDePasseLong', role: 'administrateur' });
+  verifie('un agent ne peut pas creer de compte', r.httpStatus === 403, String(r.httpStatus));
+  r = await appel(md, { event: 'admin_list_visits', sessionToken: jetonAgent });
+  verifie('un agent garde l acces au registre', r.httpStatus === 200, String(r.httpStatus));
+
+  // --- desactivation
+  const mx = magasinDeBase();
+  await appel(mx, { event: 'admin_add_user', ...ADMIN,
+    nom: 'Partant', email: 'partant@st.digital', password: 'unMotDePasseLong', role: 'accueil' });
+  r = await appel(mx, { event: 'admin_login', email: 'partant@st.digital', password: 'unMotDePasseLong' });
+  const jetonPartant = r.response.sessionToken;
+  const idPartant = mx.admin_users.find((u) => u.email === 'partant@st.digital').id;
+  r = await appel(mx, { event: 'admin_set_user_active', ...ADMIN, userId: idPartant, actif: false });
+  verifie('desactivation acceptee', r.httpStatus === 200 && r.response.actif === false, String(r.httpStatus));
+  r = await appel(mx, { event: 'admin_list_visits', sessionToken: jetonPartant });
+  verifie('la session ouverte est fermee par la desactivation', r.httpStatus === 401, String(r.httpStatus));
+  r = await appel(mx, { event: 'admin_login', email: 'partant@st.digital', password: 'unMotDePasseLong' });
+  verifie('un compte desactive ne peut plus se connecter', r.httpStatus === 401, String(r.httpStatus));
 
   // ---------------------------------------------------------- journal d activite
   const mj = magasinDeBase();

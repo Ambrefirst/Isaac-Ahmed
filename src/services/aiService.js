@@ -22,14 +22,17 @@ function getSessionId() {
   return sessionId;
 }
 
-export async function askIsaac(message, history = [], lang = "fr", signal) {
+/* `mode` vaut "vocal" quand la reponse sera lue a voix haute. Le workflow
+   ajoute alors une consigne de brievete : une reponse longue est acceptable a
+   l'ecrit, ou on la survole, mais pas a l'oral, ou l'on attend debout. */
+export async function askIsaac(message, history = [], lang = "fr", signal, mode = null) {
   const webhookUrl = process.env.REACT_APP_N8N_CHAT_WEBHOOK;
   if (!webhookUrl) return fallbackAnswer(message);
 
   const response = await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ event: "visitor_question", message, history, lang, sessionId: getSessionId() }),
+    body: JSON.stringify({ event: "visitor_question", message, history, lang, mode, sessionId: getSessionId() }),
     signal,
   });
   if (!response.ok) throw new Error("Isaac n'a pas pu répondre pour le moment.");

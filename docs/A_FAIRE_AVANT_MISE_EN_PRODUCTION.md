@@ -27,9 +27,24 @@ Le nœud Code du workflow `Isaac - Rendez-vous` contient par ailleurs une consta
 
 À faire : vider `DEFAULT_ADMIN_ACCOUNTS` et faire échouer l'authentification si la base est injoignable, plutôt que de retomber sur des valeurs en dur.
 
-## 3. Passer à de vrais comptes utilisateurs
+## 3. Comptes nominatifs — posés le 28/09/2026, transition à terminer
 
-Un mot de passe partagé par pays ne permet ni de savoir qui a confirmé un rendez-vous, ni de retirer l'accès à une personne qui quitte l'équipe. À remplacer par des comptes nominatifs avant exploitation, avec limitation des tentatives de connexion.
+Un mot de passe partagé par pays ne permettait ni de savoir qui avait confirmé un rendez-vous, ni de retirer l'accès à une personne qui quitte l'équipe. Il était de surcroît **stocké en clair**.
+
+**Ce qui est en place :**
+
+- des **comptes nominatifs**, mot de passe haché par scrypt avec un sel propre à chaque compte, comparaison à temps constant ;
+- une **session par jeton**, valable douze heures. Le back-office gardait jusqu'ici le mot de passe dans le navigateur et le renvoyait à chaque appel ; un jeton se révoque, un mot de passe recopié partout, non ;
+- une **limitation des tentatives** : cinq échecs sur une adresse, et elle est bloquée un quart d'heure, avec un `429` qui distingue le blocage d'un mauvais identifiant ;
+- deux rôles, `administrateur` qui gère les comptes et `accueil` qui traite les rendez-vous ;
+- la **désactivation ferme les sessions ouvertes** : sans cela la personne garderait l'accès jusqu'à l'expiration de son jeton ;
+- le **journal d'activité nomme désormais la personne**, et reste honnête quand il ne la connaît pas — il écrit alors le site, pas un nom inventé.
+
+Une rubrique **Paramètres → Comptes** permet de créer, désactiver et réactiver les comptes du site.
+
+> **Ce qui reste à faire, et c'est important.** Les comptes partagés sont encore acceptés, sans quoi la création du premier compte nominatif serait impossible et l'équipe se retrouverait dehors. Le drapeau `AUTORISER_COMPTES_PARTAGES` en tête du routeur les autorise. **Dès que chaque personne a son compte, le basculer à `false` et supprimer la ligne `admin_accounts`.** Tant que ce n'est pas fait, les trois mots de passe compromis du point 7 restent des clés valides.
+
+**Vérifié** par vingt essais au banc et un cycle complet en production : création depuis le compte partagé, connexion nominative, jeton acceptant les appels suivants, action attribuée à la personne dans le journal, cinq échecs bloquant le compte, désactivation fermant la session ouverte.
 
 **Atténué le 27/09/2026 par un journal d'activité.** Le back-office ne gardait aucune trace de ce qu'on y faisait : ni les confirmations, ni les refus, ni les clôtures manuelles, ni les changements de mot de passe. Seuls les courriels partis laissaient une trace, indirecte et incomplète — un changement de mot de passe n'en envoie aucun.
 
@@ -194,3 +209,43 @@ Les messages d'attente de la conversation nommaient les rouages : « Isaac consu
 Vérifié sur le bundle réellement servi par la tour : zéro occurrence de « base de connaissances », « knowledge base » et « workflow ».
 
 > **Règle qui en découle.** Un message d'interface décrit ce que le visiteur attend, jamais comment le système s'y prend. Cela vaut pour les messages d'erreur autant que pour les messages d'attente : nommer le composant qui a échoué aide à le viser.
+
+## 14. Latence de réponse — mesures du 28/09/2026
+
+Le temps de réponse reste le seul obstacle qui empêche une fonction de marcher : la conversation parlée n'est pas tenable à ce rythme.
+
+### Le modèle plus petit a été essayé, et rejeté
+
+`qwen3.5:4b` avait été retenu comme candidat parce que plus petit donc réputé plus rapide. La mesure dit l'inverse.
+
+| Modèle | Budget de jetons | Temps | Réponse rendue |
+|---|---|---|---|
+| `qwen3.5:4b` | 250 | 40,5 s | **vide** |
+| `qwen3.5:4b` | 800 | 80,9 s | 152 caractères |
+| `qwen2.5:7b` | 250 | **20,9 s** | 194 caractères |
+
+**C'est un modèle à raisonnement.** Il produit un bloc de réflexion avant de répondre — 854 caractères de pensée pour zéro de réponse à 250 jetons, 1916 à 800. Le budget est consommé par la réflexion, et la réponse arrive vide ou tard. Le « petit » modèle est **quatre fois plus lent** que le grand sur cette machine.
+
+> **Ce que cela apprend.** La taille d'un modèle ne dit rien de sa vitesse utile. Un modèle à raisonnement dépense son budget avant d'écrire un mot, et le comparer sur le seul nombre de paramètres conduit à la conclusion inverse de la bonne.
+
+### Les réponses brèves à l'oral
+
+Le mode vocal demande désormais deux phrases au maximum, pas de liste, pas d'adresse écrite. Mesuré sur la même question :
+
+| | Temps | Longueur |
+|---|---|---|
+| Écrit | 185 s | 289 caractères |
+| **Vocal** | **123 s** | 235 caractères |
+
+Un tiers de gagné, et surtout une réponse **écoutable** : à la cadence de Piper, 250 jetons font quarante secondes de parole, que personne n'écoute debout devant une borne.
+
+### Ce qui reste, et c'est le vrai levier
+
+**123 secondes restent inutilisables.** La génération ne pèse que sept secondes sur les cent-neuf mesurées : le coût dominant est la **lecture du contexte**, confirmant la mesure du 24/09.
+
+Une observation du 28/09 mérite d'être creusée : sur trois questions consécutives, la lecture du contexte est passée de **176 secondes à 2,4 secondes** grâce au cache de préfixe. Quand le contexte se répète, elle est presque gratuite ; quand il change, elle est brutale.
+
+Deux leviers, dans cet ordre :
+
+1. **Réduire le nombre de fragments récupérés**, de huit à quatre. Le prefill est divisé par deux, et le contexte devient plus souvent identique d'une question à l'autre, donc plus souvent en cache. **Risque réel sur le rappel** : l'essai `chunkSize 500` du 24/09 avait fait échouer deux questions. À ne faire qu'en rejouant les vingt questions derrière, selon la règle posée ce jour-là.
+2. **Un accélérateur graphique.** C'est la vraie réponse, et elle se chiffre. À porter en décision plutôt qu'à contourner indéfiniment.
