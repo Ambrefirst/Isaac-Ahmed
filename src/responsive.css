@@ -1,0 +1,82 @@
+/* Dimensionnement de la borne selon l'appareil.
+
+   L'application est consultee sur un ecran de borne, mais aussi depuis un
+   iPad, une tablette ou un telephone quand quelqu'un ouvre le lien. Les
+   dimensions etaient fixes ou ne changeaient qu'a deux ou trois largeurs :
+   entre ces paliers, des elements passaient hors de l'ecran. Ils n'etaient pas
+   caches, ils debordaient — d'ou l'impression de boutons qui disparaissent et
+   reapparaissent selon la taille de la fenetre.
+
+   Deux principes.
+
+   1. LES TAILLES SUIVENT LA LARGEUR au lieu de sauter d'un palier a l'autre :
+      « clamp » donne un minimum, une valeur proportionnelle et un maximum. Il
+      n'y a donc plus de largeur intermediaire ou la mise en page n'a ete
+      pensee par personne.
+
+   2. RIEN NE DOIT DEBORDER HORIZONTALEMENT. Un element trop large ne se voit
+      pas : il sort du cadre, et le reste se decale. On borne donc les
+      conteneurs et on autorise les elements souples a retrecir — par defaut,
+      un enfant de boite flexible refuse de passer sous sa largeur de contenu,
+      ce qui est la cause la plus frequente de ces debordements.
+
+   Ce fichier est charge en dernier : il corrige les dimensions sans toucher
+   aux feuilles de chaque ecran, qui gardent leur logique propre. */
+
+/* --- pas de debordement lateral, jamais -------------------------------- */
+html, body { max-width: 100%; overflow-x: hidden; }
+*, *::before, *::after { box-sizing: border-box; }
+/* Un enfant de boite flexible ou de grille ne descend pas sous la largeur de
+   son contenu tant qu'on ne l'y autorise pas. C'est ce qui poussait les
+   boutons hors de l'ecran plutot que de les faire passer a la ligne. */
+.home-header, .home-header-actions, .screen-header, .rdv-header,
+.chat-input, .home-option, .option-text, .home-invite { min-width: 0; }
+.home-logo-button, .option-text strong, .option-text span { min-width: 0; }
+img, svg, video, canvas { max-width: 100%; }
+
+/* --- hauteur reelle sur mobile ----------------------------------------- */
+/* 100vh compte la barre d'outils du navigateur mobile comme si elle n'etait
+   pas la : la page depasse alors l'ecran d'une cinquantaine de pixels, et le
+   bas — donc le champ de saisie — se retrouve dessous. */
+.home-page, .home-container, .chat-page, .rdv-page, .welcome-page { min-height: 100svh; }
+.chat-shell, .rdv-container { min-height: auto; }
+
+/* --- marges et titres proportionnels ------------------------------------ */
+.home-container { padding: clamp(14px, 3.2vw, 28px); }
+.chat-page, .rdv-page { padding: clamp(12px, 2.6vw, 24px); }
+.welcome-page { padding: clamp(16px, 3.4vw, 28px); }
+.home-logo-image { width: clamp(132px, 17vw, 224px); height: auto; }
+.screen-header h1, .rdv-header h1 { font-size: clamp(1.15rem, 3.4vw, 1.5rem); }
+.screen-header p, .rdv-header p { font-size: clamp(.8rem, 2vw, .92rem); }
+
+/* --- entetes qui passent a la ligne ------------------------------------- */
+/* Plutot que de faire disparaitre des commandes a une largeur donnee, on les
+   laisse passer a la ligne : toutes restent atteignables a toute largeur. */
+.home-header, .screen-header, .rdv-header { flex-wrap: wrap; row-gap: 12px; }
+
+/* --- tablette : la largeur intermediaire qui n'etait traitee nulle part --- */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .home-container { width: 100%; }
+  /* Deux colonnes des 760px etait trop tard sur une tablette en portrait. */
+  .home-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .message { max-width: 82%; }
+}
+
+/* --- telephone ---------------------------------------------------------- */
+@media (max-width: 640px) {
+  .home-options { grid-template-columns: 1fr; }
+  .home-header-actions { gap: 8px; }
+  /* Le champ de saisie et ses commandes tiennent sur une ligne en se
+     partageant la place, au lieu d'en pousser une hors du cadre. */
+  .chat-input { flex-wrap: nowrap; gap: 8px; }
+  .chat-input input { min-width: 0; flex: 1 1 auto; }
+  .chat-micro, .chat-input button { flex: 0 0 auto; }
+  .escalation-actions { flex-direction: column; align-items: stretch; }
+  .home-vocal-actions { flex-direction: column; align-items: stretch; }
+}
+
+/* --- ecran tres etroit -------------------------------------------------- */
+@media (max-width: 380px) {
+  .home-badge { display: none; } /* decoratif : le seul element qu'on retire */
+  .home-ancrage { gap: 10px; }
+}

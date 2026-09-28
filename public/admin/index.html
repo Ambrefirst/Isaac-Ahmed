@@ -580,6 +580,200 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
   color: var(--pale);
 }
 
+
+/* ============================ Tableau de bord ============================
+   Une page d'accueil de back-office doit repondre a « qu'est-ce qui
+   m'attend ? » avant de repondre a « combien depuis le debut ? ». La
+   hierarchie visuelle suit cet ordre : les tuiles d'action d'abord, le reste
+   ensuite, et une seule representation par grandeur. */
+
+/* Intertitre de bloc. Il remplace l'ancien intertitre unique, qui ne separait
+   que l'assistant du reste : la page a maintenant trois temps. */
+.bloc-titre{
+  font-family:var(--font-title);font-size:1.05rem;color:var(--text);
+  margin:30px 0 14px;padding-top:20px;border-top:1px solid var(--panel-border);
+  letter-spacing:.01em;
+}
+.bloc-titre:first-of-type{margin-top:6px;padding-top:0;border-top:0}
+
+.tuiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:6px}
+.tuiles.trois{grid-template-columns:repeat(3,1fr)}
+.tuile{
+  position:relative;overflow:hidden;padding:20px;text-align:left;
+  background:linear-gradient(135deg, rgba(200,220,240,.065), rgba(200,220,240,.02));
+  border:1px solid var(--panel-border);border-radius:14px;
+  font-family:inherit;color:inherit;
+}
+.tuile-label{color:var(--text-muted);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;line-height:1.5}
+.tuile-valeur{font-family:var(--font-title);font-size:2.1rem;color:var(--pale);margin-top:10px;line-height:1}
+/* Un zero n'est pas une valeur a contempler : quand il n'y a rien a faire, on
+   l'ecrit, et la tuile s'efface au lieu d'afficher un grand 0. */
+.tuile-rien{color:var(--text-muted);font-size:.9rem;margin-top:12px}
+.tuile.calme{background:rgba(200,220,240,.028)}
+
+/* Seule la tuile qui appelle une decision est accentuee, et elle est la seule
+   a mener quelque part. Tout accentuer revient a n'accentuer rien. */
+.tuile.agissable{
+  cursor:pointer;border-color:rgba(232,180,74,.55);
+  background:linear-gradient(135deg, rgba(232,180,74,.16), rgba(200,220,240,.02));
+  transition:transform .22s var(--ease),box-shadow .22s var(--ease);
+}
+.tuile.agissable .tuile-valeur{color:var(--warn)}
+.tuile.agissable:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(0,0,0,.34)}
+.tuile-lien{
+  display:block;margin-top:12px;font-size:.74rem;color:var(--light-blue);
+  letter-spacing:.06em;
+}
+.tuile-lien::after{content:" →"}
+
+/* Deux panneaux de meme poids, quand aucun des deux n'est un graphique etroit. */
+.panels-row.deux{grid-template-columns:1fr 1fr}
+.panel{margin-bottom:16px}
+
+/* La legende porte le detail chiffre : la liste de barres qui la doublait a
+   ete retiree, elle redisait exactement la meme chose a cote. */
+.donut-legend span{display:flex;align-items:baseline;gap:0;line-height:1.5}
+.donut-legend span>.dot{align-self:center;flex:0 0 auto}
+.donut-legend b{margin-left:auto;padding-left:14px;font-family:var(--font-title);color:var(--pale);font-size:.95rem}
+.donut-legend i{font-style:normal;color:var(--text-muted);font-size:.74rem;width:46px;text-align:right}
+
+/* Prochaines arrivees : qui vient, quand, pour voir qui. C'est ce qu'on
+   cherche en ouvrant cette page le matin, et cela n'existait nulle part. */
+.arrivees{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.arrivees li{
+  display:grid;grid-template-columns:1fr auto;gap:2px 14px;align-items:baseline;
+  padding:11px 0;border-bottom:1px solid var(--panel-border);
+}
+.arrivees li:last-child{border-bottom:0;padding-bottom:0}
+.arr-qui{color:var(--text);font-size:.9rem}
+.arr-soc{display:block;color:var(--text-muted);font-size:.74rem;margin-top:2px}
+.arr-quand{color:var(--pale);font-size:.82rem;white-space:nowrap}
+.arr-quand .aujourdhui{color:var(--ok);font-weight:700}
+.arr-hote{grid-column:2;color:var(--text-muted);font-size:.74rem;white-space:nowrap;text-align:right}
+
+/* Un etat vide dans un panneau n'a pas besoin de quarante pixels de marge : il
+   doit se lire comme une phrase, pas comme une page d'erreur. */
+.panel .empty{padding:18px 0;text-align:left}
+
+/* Bandeau d'avertissement du compte. Il ne s'affiche que lorsqu'il a quelque
+   chose a dire, et il le dit en une phrase. */
+.bandeau-compte{
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px;
+  background:rgba(232,180,74,.12);border:1px solid rgba(232,180,74,.42);
+  border-radius:12px;padding:14px 18px;margin-bottom:18px;font-size:.85rem;color:var(--text);
+}
+.bandeau-compte button{
+  margin-left:auto;background:transparent;border:1px solid rgba(232,180,74,.6);
+  color:var(--warn);border-radius:999px;padding:7px 16px;font-family:inherit;
+  font-size:.78rem;cursor:pointer;
+}
+
+@media (max-width: 900px){
+  .tuiles,.tuiles.trois{grid-template-columns:1fr}
+  .panels-row.deux{grid-template-columns:1fr}
+}
+
+
+/* ===================== Table des demandes, quatre colonnes ==================
+   Neuf colonnes ne tenaient pas : la table defilait de cote et on ne voyait
+   jamais une ligne entiere. Les champs qui vont ensemble sont desormais
+   groupes dans une meme cellule, ou ils se lisent comme une phrase plutot que
+   comme un alignement. */
+.t-demandes{table-layout:fixed;width:100%}
+.t-demandes th:nth-child(1),.t-demandes td:nth-child(1){width:22%}
+.t-demandes th:nth-child(2),.t-demandes td:nth-child(2){width:34%}
+.t-demandes th:nth-child(3),.t-demandes td:nth-child(3){width:14%}
+.t-demandes th:nth-child(4),.t-demandes td:nth-child(4){width:30%}
+.t-demandes td{vertical-align:top;padding:16px 14px;white-space:normal}
+
+.qui-nom{display:block;color:var(--text);font-size:.92rem;line-height:1.35}
+.qui-sous{display:block;color:var(--text-muted);font-size:.75rem;margin-top:3px;line-height:1.4}
+
+.objet-motif{display:block;color:var(--text);font-size:.88rem;line-height:1.4}
+.objet-sous{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:7px}
+.objet-hote{color:var(--text-muted);font-size:.75rem}
+.objet-sous code{font-size:.72rem;letter-spacing:.06em;color:var(--light-blue);
+  background:rgba(122,175,201,.1);border-radius:5px;padding:2px 7px}
+/* Le type d'acces est une categorie, pas un statut : il ne prend pas de
+   couleur, sans quoi chaque ligne porterait deux pastilles concurrentes. */
+.puce{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);
+  border:1px solid var(--panel-border);border-radius:999px;padding:2px 9px}
+
+.c-quand{white-space:nowrap}
+.quand-jour{display:block;color:var(--text);font-size:.84rem}
+.quand-jour.aujourdhui{color:var(--ok);font-weight:700}
+.quand-heure{display:block;font-family:var(--font-title);font-size:1.05rem;color:var(--pale);margin-top:2px}
+
+.c-etat .badge{display:inline-block}
+.etat-motif{display:block;color:var(--text-muted);font-size:.74rem;margin-top:6px;line-height:1.45}
+.c-etat .team-toggle{display:block;margin-top:7px;font-size:.73rem}
+.c-etat .row-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.c-etat .row-actions button{margin:0}
+/* Confirmer est l'action qu'on vient faire ; refuser et annuler restent
+   discrets, parce qu'on ne les choisit pas par inadvertance. */
+.row-actions .b-oui{border-color:rgba(73,209,139,.45);color:var(--ok)}
+
+/* Les seules lignes ou il y a quelque chose a faire. Elles etaient noyees. */
+.ligne-a-decider td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+
+@media (max-width: 1100px){
+  .t-demandes,.t-demandes thead,.t-demandes tbody,.t-demandes tr,.t-demandes td{display:block;width:auto}
+  .t-demandes thead{display:none}
+  .t-demandes tbody tr{border-bottom:1px solid var(--panel-border);padding:6px 0}
+  .t-demandes td{padding:6px 14px}
+  .t-demandes th:nth-child(n),.t-demandes td:nth-child(n){width:auto}
+}
+
+/* ===================== Respiration du tableau de bord ======================
+   Le contenu etait juste ; la page se lisait mal. Tout y avait le meme poids :
+   meme carte, meme bordure, meme rayon, du premier chiffre au dernier
+   graphique. Une page ou tout est encadre ne hierarchise rien, et se parcourt
+   comme une liste d'objets sans rapport.
+
+   On garde le cadre pour ce qui contient un dessin, on l'enleve pour ce qui
+   n'est qu'un chiffre, et on remplace les gros filets horizontaux par une
+   etiquette discrete. */
+.bloc-titre{
+  font-family:var(--font-body);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--light-blue);margin:34px 0 14px;padding-top:0;border-top:0;
+  display:flex;align-items:center;gap:10px;font-weight:700;
+}
+.bloc-titre::before{
+  content:"";width:22px;height:1px;background:var(--light-blue);opacity:.7;flex:0 0 22px;
+}
+.bloc-titre:first-of-type{margin-top:4px}
+
+.tuiles{gap:12px;margin-bottom:0}
+.tuile{padding:18px 20px;border-radius:12px}
+.tuile.calme{background:transparent;border-style:dashed}
+.tuile-valeur{font-size:1.85rem;margin-top:8px}
+.tuile-label{font-size:.68rem;letter-spacing:.12em}
+
+.panel{padding:18px 20px;border-radius:12px;margin-bottom:14px}
+.panel h3{margin:0 0 14px;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);font-family:var(--font-body);font-weight:700}
+/* La colonne de l'anneau etait trop etroite : la legende s'y serrait et le
+   panneau devenait plus haut que celui d'a cote, pour moins de contenu. */
+.panels-row{grid-template-columns:minmax(300px,.85fr) 1.15fr;gap:14px;margin-bottom:0}
+.donut-wrap{gap:22px}
+.donut-legend{flex:1;gap:11px}
+
+/* Les deux repartitions et la tendance forment un seul bloc de lecture. */
+.panels-row.deux{gap:14px;margin-bottom:0}
+.breakdown-row{padding:5px 0}
+
+.bandeau-compte{border-radius:12px;padding:13px 18px}
+
+
+/* Ce que « administrateur » veut dire, ecrit a l'endroit ou on le choisit.
+   Une consequence expliquee apres coup, dans un message d'erreur, arrive
+   toujours trop tard. */
+.garde-role{
+  background:rgba(232,180,74,.1);border:1px solid rgba(232,180,74,.38);
+  border-radius:10px;padding:12px 15px;margin:12px 0 4px;
+  font-size:.8rem;line-height:1.55;color:var(--text);
+}
+.garde-role strong{display:block;margin-bottom:5px;color:var(--warn)}
+
 </style>
 </head>
 <body>
@@ -661,24 +855,31 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     <main class="content">
       <!-- Dashboard -->
       <section id="section-dashboard" class="section">
-        <div class="content-header"><div><h2>Tableau de bord</h2><p>Aperçu de l'activité de votre site.</p></div><button class="ghost" id="refreshDashboard">Actualiser</button></div>
-        <div class="stat-grid" id="statGrid"></div>
+        <div class="content-header"><div><h2>Tableau de bord</h2><p id="dashResume">Aperçu de l'activité de votre site.</p></div><button class="ghost" id="refreshDashboard">Actualiser</button></div>
+
+        <div id="dashAlerte"></div>
+
+        <h3 class="bloc-titre">À traiter</h3>
+        <div class="tuiles" id="dashActions"></div>
+
+        <h3 class="bloc-titre">Activité du site</h3>
         <div class="panels-row">
-          <div class="panel"><h3>Répartition par statut</h3><div class="donut-wrap" id="donutWrap"></div></div>
-          <div class="panel"><h3>Détail des statuts</h3><div class="breakdown-list" id="breakdownList"></div></div>
+          <div class="panel"><h3>Répartition des demandes</h3><div class="donut-wrap" id="donutWrap"></div></div>
+          <div class="panel"><h3>Prochaines arrivées</h3><div id="dashProchaines"></div></div>
         </div>
-        <div class="panels-row">
+        <div class="panels-row deux">
           <div class="panel"><h3>Par type d'accès</h3><div class="breakdown-list" id="reportAccessType"></div></div>
           <div class="panel"><h3>Par hôte demandé</h3><div class="breakdown-list" id="reportHost"></div></div>
         </div>
-        <div class="panel" style="margin-top:16px;">
-          <h3>Nouveaux enregistrements par mois</h3>
+        <div class="panel">
+          <h3>Demandes reçues par mois</h3>
           <div id="visitorsMonthly"></div>
         </div>
-        <h3 class="dash-sous-titre">Usage de l'assistant</h3>
-        <div class="note-box">Historique disponible à partir du 04/09/2026 (mise en place du suivi) — pas de données rétroactives.</div>
-        <div class="stat-grid" id="aiStatGrid" style="grid-template-columns:repeat(3,1fr);"></div>
-        <div class="panel" style="margin-top:16px;"><h3>Conversations des 7 derniers jours</h3><div id="aiActivityChart"></div></div>
+
+        <h3 class="bloc-titre">Assistant</h3>
+        <div class="note-box">Le suivi des conversations a été mis en place le 04/09/2026. Rien n'existe avant cette date : ce n'est pas une absence d'activité.</div>
+        <div class="tuiles trois" id="aiStatGrid"></div>
+        <div class="panel"><h3>Conversations des 7 derniers jours</h3><div id="aiActivityChart"></div></div>
       </section>
 
       <!-- Appointments -->
@@ -1004,27 +1205,123 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     return counts;
   }
 
+  /* Date du jour au format des rendez-vous, sans passer par l'UTC : a Libreville
+     un « toISOString » du soir renvoie deja le lendemain, et les arrivees du
+     jour disparaissaient. */
+  function jourLocal(d) {
+    const x = d || new Date();
+    return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
+  }
+
   function renderDashboard() {
     const counts = computeCounts(appointmentsCache);
-    const cards = [
-      { key: "total", label: "Total demandes", value: counts.total },
-      { key: "attente-equipe", label: "Attente équipe", value: counts["en attente equipe"] },
-      { key: "confirme", label: "Confirmés", value: counts.confirme },
-      { key: "refuse", label: "Refusés", value: counts.refuse },
-      { key: "annule", label: "Annulés", value: counts.annule },
+    const aujourdhui = jourLocal();
+    const dans7 = jourLocal(new Date(Date.now() + 7 * 86400000));
+
+    const aTraiter = appointmentsCache.filter((a) => a.status === "en attente equipe" || a.status === "en attente");
+    const confirmes = appointmentsCache.filter((a) => a.status === "confirme" && a.date);
+    const duJour = confirmes.filter((a) => a.date === aujourdhui);
+    const deLaSemaine = confirmes.filter((a) => a.date > aujourdhui && a.date <= dans7);
+
+    /* Trois chiffres, et un seul appelle une action : c'est lui qui est
+       accentue et lui seul qui mene quelque part. Tout accentuer revient a
+       n'accentuer rien. */
+    const tuiles = [
+      { cle: "agir", label: "Demandes en attente de décision", valeur: aTraiter.length,
+        vide: "Rien en attente", section: "appointments",
+        actif: aTraiter.length > 0 },
+      { cle: "jour", label: "Arrivées prévues aujourd'hui", valeur: duJour.length,
+        vide: "Aucune arrivée prévue" },
+      { cle: "semaine", label: "Arrivées dans les 7 jours", valeur: deLaSemaine.length,
+        vide: "Aucune arrivée prévue" },
     ];
-    document.getElementById("statGrid").innerHTML = cards.map((c) => `<div class="stat-card ${c.key}"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`).join("");
+    document.getElementById("dashActions").innerHTML = tuiles.map((t) => {
+      const corps = `<div class="tuile-label">${t.label}</div>` +
+        (t.valeur ? `<div class="tuile-valeur">${t.valeur}</div>`
+                  : `<div class="tuile-rien">${t.vide}</div>`);
+      return t.section && t.actif
+        ? `<button class="tuile ${t.cle} agissable" data-va="${t.section}">${corps}<span class="tuile-lien">Voir les demandes</span></button>`
+        : `<div class="tuile ${t.cle}${t.valeur ? "" : " calme"}">${corps}</div>`;
+    }).join("");
+    document.querySelectorAll("#dashActions [data-va]").forEach((b) => {
+      b.addEventListener("click", () => {
+        const cible = sideNav.querySelector('button[data-section="' + b.getAttribute("data-va") + '"]');
+        if (cible) cible.click();
+      });
+    });
+
+    /* Le sous-titre dit l'essentiel avant meme qu'on lise les chiffres. */
+    const resume = document.getElementById("dashResume");
+    if (resume) {
+      resume.textContent = !appointmentsCache.length
+        ? "Aucune demande enregistrée pour ce site."
+        : aTraiter.length
+          ? aTraiter.length + (aTraiter.length > 1 ? " demandes attendent" : " demande attend") + " une décision de votre équipe."
+          : "Aucune demande en attente. " + counts.total + " au total pour ce site.";
+    }
+
+    renderProchaines(confirmes, aujourdhui);
     renderDonut(counts);
+    renderAlerteCompte();
+  }
+
+  /* Un mot de passe choisi par quelqu'un d'autre reste connu de cette personne.
+     Tant qu'il n'a pas ete change, le compte n'est pas vraiment personnel, et
+     le journal qui nomme son titulaire promet plus qu'il ne tient. */
+  function renderAlerteCompte() {
+    const box = document.getElementById("dashAlerte");
+    if (!box) return;
+    const provisoire = session && session.user && session.user.doitChanger;
+    const partage = session && !session.sessionToken;
+    if (provisoire) {
+      box.innerHTML = `<div class="bandeau-compte">Votre mot de passe a été choisi par la personne qui a créé votre compte, et elle le connaît toujours. Changez-le pour que ce compte soit vraiment le vôtre.<button id="versMdp">Changer mon mot de passe</button></div>`;
+    } else if (partage) {
+      box.innerHTML = `<div class="bandeau-compte">Vous êtes connecté avec le mot de passe partagé du site. Les actions ne peuvent être attribuées à personne dans le journal.<button id="versMdp">Créer les comptes nominatifs</button></div>`;
+    } else {
+      box.innerHTML = "";
+      return;
+    }
+    const bouton = document.getElementById("versMdp");
+    if (bouton) bouton.addEventListener("click", () => {
+      ongletReglages = provisoire ? "securite" : "comptes";
+      const cible = sideNav.querySelector('button[data-section="settings"]');
+      if (cible) cible.click();
+      renderSettings();
+    });
+  }
+
+  /* Ce qui manquait vraiment : qui arrive, quand, et pour voir qui. Une
+     repartition en pourcentages ne prepare pas une journee d'accueil. */
+  function renderProchaines(confirmes, aujourdhui) {
+    const box = document.getElementById("dashProchaines");
+    if (!box) return;
+    const suite = confirmes
+      .filter((a) => a.date >= aujourdhui)
+      .sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")))
+      .slice(0, 5);
+    if (!suite.length) {
+      box.innerHTML = '<div class="empty">Aucune arrivée confirmée à venir.</div>';
+      return;
+    }
+    box.innerHTML = '<ul class="arrivees">' + suite.map((a) => {
+      const quand = a.date === aujourdhui
+        ? '<span class="aujourdhui">aujourd\'hui' + (a.time ? " à " + a.time : "") + "</span>"
+        : new Date(a.date + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })
+          + (a.time ? " à " + a.time : "");
+      return `<li>
+        <span class="arr-qui">${a.visitor || "—"}${a.company ? `<span class="arr-soc">${a.company}</span>` : ""}</span>
+        <span class="arr-quand">${quand}</span>
+        <span class="arr-hote">${hostLabel(a.host) || ""}</span>
+      </li>`;
+    }).join("") + "</ul>";
   }
 
   function renderDonut(counts) {
     const donutWrap = document.getElementById("donutWrap");
-    const breakdownList = document.getElementById("breakdownList");
     const segments = ["en attente equipe", "confirme", "refuse", "annule"].map((s) => ({ status: s, meta: statusMeta(s), n: counts[s] || 0 }));
     const total = counts.total || 0;
     if (!total) {
-      donutWrap.innerHTML = '<div class="empty" style="padding:20px 0;">Aucune donnée</div>';
-      breakdownList.innerHTML = "";
+      donutWrap.innerHTML = '<div class="empty">Aucune demande enregistrée pour ce site.</div>';
       return;
     }
     const R = 46, C = 2 * Math.PI * R;
@@ -1042,11 +1339,10 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
         <text x="60" y="56" text-anchor="middle" font-size="20" font-weight="800" fill="var(--text)">${total}</text>
         <text x="60" y="72" text-anchor="middle" font-size="9" fill="var(--text-muted)">au total</text>
       </svg>
-      <div class="donut-legend">${segments.map((s) => `<span><span class="dot" style="background:${s.meta.color}"></span>${s.meta.label} (${s.n})</span>`).join("")}</div>`;
-    breakdownList.innerHTML = segments.map((s) => {
-      const pct = total ? Math.round((s.n / total) * 100) : 0;
-      return `<div class="breakdown-row"><span class="name">${s.meta.label}</span><span class="bar-track"><span class="bar-fill" style="width:${pct}%;background:${s.meta.color}"></span></span><span class="n">${s.n}</span></div>`;
-    }).join("");
+      <div class="donut-legend">${segments.map((s) => {
+        const pct = Math.round((s.n / total) * 100);
+        return `<span><span class="dot" style="background:${s.meta.color}"></span>${s.meta.label}<b>${s.n}</b><i>${pct} %</i></span>`;
+      }).join("")}</div>`;
   }
 
   function renderTeamDetail(team) {
@@ -1058,6 +1354,18 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
       return `<div class="team-member-row"><span>${icon}</span><span class="tm-name">${t.name}</span><span style="color:${color};">${label}</span></div>`;
     }).join("");
     return `<div class="team-detail-box">${rows}</div>`;
+  }
+
+  /* « 2026-09-28 » se dechiffre, « lun. 28 sept. » se lit. Le tableau est
+     consulte en diagonale le matin : la forme compte autant que la valeur. */
+  function dateLisible(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return iso;
+    const aujourdhui = jourLocal();
+    if (iso === aujourdhui) return '<span class="quand-jour aujourdhui">aujourd\'hui</span>';
+    return '<span class="quand-jour">' +
+      d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) + "</span>";
   }
 
   /* ---------- Appointments table ---------- */
@@ -1077,30 +1385,37 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
       const no = team.filter((t) => t.available === false).length;
       const pending = team.filter((t) => t.available === null).length;
       const teamSummary = team.length
-        ? `<button class="team-toggle" data-id="${a.id}">${yes} pour · ${no} contre · ${pending} sans réponse</button>`
-        : `<span class="muted-note">Aucune équipe</span>`;
+        ? `<button class="team-toggle" data-id="${a.id}">Équipe : ${yes} pour · ${no} contre · ${pending} sans réponse</button>`
+        : "";
       const canDecide = a.status === "en attente" || a.status === "en attente equipe";
       return `
-      <tr data-id="${a.id}">
-        <td>${a.visitor || ""}<div style="color:var(--text-muted);font-size:.75rem;">${a.company || ""}${a.jobTitle ? " — " + a.jobTitle : ""}</div></td>
-        <td>${hostLabel(a.host)}</td>
-        <td>${a.date || "-"} ${a.time || ""}</td>
-        <td>${a.purpose || ""}</td>
-        <td>${a.accessType || ""}</td>
-        <td><code>${a.validation_code || ""}</code></td>
-        <td>${teamSummary}</td>
-        <td>
-          <span class="badge ${statusMeta(a.status).key}">${statusMeta(a.status).label}</span>
-          ${a.status === "refuse" && a.refusalReason ? `<div style="color:var(--text-muted);font-size:.72rem;margin-top:4px;max-width:180px;white-space:normal;">${a.refusalReason}</div>` : ""}
+      <tr data-id="${a.id}" class="${canDecide ? "ligne-a-decider" : ""}">
+        <td class="c-qui">
+          <span class="qui-nom">${a.visitor || "—"}</span>
+          ${a.company ? `<span class="qui-sous">${a.company}${a.jobTitle ? " · " + a.jobTitle : ""}</span>` : ""}
         </td>
-        <td class="row-actions">
-          ${canDecide ? `<button data-action="confirme">Confirmer</button><button data-action="refuse">Refuser</button>` : ""}
-          ${a.status !== "annule" ? `<button data-action="annule">Annuler</button>` : ""}
+        <td class="c-objet">
+          <span class="objet-motif">${a.purpose || "—"}</span>
+          <span class="objet-sous">
+            ${a.accessType ? `<span class="puce">${ACCESS_TYPE_LABELS[a.accessType] || a.accessType}</span>` : ""}
+            <span class="objet-hote">${hostLabel(a.host) || ""}</span>
+            ${a.validation_code ? `<code>${a.validation_code}</code>` : ""}
+          </span>
+        </td>
+        <td class="c-quand">${dateLisible(a.date)}${a.time ? `<span class="quand-heure">${a.time}</span>` : ""}</td>
+        <td class="c-etat">
+          <span class="badge ${statusMeta(a.status).key}">${statusMeta(a.status).label}</span>
+          ${a.status === "refuse" && a.refusalReason ? `<span class="etat-motif">${a.refusalReason}</span>` : ""}
+          ${teamSummary}
+          <span class="row-actions">
+            ${canDecide ? `<button data-action="confirme" class="b-oui">Confirmer</button><button data-action="refuse">Refuser</button>` : ""}
+            ${a.status !== "annule" ? `<button data-action="annule">Annuler</button>` : ""}
+          </span>
         </td>
       </tr>
-      <tr class="team-detail-row" id="team-detail-${a.id}" hidden><td colspan="9">${renderTeamDetail(team)}</td></tr>`;
+      <tr class="team-detail-row" id="team-detail-${a.id}" hidden><td colspan="4">${renderTeamDetail(team)}</td></tr>`;
     }).join("");
-    tableWrap.innerHTML = `<table><thead><tr><th>Visiteur</th><th>Hôte</th><th>Date</th><th>Motif</th><th>Type</th><th>Code</th><th>Équipe</th><th>Statut</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+    tableWrap.innerHTML = `<table class="t-demandes"><thead><tr><th>Visiteur</th><th>Objet de la visite</th><th>Quand</th><th>Où ça en est</th></tr></thead><tbody>${rows}</tbody></table>`;
     tableWrap.querySelectorAll(".team-toggle").forEach((btn) => {
       btn.addEventListener("click", () => {
         const row = document.getElementById("team-detail-" + btn.getAttribute("data-id"));
@@ -1218,11 +1533,23 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       byMonth[key] = (byMonth[key] || 0) + 1;
     });
-    const keys = Object.keys(byMonth).sort();
+    /* Une seule colonne au milieu d'un panneau vide se lit comme un defaut
+       d'affichage. On montre toujours les six derniers mois, y compris ceux a
+       zero : c'est ce qui fait une tendance plutot qu'un point. */
+    const serie = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() - i);
+      const k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      serie.push(k);
+      if (!byMonth[k]) byMonth[k] = 0;
+    }
+    const keys = Object.keys(byMonth).length ? serie : [];
     const box = document.getElementById("visitorsMonthly");
-    if (!keys.length) { box.innerHTML = '<div class="empty" style="padding:10px 0;">Aucune donnée</div>'; return; }
+    if (!keys.length) { box.innerHTML = '<div class="empty">Aucune demande reçue pour l\'instant.</div>'; return; }
     const monthNames = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sep","Oct","Nov","Déc"];
-    const max = Math.max(...keys.map((k) => byMonth[k]));
+    const max = Math.max(1, ...keys.map((k) => byMonth[k]));
     box.innerHTML = `<div class="bar-chart">${keys.map((k) => {
       const [y, m] = k.split("-");
       return `<div class="col"><span class="val">${byMonth[k]}</span><div class="bar" style="height:${Math.round((byMonth[k] / max) * 100)}%"></div><span class="day">${monthNames[parseInt(m, 10) - 1]} ${y.slice(2)}</span></div>`;
@@ -1274,7 +1601,7 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
       appointmentsCache.forEach((a) => { const k = a[field] || "non renseigné"; counts[k] = (counts[k] || 0) + 1; });
       const total = appointmentsCache.length || 1;
       const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-      if (!entries.length) return '<div class="empty" style="padding:10px 0;">Aucune donnée</div>';
+      if (!entries.length) return '<div class="empty">Aucune demande reçue pour l\'instant.</div>';
       return entries.map(([k, n]) => {
         const pct = Math.round((n / total) * 100);
         return `<div class="breakdown-row"><span class="name">${labelFn ? labelFn(k) : k}</span><span class="bar-track"><span class="bar-fill" style="width:${pct}%;background:var(--blue)"></span></span><span class="n">${n}</span></div>`;
@@ -1359,8 +1686,17 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
           <label for="uRole">Role</label>
           <select id="uRole">
             <option value="accueil">Accueil — consulte et traite les rendez-vous</option>
-            <option value="administrateur">Administrateur — gere aussi les comptes</option>
+            <option value="administrateur">Administrateur — gère aussi les comptes</option>
           </select>
+          <div id="uGardeAdmin" hidden>
+            <div class="garde-role">
+              <strong>Un administrateur peut créer des comptes et en désactiver — donc en nommer d'autres.</strong>
+              Ce droit se répand de lui-même si personne ne le compte : trois administrateurs actifs au maximum par site.
+              Pour un usage courant, le rôle Accueil suffit.
+            </div>
+            <label for="uConfirm">Votre mot de passe, pour confirmer</label>
+            <input type="password" id="uConfirm" autocomplete="current-password" />
+          </div>
           <p class="pwd-msg" id="uMsg"></p>
           <button type="submit" class="btn-primary" id="uBtn">Creer le compte</button>
         </form>`;
@@ -1464,9 +1800,9 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
       msg.textContent = "Les deux nouveaux mots de passe ne correspondent pas.";
       return;
     }
-    if (nouveau.length < 8) {
+    if (nouveau.length < 10) {
       msg.className = "pwd-msg erreur";
-      msg.textContent = "Le nouveau mot de passe doit contenir au moins 8 caracteres.";
+      msg.textContent = "Le nouveau mot de passe doit contenir au moins 10 caracteres.";
       return;
     }
     if (nouveau === actuel) {
@@ -1476,16 +1812,24 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     }
     btn.disabled = true; btn.textContent = "Enregistrement...";
     try {
-      await callRdv({
-        event: "admin_change_password",
-        adminCountry: session.country,
-        adminPassword: actuel,
-        newPassword: nouveau,
-      });
-      /* La session garde le mot de passe pour les appels suivants : sans cette mise a
-         jour, toute action posterieure echouerait avec l'ancien mot de passe. */
-      session.password = nouveau;
-      setStoredSession(session);
+      /* Changer SON mot de passe, et non celui du site. Cet appel visait
+         toujours le compte partage du pays : connecte nominativement, soit il
+         echouait en annoncant un mot de passe actuel incorrect alors qu'il
+         etait bon, soit il remplacait le secret partage de tout le site. */
+      const cible = session.sessionToken
+        ? { sessionToken: session.sessionToken, currentPassword: actuel }
+        : { adminCountry: session.country, adminPassword: actuel };
+      await callRdv({ event: "admin_change_password", ...cible, newPassword: nouveau });
+      /* Une session par mot de passe le garde pour les appels suivants : sans
+         cette mise a jour, toute action posterieure echouerait. Une session par
+         jeton n'a rien a mettre a jour, et n'a jamais eu de mot de passe. */
+      if (!session.sessionToken) {
+        session.password = nouveau;
+        setStoredSession(session);
+      } else if (session.user) {
+        session.user.doitChanger = false;
+        setStoredSession(session);
+      }
       form.reset();
       msg.className = "pwd-msg succes";
       msg.textContent = "Mot de passe modifie. Notez-le, il n'est affiche nulle part.";
@@ -1554,13 +1898,18 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
   }
   document.getElementById("convSearch").addEventListener("input", () => renderConversations());
   function renderAiStats(list, total) {
-    const uniqueSessions = new Set(list.map((c) => c.sessionId)).size;
+    const sessions = new Set(list.map((c) => c.sessionId)).size;
+    const limite = Date.now() - 7 * 86400000;
+    const recentes = list.filter((c) => new Date(c.timestamp).getTime() >= limite).length;
+    /* « Affichees ci-dessous » a disparu : ce nombre parlait de la page, pas du
+       site, et n'avait rien a faire a cote de chiffres d'activite. */
     const cards = [
       { label: "Conversations enregistrées", value: total },
-      { label: "Sessions uniques (échantillon)", value: uniqueSessions },
-      { label: "Affichées ci-dessous", value: list.length },
+      { label: "Visiteurs distincts", value: sessions },
+      { label: "Ces 7 derniers jours", value: recentes },
     ];
-    document.getElementById("aiStatGrid").innerHTML = cards.map((c) => `<div class="stat-card total"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`).join("");
+    document.getElementById("aiStatGrid").innerHTML = cards.map((c) =>
+      `<div class="tuile calme"><div class="tuile-label">${c.label}</div><div class="tuile-valeur">${c.value}</div></div>`).join("");
     renderAiActivityChart(list);
   }
   function renderAiActivityChart(list) {
@@ -1625,6 +1974,21 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     if (!form) return;
     const msg = document.getElementById("uMsg");
     const btn = document.getElementById("uBtn");
+
+    /* Choisir « administrateur » dans une liste deroulante ne doit pas suffire.
+       Le champ de confirmation apparait avec la consequence ecrite a cote :
+       c'est la seule facon qu'un refus du serveur soit compris plutot que
+       subi. */
+    const role = document.getElementById("uRole");
+    const garde = document.getElementById("uGardeAdmin");
+    function majGarde() {
+      const admin = role.value === "administrateur";
+      garde.hidden = !admin;
+      document.getElementById("uConfirm").required = admin;
+      btn.textContent = admin ? "Nommer cet administrateur" : "Creer le compte";
+    }
+    role.addEventListener("change", majGarde);
+    majGarde();
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       msg.className = "pwd-msg";
@@ -1637,11 +2001,13 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
           nom: document.getElementById("uNom").value,
           email: document.getElementById("uEmail").value,
           password: document.getElementById("uMdp").value,
-          role: document.getElementById("uRole").value,
+          role: role.value,
+          confirmationMotDePasse: document.getElementById("uConfirm").value,
         });
         msg.className = "pwd-msg succes";
         msg.textContent = "Compte cree. Communiquez le mot de passe provisoire a la personne, et demandez-lui de le changer.";
         form.reset();
+        majGarde();
         brancheComptes();
       } catch (err) {
         msg.className = "pwd-msg erreur";

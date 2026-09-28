@@ -250,12 +250,16 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
           </div>
         )}
 
+        {/* La proposition ne vient plus d'une attente trop longue mais de la
+            nature de la demande. Le texte suit donc le motif : un tarif n'est
+            pas une question a laquelle Isaac a echoue, c'est une question
+            qu'il n'a pas a trancher. */}
         {escalationOffer && (
           <div className="escalation-card">
-            <p>{t("chat.escalation.title")}</p>
+            <p>{t(`chat.relais.${escalationOffer.motif}`)}</p>
             <div className="escalation-actions">
-              <button type="button" className="ghost" onClick={onKeepWaiting}>{t("chat.escalation.wait")}</button>
-              <button type="button" className="primary" onClick={onEscalate}>{t("chat.escalation.escalate")}</button>
+              <button type="button" className="ghost" onClick={onKeepWaiting}>{t("chat.relais.non")}</button>
+              <button type="button" className="primary" onClick={onEscalate}>{t("chat.relais.oui")}</button>
             </div>
           </div>
         )}

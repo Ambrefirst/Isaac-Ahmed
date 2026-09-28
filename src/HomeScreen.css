@@ -259,3 +259,31 @@
   color: #fff;
 }
 .reprise-forte:hover { background: linear-gradient(140deg, var(--blue, #2E7AB5), var(--navy, #1A4D7A)); }
+
+/* Refus d'acces a l'espace du personnel. Un 404 nu donnait l'impression que
+   l'application etait cassee ; ici on dit que c'est voulu, et quoi faire. */
+.acces-personnel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 13px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(232, 180, 74, .4);
+  background: rgba(232, 180, 74, .1);
+  color: var(--pale, #C8DCF0);
+  font-size: .85rem;
+  line-height: 1.5;
+}
+.acces-personnel button {
+  margin-left: auto;
+  padding: 6px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 180, 74, .5);
+  background: transparent;
+  color: var(--warn, #E8B44A);
+  font-family: inherit;
+  font-size: .78rem;
+  cursor: pointer;
+}

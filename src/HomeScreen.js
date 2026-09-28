@@ -119,8 +119,24 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
   const vocal = useConversationParlee({ salutation: t("voix.salutation"), langue: language });
   const heure = useLocalTime(language);
 
-  function openBackOffice() {
-    window.location.href = "/admin/";
+  /* L'espace du personnel n'est pas servi sur tous les acces. Y envoyer
+     directement affichait la page d'erreur du serveur : un 404 nu, qui donne
+     l'impression que l'application est cassee alors qu'il s'agit d'un refus
+     volontaire. On verifie d'abord, et on explique. */
+  const [accesPersonnel, setAccesPersonnel] = useState(null); // null | "refuse"
+
+  async function openBackOffice() {
+    setAccesPersonnel(null);
+    try {
+      const reponse = await fetch("/admin/", { method: "GET", cache: "no-store" });
+      if (reponse.ok) {
+        window.location.href = "/admin/";
+        return;
+      }
+    } catch (e) {
+      /* Injoignable ou refuse : pour le visiteur, la conclusion est la meme. */
+    }
+    setAccesPersonnel("refuse");
   }
 
   return (
@@ -135,6 +151,13 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
             <button className="icon-button" onClick={openBackOffice} aria-label={t("home.profile")}><UserIcon /></button>
           </div>
         </header>
+
+        {accesPersonnel === "refuse" && (
+          <div className="acces-personnel" role="status">
+            {t("home.backoffice.indispo")}
+            <button onClick={() => setAccesPersonnel(null)} aria-label={t("home.backoffice.fermer")}>{t("home.backoffice.fermer")}</button>
+          </div>
+        )}
 
         {/* Bandeau d'ancrage : ou l'on est, quelle heure il est, et si Isaac repond */}
         <div className="home-ancrage">

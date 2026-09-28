@@ -250,31 +250,48 @@ function verifie(nom, condition, detail) {
   // ---------------------------------------------------------- comptes nominatifs
   const mn = magasinDeBase();
   const ADMIN = { adminCountry: 'gabon', adminPassword: 'motdepasse' };
+  /* Des mots de passe qui passent le controle de robustesse : assez longs, sans
+     mot courant, sans suite, et sans reprendre le nom de la personne. */
+  const MDP_SOLIDE = 'Vr7-tulipe-orage';
+  const MDP_AUTRE = 'Bq4-cedre-fauve';
+
+  /* Ce que fera l'equipe : le mot de passe partage sert UNE fois, a poser le
+     premier administrateur, et les comptes suivants se creent avec lui. */
+  async function amorceAdmin(magasin, nom, email) {
+    await appel(magasin, { event: 'admin_add_user', ...ADMIN, nom, email, password: MDP_SOLIDE });
+    const rep = await appel(magasin, { event: 'admin_login', email, password: MDP_SOLIDE });
+    return rep.response.sessionToken;
+  }
 
   /* Le premier compte se cree avec le compte partage : sans ce repli, personne
      ne pourrait installer les comptes nominatifs. */
   r = await appel(mn, { event: 'admin_add_user', ...ADMIN,
-    nom: 'Ambre Mengue', email: 'Ambre.Mengue@ST.digital', password: 'unMotDePasseLong', role: 'administrateur' });
+    nom: 'Ambre Mengue', email: 'Ambre.Mengue@ST.digital', password: MDP_SOLIDE, role: 'administrateur' });
   verifie('premier compte cree depuis le compte partage', r.httpStatus === 200 && r.response.accepted,
     r.httpStatus + ' ' + JSON.stringify(r.response).slice(0, 80));
 
   const enregistre = mn.admin_users[0];
   verifie('le mot de passe n est pas stocke en clair',
-    !JSON.stringify(mn.admin_users).includes('unMotDePasseLong'), 'aucune occurrence');
+    !JSON.stringify(mn.admin_users).includes(MDP_SOLIDE), 'aucune occurrence');
   verifie('une empreinte et un sel sont poses',
     !!enregistre.empreinte && !!enregistre.sel && enregistre.empreinte.length === 64,
     'empreinte de ' + (enregistre.empreinte || '').length + ' caracteres');
 
-  r = await appel(mn, { event: 'admin_add_user', ...ADMIN,
+  /* A partir d'ici, le mot de passe partage a epuise son role : les comptes
+     suivants se creent avec le compte nominatif qu'il vient de poser. */
+  const jetonMn = (await appel(mn, { event: 'admin_login',
+    email: 'ambre.mengue@st.digital', password: MDP_SOLIDE })).response.sessionToken;
+
+  r = await appel(mn, { event: 'admin_add_user', sessionToken: jetonMn,
     nom: 'Court', email: 'court@st.digital', password: 'trop', role: 'accueil' });
   verifie('mot de passe trop court refuse', r.httpStatus === 400, String(r.httpStatus));
 
-  r = await appel(mn, { event: 'admin_add_user', ...ADMIN,
-    nom: 'Doublon', email: 'AMBRE.MENGUE@st.digital', password: 'unAutreMotLong', role: 'accueil' });
+  r = await appel(mn, { event: 'admin_add_user', sessionToken: jetonMn,
+    nom: 'Doublon', email: 'AMBRE.MENGUE@st.digital', password: MDP_AUTRE, role: 'accueil' });
   verifie('adresse deja prise refusee, casse ignoree', r.httpStatus === 409, String(r.httpStatus));
 
   // --- connexion
-  r = await appel(mn, { event: 'admin_login', email: 'ambre.mengue@st.digital', password: 'unMotDePasseLong' });
+  r = await appel(mn, { event: 'admin_login', email: 'ambre.mengue@st.digital', password: MDP_SOLIDE });
   const jeton = r.response.sessionToken;
   verifie('connexion nominative acceptee', r.httpStatus === 200 && !!jeton, String(r.httpStatus));
   verifie('la reponse ne contient ni empreinte ni sel',
@@ -298,14 +315,15 @@ function verifie(nom, condition, detail) {
 
   // --- limitation des tentatives
   const mb = magasinDeBase();
-  await appel(mb, { event: 'admin_add_user', ...ADMIN,
-    nom: 'Cible', email: 'cible@st.digital', password: 'unMotDePasseLong', role: 'accueil' });
+  const jetonMb = await amorceAdmin(mb, 'Chef Site', 'chef@st.digital');
+  await appel(mb, { event: 'admin_add_user', sessionToken: jetonMb,
+    nom: 'Cible', email: 'cible@st.digital', password: MDP_SOLIDE, role: 'accueil' });
   let dernierEchec = null;
   for (let i = 0; i < 5; i += 1) {
     dernierEchec = await appel(mb, { event: 'admin_login', email: 'cible@st.digital', password: 'faux' });
   }
   verifie('cinq echecs restent des 401', dernierEchec.httpStatus === 401, String(dernierEchec.httpStatus));
-  r = await appel(mb, { event: 'admin_login', email: 'cible@st.digital', password: 'unMotDePasseLong' });
+  r = await appel(mb, { event: 'admin_login', email: 'cible@st.digital', password: MDP_SOLIDE });
   verifie('le bon mot de passe est refuse apres cinq echecs',
     r.httpStatus === 429, r.httpStatus + ' ' + (r.response.error || ''));
   verifie('les echecs sont journalises',
@@ -314,29 +332,120 @@ function verifie(nom, condition, detail) {
 
   // --- droits
   const md = magasinDeBase();
-  await appel(md, { event: 'admin_add_user', ...ADMIN,
-    nom: 'Agent Accueil', email: 'agent@st.digital', password: 'unMotDePasseLong', role: 'accueil' });
-  r = await appel(md, { event: 'admin_login', email: 'agent@st.digital', password: 'unMotDePasseLong' });
+  const jetonMd = await amorceAdmin(md, 'Chef Site', 'chef@st.digital');
+  await appel(md, { event: 'admin_add_user', sessionToken: jetonMd,
+    nom: 'Agent Accueil', email: 'agent@st.digital', password: MDP_SOLIDE, role: 'accueil' });
+  r = await appel(md, { event: 'admin_login', email: 'agent@st.digital', password: MDP_SOLIDE });
   const jetonAgent = r.response.sessionToken;
   r = await appel(md, { event: 'admin_add_user', sessionToken: jetonAgent,
-    nom: 'X', email: 'x@st.digital', password: 'unMotDePasseLong', role: 'administrateur' });
+    nom: 'X', email: 'x@st.digital', password: MDP_SOLIDE, role: 'administrateur' });
   verifie('un agent ne peut pas creer de compte', r.httpStatus === 403, String(r.httpStatus));
   r = await appel(md, { event: 'admin_list_visits', sessionToken: jetonAgent });
   verifie('un agent garde l acces au registre', r.httpStatus === 200, String(r.httpStatus));
 
   // --- desactivation
   const mx = magasinDeBase();
-  await appel(mx, { event: 'admin_add_user', ...ADMIN,
-    nom: 'Partant', email: 'partant@st.digital', password: 'unMotDePasseLong', role: 'accueil' });
-  r = await appel(mx, { event: 'admin_login', email: 'partant@st.digital', password: 'unMotDePasseLong' });
+  const jetonMx = await amorceAdmin(mx, 'Chef Site', 'chef@st.digital');
+  await appel(mx, { event: 'admin_add_user', sessionToken: jetonMx,
+    nom: 'Partant', email: 'partant@st.digital', password: MDP_SOLIDE, role: 'accueil' });
+  r = await appel(mx, { event: 'admin_login', email: 'partant@st.digital', password: MDP_SOLIDE });
   const jetonPartant = r.response.sessionToken;
   const idPartant = mx.admin_users.find((u) => u.email === 'partant@st.digital').id;
-  r = await appel(mx, { event: 'admin_set_user_active', ...ADMIN, userId: idPartant, actif: false });
+  r = await appel(mx, { event: 'admin_set_user_active', sessionToken: jetonMx, userId: idPartant, actif: false });
   verifie('desactivation acceptee', r.httpStatus === 200 && r.response.actif === false, String(r.httpStatus));
   r = await appel(mx, { event: 'admin_list_visits', sessionToken: jetonPartant });
   verifie('la session ouverte est fermee par la desactivation', r.httpStatus === 401, String(r.httpStatus));
-  r = await appel(mx, { event: 'admin_login', email: 'partant@st.digital', password: 'unMotDePasseLong' });
+  r = await appel(mx, { event: 'admin_login', email: 'partant@st.digital', password: MDP_SOLIDE });
   verifie('un compte desactive ne peut plus se connecter', r.httpStatus === 401, String(r.httpStatus));
+
+  // ---------------------------------------------------------- securite des comptes
+
+  /* Le defaut le plus grave trouve le 28/09. Le mot de passe partage du site
+     est connu de toute l'equipe et a circule : s'il peut creer un compte
+     nominatif d'administrateur, il fabrique un acces PERMANENT qui survivra a
+     sa propre rotation, et qui aura l'air legitime dans le journal. Il ne doit
+     servir qu'a poser le premier compte. */
+  const ms = magasinDeBase();
+  r = await appel(ms, { event: 'admin_add_user', ...ADMIN,
+    nom: 'Premier Admin', email: 'premier@st.digital', password: MDP_SOLIDE, role: 'accueil' });
+  verifie('le mot de passe partage cree le premier compte', r.httpStatus === 200, String(r.httpStatus));
+  verifie('et ce premier compte est un administrateur, meme si on a demande accueil',
+    ms.admin_users[0].role === 'administrateur', ms.admin_users[0].role);
+  verifie('le journal dit que ce compte vient de l amorce, pas d une personne',
+    /amorce/i.test(String(ms.admin_users[0].creePar)), String(ms.admin_users[0].creePar));
+
+  r = await appel(ms, { event: 'admin_add_user', ...ADMIN,
+    nom: 'Porte Derobee', email: 'derobee@st.digital', password: MDP_AUTRE, role: 'administrateur' });
+  verifie('ESCALADE : le mot de passe partage ne cree plus rien ensuite',
+    r.httpStatus === 403, r.httpStatus + ' ' + (r.response.error || ''));
+  verifie('et aucun second compte n a ete ecrit', ms.admin_users.length === 1,
+    ms.admin_users.length + ' compte(s)');
+
+  const idPremier = ms.admin_users[0].id;
+  r = await appel(ms, { event: 'admin_set_user_active', ...ADMIN, userId: idPremier, actif: false });
+  verifie('le mot de passe partage ne peut pas non plus desactiver un compte',
+    r.httpStatus === 403, String(r.httpStatus));
+
+  /* Le mot de passe partage n avait AUCUN frein : il suffisait de frapper ici
+     plutot qu a la connexion nominative pour essayer sans limite. */
+  const mf = magasinDeBase();
+  let dernier = null;
+  for (let i = 0; i < 5; i += 1) {
+    dernier = await appel(mf, { event: 'admin_list_visits', adminCountry: 'gabon', adminPassword: 'faux' });
+  }
+  verifie('cinq essais du mot de passe partage restent des 401', dernier.httpStatus === 401, String(dernier.httpStatus));
+  r = await appel(mf, { event: 'admin_list_visits', ...ADMIN });
+  verifie('FREIN : le bon mot de passe partage est refuse apres cinq echecs',
+    r.httpStatus === 401, String(r.httpStatus));
+
+  /* La comparaison en temps constant du routeur lit ses arguments en
+     HEXADECIMAL. Deux mots de passe ordinaires y deviennent deux tampons vides,
+     donc egaux : l authentification etait contournable avec n importe quoi.
+     Cet essai garde la correction. */
+  const mh = magasinDeBase();
+  r = await appel(mh, { event: 'admin_list_visits', adminCountry: 'gabon', adminPassword: 'zzz-non-hexadecimal' });
+  verifie('HEXADECIMAL : un mot de passe non hexadecimal ne passe pas',
+    r.httpStatus === 401, String(r.httpStatus));
+
+  /* Une longueur ne fait pas un mot de passe. */
+  const mr = magasinDeBase();
+  const jetonMr = await amorceAdmin(mr, 'Chef Site', 'chef@st.digital');
+  const refuses = [
+    ['dix zeros repetes', '0000000000'],
+    ['une suite evidente', 'abcd123456789'],
+    ['un mot courant', 'monMotDePasse2026'],
+    ['le nom du projet', 'isaac-borne-2026'],
+    ['son propre nom', 'Ada-Nguema-2026'],
+  ];
+  for (const [quoi, mdp] of refuses) {
+    r = await appel(mr, { event: 'admin_add_user', sessionToken: jetonMr,
+      nom: 'Ada Nguema', email: 'ada.nguema@st.digital', password: mdp, role: 'accueil' });
+    verifie('mot de passe refuse : ' + quoi, r.httpStatus === 400, r.httpStatus + ' ' + (r.response.error || ''));
+  }
+
+  /* Changer son mot de passe ecrivait TOUJOURS le mot de passe partage du
+     site, meme pour un compte nominatif. Selon ce que la personne tapait, soit
+     l operation echouait sans raison comprehensible, soit elle remplacait le
+     mot de passe de tout le site en croyant changer le sien. */
+  const mp = magasinDeBase();
+  const jetonMp = await amorceAdmin(mp, 'Ada Nguema', 'ada.nguema@st.digital');
+  const partageAvant = JSON.stringify(mp.admin_accounts || null);
+
+  r = await appel(mp, { event: 'admin_change_password', sessionToken: jetonMp,
+    currentPassword: 'ce-n-est-pas-le-bon', newPassword: MDP_AUTRE });
+  verifie('changer son mot de passe exige l actuel', r.httpStatus === 401, String(r.httpStatus));
+
+  r = await appel(mp, { event: 'admin_change_password', sessionToken: jetonMp,
+    currentPassword: MDP_SOLIDE, newPassword: MDP_AUTRE });
+  verifie('changement accepte avec le bon mot de passe actuel', r.httpStatus === 200, String(r.httpStatus));
+  verifie('MOT DE PASSE PARTAGE : il n a PAS ete touche',
+    JSON.stringify(mp.admin_accounts || null) === partageAvant, 'inchange');
+  r = await appel(mp, { event: 'admin_login', email: 'ada.nguema@st.digital', password: MDP_AUTRE });
+  verifie('le nouveau mot de passe personnel fonctionne', r.httpStatus === 200, String(r.httpStatus));
+  r = await appel(mp, { event: 'admin_login', email: 'ada.nguema@st.digital', password: MDP_SOLIDE });
+  verifie('l ancien ne fonctionne plus', r.httpStatus === 401, String(r.httpStatus));
+  verifie('le compte n est plus marque a changer',
+    mp.admin_users[0].doitChanger === false, String(mp.admin_users[0].doitChanger));
 
   // ---------------------------------------------------------- journal d activite
   const mj = magasinDeBase();
@@ -397,11 +506,11 @@ function verifie(nom, condition, detail) {
   verifie('une tache automatique reste visible',
     actions.includes('visites_closes_d_office'), 'presente');
 
-  r = await appel(mj, { event: 'admin_change_password', ...AUTH, newPassword: 'unMotDePasseLong' });
+  r = await appel(mj, { event: 'admin_change_password', ...AUTH, newPassword: MDP_SOLIDE });
   const mdp = mj.audit[mj.audit.length - 1];
   verifie('un changement de mot de passe est journalise', mdp.action === 'mot_de_passe_change', JSON.stringify(mdp.action));
   verifie('le mot de passe n apparait pas dans le journal',
-    !JSON.stringify(mj.audit).includes('unMotDePasseLong'), 'aucune occurrence');
+    !JSON.stringify(mj.audit).includes(MDP_SOLIDE), 'aucune occurrence');
   r = await appel(mj, { event: 'admin_list_audit', ...AUTH });
   verifie('l ancien mot de passe ne donne plus acces', r.httpStatus === 401, String(r.httpStatus));
 
