@@ -9,7 +9,8 @@ import { useLanguage } from "./i18n";
 
 const DATA_CENTER_VALUES = ["libreville", "douala", "abidjan"];
 const ACCESS_TYPE_VALUES = ["visite", "interne", "intervention", "prestataire", "client", "stagiaire", "livraison"];
-const HOST_VALUES = ["site_manager", "commercial", "technique", "securite", "rh"];
+const HOST_VALUES = ["site_manager", "commercial", "technique", "securite", "rh",
+                     "marketing", "admin_financier"];
 
 const STEP_HEADER_KEYS = {
   actions: "rdv.header.actions",

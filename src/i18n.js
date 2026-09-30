@@ -128,6 +128,8 @@ export const translations = {
     "rdv.host.technique": "Hôte technique (Direction Technique)",
     "rdv.host.securite": "Hôte sécurité",
     "rdv.host.rh": "Hôte RH (stagiaires, recrutement)",
+    "rdv.host.marketing": "Hôte marketing (communication, événementiel)",
+    "rdv.host.admin_financier": "Hôte administratif et financier (facturation, comptabilité)",
 
     "rdv.requestdone.text": "Votre demande a bien été transmise. L'équipe la traitera et préviendra la personne concernée.",
     "rdv.requestdone.action": "Retour aux rendez-vous",
@@ -375,6 +377,8 @@ export const translations = {
     "rdv.host.technique": "Technical host (Technical Direction)",
     "rdv.host.securite": "Security host",
     "rdv.host.rh": "HR host (interns, recruitment)",
+    "rdv.host.marketing": "Marketing host (communication, events)",
+    "rdv.host.admin_financier": "Administrative and financial host (billing, accounting)",
 
     "rdv.requestdone.text": "Your request has been received. The team will process it and notify the person concerned.",
     "rdv.requestdone.action": "Back to appointments",

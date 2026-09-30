@@ -962,6 +962,8 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
               <option value="securite">Sécurité</option>
               <option value="rh">RH</option>
               <option value="site_manager">Site Manager</option>
+              <option value="marketing">Marketing</option>
+              <option value="admin_financier">Administratif et financier</option>
             </select></div></div>
             <button type="submit" class="btn-primary" style="width:auto;padding:12px 20px;">Ajouter</button>
           </form>
@@ -1196,7 +1198,7 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     "annule": { key: "annule", label: "Annulés", color: "#8a5cf6" },
   };
   function statusMeta(s) { return STATUS_META[s] || STATUS_META["en attente"]; }
-  const HOST_LABELS = { site_manager: "Site Manager", commercial: "Hôte commercial", technique: "Hôte technique", securite: "Hôte sécurité", rh: "Hôte RH" };
+  const HOST_LABELS = { site_manager: "Site Manager", commercial: "Hôte commercial", technique: "Hôte technique", securite: "Hôte sécurité", rh: "Hôte RH", marketing: "Hôte marketing", admin_financier: "Hôte administratif et financier" };
   function hostLabel(h) { return HOST_LABELS[h] || h || "Non renseigné"; }
 
   function computeCounts(appointments) {

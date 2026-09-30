@@ -85,11 +85,27 @@ const FAITS = [
   },
   {
     cle: "remerciement",
-    exige: [/^(merci|thanks|thank you|je vous remercie|nickel|parfait|super|genial|tres bien|c est note)\b/],
+    /* Un acquiescement peut preceder le remerciement : « parfait, merci ».
+       Sans cette tolerance, la phrase n'etait reconnue par aucun des deux. */
+    exige: [/^(ok|okay|d accord|daccord|parfait|super|tres bien|genial|nickel)?[ ,]*(merci|thanks|thank you|je vous remercie)\b/],
     exclut: [/\?|horaire|adresse|datacenter|tarif|visite|contact/],
     reponse: {
       fr: "Je vous en prie. N'hésitez pas si vous avez une autre question.",
       en: "You are welcome. Do let me know if you have another question.",
+    },
+  },
+  {
+    /* Acquiescer n'est pas demander. « ok », « parfait », « d'accord » ne
+       reclament pas de reponse : ils demandent qu'on prenne acte. Sans cette
+       entree, ces phrases partaient au modele, qui les prenait pour une
+       demande et repartait dans un accueil complet. */
+    cle: "acquiescement",
+    exige: [/^(ok|okay|d accord|daccord|tres bien|parfait|super|genial|impeccable|nickel|c est note|entendu|compris|ca marche|tres bien merci)\b/],
+    /* Un acquiescement suivi d'une vraie question n'en est plus un. */
+    exclut: [/\?|horaire|adresse|datacenter|tarif|prix|visite|contact|rendez ?vous|rdv|qui |quel|comment|combien|merci\b/],
+    reponse: {
+      fr: "Parfait. Je reste à votre disposition si vous avez une autre question.",
+      en: "Perfect. I remain at your disposal if you have another question.",
     },
   },
   {
