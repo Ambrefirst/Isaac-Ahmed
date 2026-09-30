@@ -194,6 +194,35 @@ Reste également à mesurer en **environnement bruyant** : les dix enregistremen
 
 ---
 
+## 15. Annuaire du personnel — mécanisme posé le 30/09/2026, données à saisir
+
+**Ce qui est fait.** Isaac lit la table du personnel et répond à « qui s'occupe
+du commercial ? » par un nom et une fonction. C'est **la même table** que celle
+alimentée par la rubrique Équipe du back-office, et celle que le parcours
+Rendez-vous interroge pour prévenir les bonnes personnes. Une seule saisie sert
+aux trois usages.
+
+Elle est relue à chaque question plutôt que recopiée dans la fiche : un
+changement fait dans le back-office prend effet immédiatement, sans
+redéploiement.
+
+**Décision du 30/09/2026.** La base interdit de communiquer « des informations
+sur les employés ». Prise à la lettre, cette règle empêcherait Isaac d'orienter
+un visiteur. Il a été décidé qu'**un nom et une fonction ne relèvent pas du
+confidentiel**, et sont donc communicables.
+
+La frontière reste celle-ci, et elle est appliquée dans le code : l'annuaire
+dit **à qui** s'adresser, jamais **comment** joindre quelqu'un directement.
+Aucune adresse électronique, aucun téléphone direct n'est rendu.
+
+**Ce qui reste à faire, et qui n'est pas technique.** La table contient
+aujourd'hui quatre entrées d'essai — « Site Manager Gabon », « Sophie
+Commercial » — avec des adresses Gmail de test. Il faut y saisir le véritable
+organigramme depuis la rubrique Équipe. Cela réglera du même coup le point 4 de
+cette liste, les adresses électroniques réelles.
+
+---
+
 ## Lire aussi
 
 `ECHECS_SILENCIEUX.md` recense les dix-neuf pannes qui n'ont produit **aucune erreur** au cours du projet, avec pour chacune comment elle a été trouvée et ce qui l'empêche aujourd'hui. Trois d'entre elles se sont produites **deux fois**, faute d'avoir été consignées la première : c'est la raison d'être de ce document.
