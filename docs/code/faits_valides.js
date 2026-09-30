@@ -183,6 +183,9 @@ const FAITS = [
     exclut: [/j'?ai (un )?(rendez ?vous|rdv)|mon (rendez ?vous|rdv)|annuler|reporter|confirmer/],
     reponse: {
       fr: "Avec plaisir. Sur l'écran d'accueil de la borne, choisissez « Rendez-vous » : c'est là que votre demande s'enregistre, que la personne concernée est prévenue, et que votre code d'invitation vous est envoyé.",
+      /* Des guillemets ne s'entendent pas, et une phrase longue se suit mal a
+         l'oral : on va au geste a faire. */
+      fr_vocal: "Avec plaisir. Touchez Rendez-vous sur l'écran d'accueil : votre demande y sera enregistrée et la personne concernée prévenue.",
       en: "With pleasure. On the kiosk's home screen, choose \"Appointment\": that is where your request is recorded, the person concerned is notified, and your invitation code is sent to you.",
     },
   },
@@ -197,6 +200,7 @@ const FAITS = [
     exclut: [/prendre|reserver|annuler|reporter/],
     reponse: {
       fr: "Bienvenue chez ST DIGITAL. Si vous avez reçu un code d'invitation, saisissez-le dans la rubrique « Rendez-vous » de la borne ; sinon, présentez-vous à l'accueil, on vous orientera.",
+      fr_vocal: "Bienvenue chez ST DIGITAL. Si vous avez un code d'invitation, touchez Rendez-vous sur l'écran ; sinon, présentez-vous à l'accueil.",
       en: "Welcome to ST DIGITAL. If you received an invitation code, enter it in the kiosk's \"Appointment\" section; otherwise, please come to the reception desk and someone will direct you.",
     },
   },
@@ -311,7 +315,12 @@ const FAITS = [
     exclut: [/rendez vous|rdv|visite|portes ouvertes|appointment|visit|open day/],
     reponse: {
       fr: "Vous pouvez nous joindre par courriel à info@st.digital, ou par téléphone au +241 66 17 66 41.",
+      /* Lue a voix haute, l'adresse doit s'entendre. « info@st.digital » se
+         prononce mal ; ecrite ainsi, elle se comprend a l'oreille et reste
+         lisible a l'ecran, ou la reponse s'affiche aussi. */
+      fr_vocal: "Vous pouvez nous joindre au 66 17 66 41, indicatif 241. Par courriel, c'est info, arobase, s t point digital.",
       en: "You can reach us by email at info@st.digital, or by phone on +241 66 17 66 41.",
+      en_vocal: "You can reach us on 66 17 66 41, country code 241. By email, that is info, at, s t dot digital.",
     },
   },
 ];
@@ -331,10 +340,16 @@ function chercheFait(question) {
   return trouves.length === 1 ? trouves[0] : null;
 }
 
-function reponseValidee(question, langue) {
+/* `mode` vaut "vocal" quand la reponse sera lue a voix haute. Certaines
+   reponses ont alors une variante ecrite pour l'oreille : une adresse
+   electronique se prononce mal, des guillemets ne s'entendent pas. Les autres
+   servent le meme texte dans les deux modes. */
+function reponseValidee(question, langue, mode) {
   const fait = chercheFait(question);
   if (!fait) return null;
-  return { cle: fait.cle, reponse: fait.reponse[langue === "en" ? "en" : "fr"] };
+  const cle = langue === "en" ? "en" : "fr";
+  const parlee = mode === "vocal" ? fait.reponse[cle + "_vocal"] : null;
+  return { cle: fait.cle, reponse: parlee || fait.reponse[cle] };
 }
 
 module.exports = { normalise, chercheFait, reponseValidee, FAITS, JAMAIS_RACCOURCI };
