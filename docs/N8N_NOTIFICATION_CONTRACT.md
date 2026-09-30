@@ -12,6 +12,24 @@
 
 En attendant l'une ou l'autre, **Gmail + mot de passe d'application** sert de canal de démonstration réel pour valider le critère d'acceptation M0. Adresses de test actuelles (`hosts.json`) : toutes les entrées pointent vers l'adresse Gmail de la stagiaire (pas une vraie boîte ST Digital) — **à remplacer avant toute démonstration devant la tutrice** par de vraies adresses ou au moins une adresse ST Digital accessible. Bascule vers Outlook/Teams documentée comme évolution future dans le dossier d'architecture.
 
+**Mise à jour du 30/09/2026 — `update:workflow` est déprécié.** La commande
+fonctionne encore et publie bien, mais n8n demande désormais
+`publish:workflow --id=<id>`. La séquence de déploiement reste la même, et le
+piège qu'elle évite n'a pas changé : `import:workflow` **désactive
+silencieusement** ce qu'il touche — il l'annonce par un `Deactivating
+workflow "…"` qu'on lit trop vite — et la publication ne prend effet qu'après
+un redémarrage, que la commande réclame elle-même.
+
+```
+docker exec n8n n8n import:workflow --input=<fichier>
+docker exec n8n n8n publish:workflow --id=<id>     # une fois par workflow importé
+docker restart n8n
+```
+
+Vérifier ensuite que chaque workflow touché est bien ressorti **actif** : un
+export complet le dit, et c'est moins cher qu'une démonstration devant un
+webhook éteint.
+
 **Piège n8n à retenir si un envoi semble ignorer une modification** : une credential attachée ou un nœud modifié via l'éditeur n8n peut sembler ne pas s'appliquer même après un redémarrage complet du conteneur. Cause : n8n distingue une version *enregistrée* (`versionId`) d'une version *publiée/active* (`activeVersionId`) — seule la version active tourne réellement. Vérifier les deux champs via `n8n export:workflow`, et si différents, forcer `n8n publish:workflow --id=<id>` puis redémarrer.
 
 Le frontend envoie une requete `POST` vers `REACT_APP_N8N_NOTIFICATION_WEBHOOK`.
