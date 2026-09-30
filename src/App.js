@@ -4,10 +4,10 @@ import WelcomeScreen from "./WelcomeScreen";
 import HomeScreen from "./HomeScreen";
 import RendezVousScreen from "./RendezVousScreen";
 import ChatScreen from "./ChatScreen";
-import { askIsaac, escalateToStaff } from "./services/aiService";
+import { askIsaac, escalateToStaff, prevenirService } from "./services/aiService";
 import { surPlace } from "./services/presence";
 import { enregistreDuree } from "./services/attente";
-import { relaisNecessaire } from "./services/relaisHumain";
+import { contactDit, relaisCommercial, relaisNecessaire } from "./services/relaisHumain";
 import { useLanguage } from "./i18n";
 
 const TYPE_CHAR_DELAY_MS = 18;
@@ -48,6 +48,10 @@ function App() {
   const timers = useRef([]);
   const abortRef = useRef(null);
   const escalatedRef = useRef(false);
+  /* La demande commerciale deja transmise dans cette conversation, s'il y en a
+     une. Elle evite d'envoyer un courriel par question a quelqu'un qui insiste,
+     et sert d'ancrage quand le visiteur donne son numero deux phrases plus loin. */
+  const commercialRef = useRef(null);
   /* Minuterie d'effacement du fil. Voir l'en-tete du fichier : une borne est
      partagee, et ce qu'un visiteur a demande ne regarde pas le suivant. */
   const oubliRef = useRef(null);
@@ -86,6 +90,10 @@ function App() {
     setMessages([]);
     setEscalationOffer(null);
     escalatedRef.current = false;
+    /* Le visiteur suivant n'herite pas de la demande commerciale du precedent :
+       sans cette remise a zero, le service ne serait plus prevenu du tout, et
+       un numero dicte irait completer le besoin de quelqu'un d'autre. */
+    commercialRef.current = null;
   }
 
   function programmeOubli(delai) {
@@ -169,6 +177,46 @@ function App() {
     setEscalationOffer(null);
     setPhase(null);
     await typeOutAnswer(answer);
+
+    /* UNE DEMANDE COMMERCIALE NE SE PROPOSE PAS, ELLE SE TRANSMET.
+
+       « Combien coûterait l'hébergement de mon site ? » n'a pas de réponse
+       dans une base documentaire, et n'en aura jamais : le prix dépend du
+       volume, du trafic, de la durée, de l'existant. Isaac ne connaît aucun
+       de ces paramètres, et seul un commercial est habilité à les chiffrer.
+       Chercher plus loin serait perdre du temps ; demander au visiteur s'il
+       veut être mis en relation, c'est lui faire porter une décision qui est
+       déjà prise par la nature de sa question.
+
+       Le service commercial est donc prévenu TOUT DE SUITE, une fois par
+       conversation, avec la demande telle qu'elle a été posée. Le bouton de
+       mise en relation reste pour les autres cas — ceux où une personne peut
+       aider sans qu'on sache encore laquelle. */
+    if (relaisCommercial(cleanMessage, answer) && !commercialRef.current) {
+      commercialRef.current = cleanMessage;
+      const ici = surPlace();
+      const parti = await prevenirService(cleanMessage, {
+        service: "commercial", surPlace: ici, mode: "chat",
+      });
+      await typeOutAnswer(
+        t(parti ? (ici ? "chat.commercial.surplace" : "chat.commercial.adistance") : "chat.escalateFailed")
+      );
+      return;
+    }
+
+    /* Le visiteur laisse un moyen de le joindre après coup : on complète le
+       signalement déjà parti plutôt que d'en ouvrir un second. Sans cela,
+       l'équipe reçoit un besoin qu'elle ne peut rattacher à personne. */
+    if (commercialRef.current) {
+      const contact = contactDit(cleanMessage);
+      if (contact) {
+        await prevenirService(commercialRef.current, {
+          service: "commercial", surPlace: surPlace(), mode: "chat", contact,
+        });
+        await typeOutAnswer(t("chat.commercial.contact"));
+        return;
+      }
+    }
 
     /* La proposition de mise en relation vient APRES la reponse, et depend de
        ce qui a ete demande — plus de la duree de l'attente. Un tarif, un

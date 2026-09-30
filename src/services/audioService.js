@@ -51,6 +51,16 @@ const ARTEFACTS = [
   /abonnez[- ]vous/i,
   /merci d['\u2019]avoir regard/i,
   /merci de votre attention/i,
+  /* \u00ab Enregistr\u00e9. \u00bb \u2014 rendu tel quel le 30/09 sur la borne principale, quand
+     le micro n'a capte que le bruit du hall. Ce n'est pas une question
+     d'accueil, et le laisser passer a fait repondre Isaac a une phrase que
+     personne n'avait dite. Le motif est ancre aux DEUX bouts : il attrape la
+     transcription entiere, jamais \u00ab j'ai enregistre ma demande \u00bb. */
+  /^[^a-z0-9]*enregistr(?:[\u00e9e]e?s?|ement)?[^a-z0-9]*$/i,
+  /^[^a-z0-9]*(?:g[\u00e9e]n[\u00e9e]rique|musique|applaudissements?|rires?|silence|bruits?)[^a-z0-9]*$/i,
+  /* Une transcription sans une seule lettre ni un seul chiffre \u2014 \u00ab ... \u00bb,
+     \u00ab \u266a \u00bb, \u00ab [ ] \u00bb \u2014 ne porte aucune parole, quelle qu'en soit la forme. */
+  /^[^a-z0-9]+$/i,
 ];
 
 /* Mesures du 28/09 sur dix-huit enregistrements de parole reelle degradee.

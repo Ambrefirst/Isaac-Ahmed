@@ -116,7 +116,19 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
   /* La conversation parlee se tient ICI, sur la borne, autour de la sphere.
      Elle n'ouvre pas de fenetre et ne mene pas au fil de discussion : appuyer
      sur « Parler a Isaac » veut dire qu'on veut entendre une voix, pas lire. */
-  const vocal = useConversationParlee({ salutation: t("voix.salutation"), langue: language });
+  const vocal = useConversationParlee({
+    salutation: t("voix.salutation"),
+    langue: language,
+    /* Les phrases du relais commercial sont fournies par l'ecran : le crochet
+       n'a pas de traduction a lui, et une chaine ecrite en dur dedans serait
+       restee en francais pour un visiteur anglophone. */
+    relais: {
+      transmisSurPlace: t("voix.commercial.surplace"),
+      transmisADistance: t("voix.commercial.adistance"),
+      contactRecu: t("voix.commercial.contact"),
+      transmisEchec: t("voix.commercial.echec"),
+    },
+  });
   const heure = useLocalTime(language);
 
   /* L'espace du personnel n'est pas servi sur tous les acces. Y envoyer
@@ -205,6 +217,9 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
                 {vocal.entendu && <p className="home-transcript">{vocal.entendu}</p>}
                 {vocal.reponse && <p className="home-vocal-reponse">{vocal.reponse}</p>}
                 {vocal.erreur && <p className="home-vocal-erreur" role="alert">{vocal.erreur}</p>}
+                {vocal.etat === "pause" && !vocal.erreur && (
+                  <p className="home-vocal-pause">{t("voix.pause.explication")}</p>
+                )}
 
                 {/* Les deux facons de reprendre la main.
 

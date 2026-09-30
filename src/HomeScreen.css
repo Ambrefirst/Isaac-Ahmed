@@ -200,6 +200,16 @@
   color: var(--text-muted, #93AFC4);
 }
 
+/* Le micro en pause n'est pas une panne : la phrase se lit comme une
+   indication, pas comme une alerte. */
+.home-vocal-pause {
+  margin: 0;
+  font-size: .82rem;
+  line-height: 1.5;
+  max-width: 40ch;
+  color: var(--text-muted, #93AFC4);
+}
+
 .home-transcript {
   margin: 0;
   padding: 11px 20px;

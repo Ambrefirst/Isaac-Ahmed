@@ -204,6 +204,16 @@ export const translations = {
     "voix.bouton.fini": "J'ai fini de parler",
     "voix.aide": "Appuyez pour parler, appuyez de nouveau quand vous avez fini. Isaac vous répond à voix haute.",
     "voix.etat.pause": "MICRO COUPÉ",
+    /* « MICRO COUPÉ » dit l'état, pas la suite. Sans cette phrase, la mise en
+       pause passait pour une conversation qui s'était terminée seule. */
+    "voix.pause.explication": "La conversation est gardée. Appuyez sur « Reprendre la parole » quand vous voulez continuer.",
+    /* Ce qu'Isaac ajoute à voix haute quand il vient de transmettre une demande
+       commerciale. Il annonce une action RÉELLE et déjà partie — pas une
+       visite, pas un rappel promis à la place de quelqu'un d'autre. */
+    "voix.commercial.surplace": "Je transmets votre demande au service commercial. Présentez-vous à l'accueil, on vous mettra en relation avec un commercial.",
+    "voix.commercial.adistance": "Je transmets votre demande au service commercial. Dites-moi votre numéro ou votre adresse électronique si vous souhaitez être rappelé.",
+    "voix.commercial.contact": "C'est noté, je le joins à votre demande.",
+    "voix.commercial.echec": "Je n'ai pas pu prévenir le service commercial. Vous pouvez les joindre au 66 17 66 41.",
     "voix.corriger": "Ce n'est pas ce que j'ai dit",
     "voix.couper": "Couper le micro",
     "voix.reprendre": "Reprendre la parole",
@@ -242,6 +252,13 @@ export const translations = {
     "chat.escalated.surplace": "C'est transmis. Un membre de l'équipe a été prévenu et vient vous rejoindre à l'accueil.",
     "chat.escalated.adistance": "C'est transmis à l'équipe. Pour qu'elle puisse vous répondre, laissez-moi votre nom et un moyen de vous joindre — téléphone ou adresse électronique.",
     "chat.escalateFailed": "Je n'ai pas pu prévenir l'équipe pour le moment. Vous pouvez nous joindre au +241 66 17 66 41 ou par courriel à info@st.digital.",
+    /* Un prix dimensionne sur un besoin ne se trouve pas dans une base : il se
+       calcule avec le client. On ne propose donc pas la mise en relation, on la
+       fait, et on le dit au passe — le courriel est deja parti quand la phrase
+       s'affiche. */
+    "chat.commercial.surplace": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Je viens de la transmettre au service commercial. Présentez-vous à l'accueil, on vous mettra en relation.",
+    "chat.commercial.adistance": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Je viens de la transmettre au service commercial. Laissez-moi un numéro ou une adresse électronique et ils vous recontacteront.",
+    "chat.commercial.contact": "C'est noté, je l'ajoute à votre demande. Le service commercial vous recontactera.",
 
     "camera.unavailable": "La caméra est inaccessible depuis ce navigateur. Merci de vous présenter à l'accueil.",
     "photo.activate": "Activer la caméra",
@@ -453,6 +470,11 @@ export const translations = {
     "voix.bouton.fini": "I have finished speaking",
     "voix.aide": "Press to speak, press again when you have finished. Isaac answers aloud.",
     "voix.etat.pause": "MICROPHONE OFF",
+    "voix.pause.explication": "The conversation is kept. Press “Start speaking again” whenever you want to continue.",
+    "voix.commercial.surplace": "I am passing your request to the sales team. Please go to the front desk and they will put you in touch with a sales representative.",
+    "voix.commercial.adistance": "I am passing your request to the sales team. Tell me your phone number or email address if you would like to be called back.",
+    "voix.commercial.contact": "Noted, I am adding it to your request.",
+    "voix.commercial.echec": "I could not reach the sales team. You can call them on 66 17 66 41.",
     "voix.corriger": "That is not what I said",
     "voix.couper": "Turn the microphone off",
     "voix.reprendre": "Start speaking again",
@@ -491,6 +513,9 @@ export const translations = {
     "chat.escalated.surplace": "Passed on. A team member has been notified and is on their way to the reception desk.",
     "chat.escalated.adistance": "Passed on to the team. So that they can get back to you, please leave me your name and a way to reach you — phone or email.",
     "chat.escalateFailed": "I could not reach the team right now. You can contact us on +241 66 17 66 41 or by email at info@st.digital.",
+    "chat.commercial.surplace": "This depends on your own setup: only a sales representative can price it. I have just passed it to the sales team. Please go to the front desk and they will put you in touch.",
+    "chat.commercial.adistance": "This depends on your own setup: only a sales representative can price it. I have just passed it to the sales team. Leave me a phone number or an email address and they will get back to you.",
+    "chat.commercial.contact": "Noted, I am adding it to your request. The sales team will get back to you.",
 
     "camera.unavailable": "The camera is unavailable in this browser. Please come to the reception desk.",
     "photo.activate": "Turn on the camera",

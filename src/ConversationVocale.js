@@ -20,7 +20,16 @@ import useConversationParlee from "./useConversationParlee";
 
 export default function ConversationVocale({ onFermer }) {
   const { t, language } = useLanguage();
-  const vocal = useConversationParlee({ salutation: t("voix.salutation"), langue: language });
+  const vocal = useConversationParlee({
+    salutation: t("voix.salutation"),
+    langue: language,
+    relais: {
+      transmisSurPlace: t("voix.commercial.surplace"),
+      transmisADistance: t("voix.commercial.adistance"),
+      contactRecu: t("voix.commercial.contact"),
+      transmisEchec: t("voix.commercial.echec"),
+    },
+  });
 
   /* La conversation s'ouvre d'elle-meme : le visiteur a deja appuye pour
      arriver ici, lui demander un second geste n'aurait pas de sens. */
@@ -62,13 +71,24 @@ export default function ConversationVocale({ onFermer }) {
         {vocal.entendu && <p className="voix-transcrit">{vocal.entendu}</p>}
         {vocal.reponse && <p className="voix-reponse">{vocal.reponse}</p>}
         {vocal.erreur && <p className="voix-erreur" role="alert">{vocal.erreur}</p>}
+        {vocal.etat === "pause" && !vocal.erreur && (
+          <p className="voix-attente">{t("voix.pause.explication")}</p>
+        )}
 
         {/* Apres un silence prolonge, la conversation se met en pause d'elle-meme
             plutot que de garder le micro ouvert. Il faut alors pouvoir la
             reprendre : sans ce bouton, la fenetre restait muette et sans issue
             autre que la fermer. */}
         {(vocal.etat === "arret" || vocal.etat === "pause") && (
-          <button type="button" className="voix-bouton" onClick={vocal.reprendre}>
+          <button
+            type="button"
+            className="voix-bouton"
+            /* Reprendre garde l'echange et rouvre simplement le micro ;
+               demarrer recommence, salutation comprise. Les deux boutons
+               appelaient « reprendre » : depuis l'arret, la fenetre se
+               remettait a ecouter sans qu'Isaac ait dit un mot. */
+            onClick={vocal.etat === "pause" ? vocal.reprendre : vocal.demarrer}
+          >
             {vocal.etat === "pause" ? t("voix.reprendre") : t("voix.bouton.parler")}
           </button>
         )}

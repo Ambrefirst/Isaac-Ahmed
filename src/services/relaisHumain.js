@@ -56,6 +56,82 @@ const AVEUX_D_IGNORANCE = [
   /je\s+vous\s+invite\s+[àa]\s+contacter/i,
 ];
 
+/* Parmi les sujets réservés, ceux qui appellent le SERVICE COMMERCIAL.
+
+   Tous ne s'y adressent pas : une disponibilité de baies ou l'état d'un
+   compte relèvent de l'exploitation, pas de la vente. On sépare donc les deux
+   plutôt que d'envoyer toute demande réservée au même endroit — un service
+   qui reçoit ce qui ne le concerne pas cesse vite de lire ce qu'il reçoit.
+
+   S'y ajoutent les marques d'intérêt commercial qui ne parlent pas d'argent :
+   « je cherche une solution de sauvegarde », « on voudrait héberger nos
+   serveurs ». Ce sont des clients potentiels, et personne ne les rappellera
+   si la borne se contente de leur décrire le catalogue. */
+const BESOINS_COMMERCIAUX = [
+  /\btarifs?\b|\bprix\b|\bco[uû]ts?\b|\bdevis\b|\bcotations?\b|\btarification\b/i,
+  /combien\s+(ça\s+)?(co[uû]te|cela\s+co[uû]te)|\bquel\s+est\s+le\s+montant\b/i,
+  /\bremises?\b|\bn[ée]gocia|\bbudget\b|\boffres?\s+commerciale|\bproposition\s+commerciale/i,
+  /\bs?['’]?abonner\b|\bsouscrire\b|\bdevenir\s+client\b|\bouvrir\s+un\s+compte\b/i,
+  /\b(je|nous|on)\s+(cherche|cherchons|voudrai(?:s|ons)|aimerai(?:s|ons)|souhaite(?:rions|rais)?)[^.?!]{0,40}\b(solution|service|offre|h[ée]berge|sauvegarde|infogérance|infog[ée]rance|connectivit[ée]|cloud|baie|rack)/i,
+  /\b(parler|[ée]changer|rencontrer|joindre|contacter)[^.?!]{0,20}\b(commercial|service\s+commercial|vendeur|charg[ée]\s+d['’]affaires)/i,
+];
+
+/* Ce dont on parle, quand on ne parle pas encore d'argent. Sert à décider si
+   un « je ne dispose pas de cette information » relève du commercial ou d'un
+   simple trou dans la base. */
+const OBJETS_VENDABLES =
+  /\bh[ée]berge|\bsite\s+web\b|\bcloud\b|\bserveurs?\b|\bbaies?\b|\bracks?\b|\bsauvegarde|\bbackup\b|\binfog[ée]rance\b|\bconnectivit[ée]\b|\bliaison\b|\bfibre\b|\bvpn\b|\bcolocation\b|\bdatacenter\b|\bcapacit[ée]\b|\bvolum|\babonnement\b|\bservices?\b|\boffres?\b|\bsolution/i;
+
+export function besoinCommercial(question) {
+  return BESOINS_COMMERCIAUX.some((motif) => motif.test(question || ""));
+}
+
+/* LE CAS QU'UNE BASE DOCUMENTAIRE NE PEUT PAS COUVRIR.
+
+   « Combien coûterait l'hébergement de mon site ? » n'a pas de réponse dans
+   une documentation, et n'en aura jamais : le prix dépend du volume, du
+   trafic, de la durée, de ce qui existe déjà chez le client. Aucun de ces
+   paramètres n'est connu de la borne, et seul un commercial est habilité à
+   les mettre en face d'un montant. Chercher plus loin dans la base ne sert
+   à rien — c'est une question qui se transmet, pas qui se résout.
+
+   Deux façons de le reconnaître, et une seule suffit :
+
+   1. LA DEMANDE elle-même est commerciale : un devis, une cotation, un prix,
+      une envie de souscrire, une demande de parler à un commercial.
+
+   2. ISAAC AVOUE ne pas savoir, ET la question portait sur quelque chose que
+      ST DIGITAL vend. Le second test compte autant que le premier : sans lui,
+      « je ne dispose pas de cette information » sur les horaires du parking
+      déclencherait un courriel au service commercial. */
+export function relaisCommercial(question, reponse) {
+  if (besoinCommercial(question)) return true;
+  return avoueIgnorer(reponse) && OBJETS_VENDABLES.test(question || "");
+}
+
+/* Ce que le visiteur a bien voulu laisser pour être rappelé.
+
+   Rien n'est obligatoire : l'équipe est prévenue avec ou sans, et c'est le
+   point de toute la manœuvre. Mais si la phrase contient un numéro ou une
+   adresse, la transmettre transforme un signalement en rappel possible.
+
+   La reconnaissance vocale écrit les chiffres en chiffres, espacés par deux
+   ou par trois selon la diction : on recolle avant de compter. En deçà de
+   huit chiffres ce n'est pas un numéro — c'est une date, un étage ou un prix. */
+export function contactDit(texte) {
+  const t = String(texte || "");
+
+  const courriel = t.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i);
+  if (courriel) return courriel[0];
+
+  const suite = t.match(/(?:\+?\d[\d\s.-]{7,}\d)/);
+  if (suite) {
+    const chiffres = suite[0].replace(/\D/g, "");
+    if (chiffres.length >= 8 && chiffres.length <= 15) return chiffres;
+  }
+  return null;
+}
+
 export function sujetReserve(question) {
   return SUJETS_RESERVES.some((motif) => motif.test(question || ""));
 }
