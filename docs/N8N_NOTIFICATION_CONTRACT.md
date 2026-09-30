@@ -49,3 +49,47 @@ Le frontend envoie une requete `POST` vers `REACT_APP_N8N_NOTIFICATION_WEBHOOK`.
 Copier `.env.example` vers `.env.local`, puis renseigner `REACT_APP_N8N_NOTIFICATION_WEBHOOK=https://aistd.app.n8n.cloud/webhook/isaac` (même URL que les autres webhooks n8n du projet). Ne jamais versionner `.env.local` ni les identifiants Outlook/Teams.
 
 Le frontend ne contient aucun secret Microsoft. Les credentials Outlook et Teams doivent rester dans les credentials n8n, avec le niveau de permission minimal.
+
+---
+
+## Événement `chat_escalate` — mise en relation, et relais commercial
+
+Le frontend poste sur `REACT_APP_N8N_NOTIFICATION_WEBHOOK` (en production :
+`/webhook/isaac-visitor`, servi par le workflow public minimal).
+
+```json
+{
+  "event": "chat_escalate",
+  "question": "Combien coûterait l'hébergement de notre site web ?",
+  "surPlace": true,
+  "service": "commercial",
+  "mode": "vocal",
+  "contact": "066176641",
+  "sessionId": "…"
+}
+```
+
+| Champ | Obligatoire | Rôle |
+|---|---|---|
+| `question` | oui | la demande **telle qu'elle a été posée**, jamais reformulée |
+| `surPlace` | non | `false` quand la personne consulte le lien public : il n'y a personne à aller voir à l'accueil |
+| `service` | non | destine la demande à un **service** de l'annuaire (`commercial`, …). Absent : comportement historique, l'accueil est prévenu |
+| `mode` | non | `"vocal"` si la demande a été dite à voix haute, `"chat"` si elle a été écrite |
+| `contact` | non | numéro ou adresse laissés par le visiteur, quand il en a donné un |
+
+**Pourquoi un service et non une personne.** Un besoin de devis adressé à un
+commercial nommé reste sans réponse si cette personne est absente. Le workflow
+lit l'annuaire (`app_data.staff`), retient tous les membres du service, et
+retombe sur l'adresse d'accueil si le service n'a encore personne — un silence
+serait pire que le mauvais destinataire.
+
+**Quand le frontend l'envoie seul.** Une question dont la réponse dépend de la
+situation du client — un prix dimensionné sur un besoin, une cotation, une
+offre — n'a pas de réponse dans une base documentaire et n'en aura jamais.
+Isaac ne propose donc pas la mise en relation, il transmet, et il le dit. Le
+détail de la reconnaissance est dans `src/services/relaisHumain.js`
+(`relaisCommercial`), et couvert par vingt cas de référence.
+
+Un seul envoi par conversation. Si le visiteur laisse ensuite un moyen de le
+joindre, un second appel porte le même `question` et le `contact` : il complète
+le signalement au lieu d'en ouvrir un autre.

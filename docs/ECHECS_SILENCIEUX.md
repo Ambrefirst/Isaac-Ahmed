@@ -368,7 +368,65 @@ deja de la meme facon, en silence.
 
 ---
 
-## Ce que ces vingt-deux cas ont en commun
+## 23. Un seuil absolu dans une piece qui ne l'est pas
+
+Le mode parle decidait qu'on avait cesse de parler en comparant le niveau
+sonore du micro a une constante : `0,012`. La valeur avait ete choisie dans un
+bureau calme, ou elle est juste.
+
+Un hall d'accueil depasse ce niveau tout seul. La borne croyait donc entendre
+parler en permanence : elle n'atteignait jamais la seconde et demie de silence
+qui rend la parole a Isaac, laissait tourner l'enregistrement jusqu'a la limite
+de douze secondes, et envoyait a la reconnaissance douze secondes de brouhaha.
+
+**Ce que la reconnaissance en a fait.** Elle a rendu `Enregistré.` — un mot de
+son corpus d'entrainement, pas un mot prononce. Le texte etait bien forme, sa
+confiance suffisante, et rien dans la chaine ne pouvait le distinguer d'une
+question. Isaac y a repondu par son message d'accueil. Du point de vue du
+visiteur : il n'avait rien dit, et la borne lui parlait.
+
+C'est le dix-huitieme cas exactement — une sortie plausible la ou il n'y avait
+pas d'entree — mais sa cause est en amont, dans une mesure physique posee une
+fois pour toutes. **Un seuil qui decrit l'environnement doit etre mesure dans
+l'environnement.** On calibre desormais le bruit de fond pendant une
+demi-seconde, micro ouvert, et la parole doit le dominer.
+
+## 24. Un seul nombre pour deux questions
+
+`ATTENTE_MAXIMALE = 12000` repondait a la fois a « personne ne dit rien, on
+arrete d'attendre » et a « il parle depuis trop longtemps, on transcrit ce
+qu'on a ». Les deux questions n'ont pas la meme reponse, et la valeur unique
+etait fausse pour les deux : trop courte pour laisser le temps de reagir apres
+une reponse lue a l'ecran, et assez courte pour couper au milieu d'une phrase
+commencee a la onzieme seconde.
+
+Le defaut est silencieux parce qu'aucune des deux coupures ne signale qu'elle
+est arrivee trop tot : l'une met le micro en pause, l'autre transcrit une
+phrase tronquee. Rien ne dit qu'il manque quelque chose.
+
+**Quand une constante sert a deux decisions, elle est probablement fausse pour
+l'une des deux.** Ce sont maintenant deux constantes : vingt-cinq secondes
+avant la pause, quarante secondes de parole d'affilee.
+
+## 25. Une panne qui se faisait passer pour une fin
+
+Toute erreur de la conversation parlee menait a l'etat `ARRET` : le meme etat
+que « le visiteur a appuye sur Terminer ». L'ecran revenait au depart,
+l'historique etait perdu, et le message d'erreur s'affichait sur un ecran que
+plus personne ne regardait.
+
+Ce n'est pas un signal manquant, c'est un signal **confondu** : deux causes tres
+differentes rendues indistinguables a l'arrivee. La borne semblait se fermer
+toute seule, ce qui est le symptome qui a ete rapporte — et non l'erreur, qui
+n'a jamais ete lue.
+
+**Un arret subi et un arret voulu ne doivent pas se ressembler.** Une panne
+interrompt desormais vers `PAUSE`, dit ce qui s'est passe et laisse
+« Reprendre la parole » a portee de main. Seul le visiteur termine.
+
+---
+
+## Ce que ces vingt-cinq cas ont en commun
 
 Un seul mécanisme les explique tous : **quelque part, une opération qui échoue renvoie le même signal qu'une opération qui réussit**. Un `200` sur un texte vide. Un fichier écrit que personne ne lit. Un paramètre ignoré. Un magasin vectoriel vide qui répond quand même. Une animation qui existe et ne dure rien.
 

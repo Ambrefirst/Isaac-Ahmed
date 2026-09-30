@@ -241,9 +241,56 @@ cette liste, les adresses électroniques réelles.
 
 ---
 
+## 16. Les adresses électroniques du système — bloquant, décision attendue
+
+**Constat du 30/09/2026.** Deux constantes, déclarées à l'identique dans les
+deux workflows n8n (`Isaac - Rendez-vous` et `Isaac - Visiteur (public)`),
+portent encore une **adresse Gmail personnelle** :
+
+| Constante | Rôle | Conséquence |
+|---|---|---|
+| `FROM` | expéditeur de **tous** les courriels | le visiteur reçoit sa confirmation de demande depuis une adresse personnelle, pas depuis ST DIGITAL |
+| `ACCUEIL_EMAIL` | destinataire de l'accueil, et secours quand l'annuaire ne donne personne | la copie « Nouvelle demande de rendez-vous » et toute escalade arrivent dans une boîte personnelle |
+
+Les envois **nominatifs** sont corrects : la confirmation au visiteur part vers
+l'adresse qu'il a saisie, les sollicitations d'équipe vers les adresses de
+l'annuaire. C'est l'en-tête et le secours qui n'ont jamais été mis à jour.
+
+Recensement des points touchés :
+
+- `appointment_requested` — copie accueil de la nouvelle demande (destinataire)
+- `chat_escalate` — mise en relation avec l'équipe (destinataire)
+- `visitor_arrival_confirmed` — secours si aucun *site manager* n'est inscrit
+- `visits_autoclose` — secours, même raison
+- `admin_update_status` — secours à la confirmation d'une visite
+- **tous** les envois, sans exception, pour l'expéditeur
+
+**Pourquoi ce n'est pas qu'un changement de chaîne.** Le canal SMTP est un
+compte Gmail avec mot de passe d'application, choisi le 04/09 parce que
+l'authentification SMTP est désactivée sur le tenant M365 (voir
+`N8N_NOTIFICATION_CONTRACT.md`). Gmail refuse d'expédier au nom d'une adresse
+qui n'est pas un alias vérifié du compte. Remplacer `FROM` par une adresse
+`@st.digital` sans préparer l'alias ferait **échouer tous les envois** — et
+l'envoi est en *best-effort*, donc l'échec serait silencieux.
+
+Trois décisions à prendre, dans cet ordre :
+
+1. **Destinataire d'accueil** (`ACCUEIL_EMAIL`) — sans contrainte technique,
+   modifiable immédiatement. Quelle adresse ST DIGITAL reçoit les demandes
+   arrivées à la borne ?
+2. **Expéditeur** (`FROM`) — soit déclarer l'adresse ST DIGITAL comme alias
+   vérifié du compte Gmail, soit obtenir l'activation SMTP côté M365 (demande
+   ouverte depuis le 04/09), soit assumer l'adresse actuelle pour la
+   soutenance et la documenter comme telle.
+3. **Garde-fou** — refuser au démarrage une adresse qui n'est pas un domaine
+   de l'entreprise, plutôt que de laisser une valeur de test survivre trois
+   semaines sans que rien ne le signale.
+
+---
+
 ## Lire aussi
 
-`ECHECS_SILENCIEUX.md` recense les dix-neuf pannes qui n'ont produit **aucune erreur** au cours du projet, avec pour chacune comment elle a été trouvée et ce qui l'empêche aujourd'hui. Trois d'entre elles se sont produites **deux fois**, faute d'avoir été consignées la première : c'est la raison d'être de ce document.
+`ECHECS_SILENCIEUX.md` recense les vingt-cinq pannes qui n'ont produit **aucune erreur** au cours du projet, avec pour chacune comment elle a été trouvée et ce qui l'empêche aujourd'hui. Trois d'entre elles se sont produites **deux fois**, faute d'avoir été consignées la première : c'est la raison d'être de ce document.
 
 Le dix-huitième cas est le seul qu'aucun essai automatique n'aurait pu attraper : la reconnaissance vocale rend une phrase inventée aussi bien formée qu'une phrase entendue. Les filtres posés le 28/09 en écartent les formes connues et les transcriptions peu sûres ; ils n'écartent pas une phrase plausible mais fausse. C'est une limite de la chaîne, pas un défaut à corriger : elle est traitée en rendant la main au visiteur, qui peut interrompre et reprendre.
 
