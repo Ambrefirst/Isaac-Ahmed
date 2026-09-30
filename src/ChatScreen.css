@@ -183,13 +183,16 @@
 }
 @keyframes attente-tourne { to { transform: rotate(360deg); } }
 .attente-jauge { height: 2px; background: rgba(122, 175, 201, 0.16); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+/* La largeur est pilotee en JavaScript, d'apres la mediane des dernieres
+   reponses : voir src/services/attente.js. Elle etait auparavant animee ici
+   sur une duree fixe de cent secondes, et cette duree est devenue fausse le
+   jour ou la borne s'est mise a repondre en quelques secondes — sans que rien
+   ne le signale. Une transition courte lisse les sauts entre deux images. */
 .attente-jauge i {
   display: block; height: 100%; width: 0;
   background: linear-gradient(90deg, var(--blue), var(--sky));
-  animation: attente-progresse 100s linear forwards;
+  transition: width .2s linear;
 }
-/* 100 s : duree reellement observee d'une reponse complete sur la tour, sans carte graphique */
-@keyframes attente-progresse { to { width: 100%; } }
 
 /* ---------------- questions proposees ---------------- */
 .chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
@@ -325,8 +328,7 @@
     animation-duration: 2.2s !important;
     animation-iteration-count: infinite !important;
   }
-  .attente-jauge i {
-    animation-duration: 100s !important;
-    animation-iteration-count: 1 !important;
-  }
+  /* Plus d'animation a exempter : la jauge n'en a plus. On retire seulement
+     la transition, qui n'est pas une information mais un lissage. */
+  .attente-jauge i { transition: none !important; }
 }

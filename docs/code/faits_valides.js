@@ -69,9 +69,56 @@ const LOCALISATION = /ou se trouve|ou est|ou sont|adresse|situe|situee|localis|c
 
 const FAITS = [
   {
+    /* Les politesses passaient par le modele, qui regenerait a chaque fois une
+       phrase deja ecrite dans la fiche — cinq secondes pour dire bonjour. Ces
+       formules sont fixes : on les rend directement.
+
+       Chaque courtoisie a la sienne. Repondre « bonjour » a un remerciement
+       donne l'impression de ne pas avoir ecoute. */
+    cle: "salutation",
+    exige: [/^(bonjour|bonsoir|salut|coucou|hello|hi|hey|yo|bjr)\b/],
+    exclut: [/\?|horaire|adresse|datacenter|tarif|prix|visite|contact|qui|que|quoi|quel|comment|combien|ou\b/],
+    reponse: {
+      fr: "Bonjour et bienvenue chez ST DIGITAL. Comment puis-je vous aider ?",
+      en: "Hello and welcome to ST DIGITAL. How may I help you?",
+    },
+  },
+  {
+    cle: "remerciement",
+    exige: [/^(merci|thanks|thank you|je vous remercie|nickel|parfait|super|genial|tres bien|c est note)\b/],
+    exclut: [/\?|horaire|adresse|datacenter|tarif|visite|contact/],
+    reponse: {
+      fr: "Je vous en prie. N'hésitez pas si vous avez une autre question.",
+      en: "You are welcome. Do let me know if you have another question.",
+    },
+  },
+  {
+    cle: "au_revoir",
+    exige: [/^(au revoir|a bientot|a plus|bye|bonne journee|bonne soiree|bonne fin|salut a vous|a demain)\b/],
+    exclut: [/\?/],
+    reponse: {
+      fr: "Bonne journée, et à bientôt chez ST DIGITAL.",
+      en: "Have a good day, and see you soon at ST DIGITAL.",
+    },
+  },
+  {
+    /* « Comment allez-vous ? » n'appelle pas la fiche : c'est une politesse,
+       et y repondre par une presentation d'entreprise serait a cote. */
+    cle: "prise_de_contact",
+    exige: [/^(ca va|comment ca va|comment allez[- ]vous|comment vas[- ]tu|tu vas bien|vous allez bien|how are you)\b/],
+    exclut: [],
+    reponse: {
+      fr: "Très bien, merci. Que puis-je faire pour vous ?",
+      en: "Very well, thank you. What can I do for you?",
+    },
+  },
+  {
     cle: "horaires",
     /* Au moins un terme d'horaire... */
-    exige: [/horaire|ouvert|ouvre|ouverture|fermet|fermeture|quelle heure|heures d|opening hours|business hours|what time|when.*open|are you open|closing time/],
+    /* Frontieres de mots obligatoires : sans elles, « ouvert » se trouve dans
+       « decouverte » et une question sur les journees portes ouvertes recevait
+       les horaires du bureau. */
+    exige: [/\bhoraires?\b|\bouverts?\b|\bouvre[zr]?\b|\bouverture\b|\bfermet|\bfermeture\b|\bferme[zr]?\b|quelle heure|heures d|opening hours|business hours|what time|when.*open|are you open|closing time/],
     /* ...et aucun de ceux-ci, qui désignent une autre question. Les horaires
        validés sont ceux du BUREAU de Libreville : une question sur la visite
        du Datacenter ou sur les portes ouvertes n'a pas la même réponse. */

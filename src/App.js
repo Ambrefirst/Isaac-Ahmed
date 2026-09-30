@@ -5,6 +5,7 @@ import HomeScreen from "./HomeScreen";
 import RendezVousScreen from "./RendezVousScreen";
 import ChatScreen from "./ChatScreen";
 import { askIsaac, escalateToStaff } from "./services/aiService";
+import { enregistreDuree } from "./services/attente";
 import { relaisNecessaire } from "./services/relaisHumain";
 import { useLanguage } from "./i18n";
 
@@ -152,9 +153,13 @@ function App() {
       timers.current.push(retrievalTimer);
     }
 
+    /* On chronometre pour que la barre d'attente se regle sur la realite
+       plutot que sur une constante ecrite un jour donne. */
+    const debutReponse = Date.now();
     let answer;
     try {
       answer = await askIsaac(cleanMessage, history, language, controller.signal);
+      enregistreDuree(Date.now() - debutReponse);
     } catch (err) {
       if (escalatedRef.current) return; // visitor already chose to escalate; drop the aborted request silently
       answer = t("chat.fallbackError");

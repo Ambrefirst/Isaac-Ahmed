@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { avancement, estimationAttente } from "./services/attente";
 import "./ChatScreen.css";
 import { useLanguage } from "./i18n";
 import Orb from "./Orb";
@@ -72,6 +73,39 @@ const CLEFS = {
   writing: "chat.step.writing",
 };
 
+/* La barre d'attente, reglee sur ce qu'Isaac met REELLEMENT.
+
+   Elle etait figee a cent secondes — la duree observee le jour ou elle a ete
+   ecrite. La borne repond desormais en quelques secondes : la barre ne
+   bougeait plus, et annoncait une attente disparue. Plutot que de lui donner
+   une nouvelle duree fixe, qui redeviendrait fausse au prochain changement,
+   elle suit la mediane des dernieres reponses.
+
+   Elle n'atteint jamais cent pour cent d'elle-meme : seule l'arrivee de la
+   reponse la remplit. Une barre qui annonce « termine » avant la fin fait
+   croire a une panne a partir de cet instant. */
+function JaugeAttente() {
+  const [part, setPart] = useState(0);
+
+  useEffect(() => {
+    const estimation = estimationAttente();
+    const depart = Date.now();
+    let image = null;
+    const avancer = () => {
+      setPart(avancement(Date.now() - depart, estimation));
+      image = window.requestAnimationFrame(avancer);
+    };
+    avancer();
+    return () => image && window.cancelAnimationFrame(image);
+  }, []);
+
+  return (
+    <div className="attente-jauge" aria-hidden="true">
+      <i style={{ width: `${(part * 100).toFixed(1)}%` }} />
+    </div>
+  );
+}
+
 function SequenceAttente({ phase, t }) {
   if (phase === "quick") {
     return (
@@ -95,7 +129,7 @@ function SequenceAttente({ phase, t }) {
           </div>
         );
       })}
-      <div className="attente-jauge" aria-hidden="true"><i /></div>
+      <JaugeAttente />
     </div>
   );
 }
