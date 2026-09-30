@@ -49,10 +49,15 @@ function normalise(texte) {
    combien coûte l'hébergement ? » ne doit pas recevoir les seuls horaires :
    la moitié de la question resterait sans réponse. */
 const JAMAIS_RACCOURCI = [
-  /tarif|prix|cout|couts|devis|remise|budget|factur/,
-  /contrat|engagement|resiliation|sla|penalit/,
-  /ignore (tes|les) instruction|desactive|code d acces|mot de passe/,
-  /\bplainte|incident|urgence|forcer/,
+  /* Contrats et engagements : aucune formule validee ne les couvre. La reponse
+     sur les tarifs parle d'une proposition commerciale, ce qui ne convient pas
+     a une question sur une resiliation ou une penalite. */
+  /contrat|engagement|resiliation|sla|penalit|clause/,
+  /* Une plainte demande un responsable, pas une phrase toute faite. */
+  /\bplainte|porter plainte|reclamation/,
+  /* Une tentative de detournement ne doit jamais recevoir de reponse
+     preparee : elle doit passer par le modele, qui refusera. */
+  /ignore (tes|les) instruction|desactive|code d acces|mot de passe|donne moi le code/,
 ];
 
 /* Manieres de demander ou se trouve quelque chose. La derniere ligne compte :
@@ -96,6 +101,97 @@ const FAITS = [
     reponse: {
       fr: "Le Datacenter de ST DIGITAL au Gabon se trouve à Nkok, dans la zone économique spéciale, à proximité de Libreville.",
       en: "ST DIGITAL's Gabon Datacenter is located in Nkok, in the special economic zone, near Libreville.",
+    },
+  },
+  {
+    /* Reponse standard de la base, section 9. Elle est redigee mot pour mot :
+       la regenerer ne peut que l'abimer. */
+    cle: "visite_datacenter",
+    exige: [/visit|acces|acceder|entrer|rentrer|tour/, /datacenter|data ?cent|centre de donnees|nkok/],
+    exclut: [/portes ouvertes|open day|ou se trouve|adresse|situe/],
+    reponse: {
+      fr: "Les visites du Datacenter sont encadrées pour des raisons de sécurité. L'accès aux zones techniques nécessite une autorisation et un accompagnement par du personnel habilité. Je peux transmettre votre demande à l'équipe concernée.",
+      en: "Datacenter visits are supervised for security reasons. Access to technical areas requires authorisation and an escort by authorised staff. I can pass your request on to the team concerned.",
+    },
+  },
+  {
+    /* Reponse standard, section 10. Aucune date n'est annoncee : c'est
+       precisement la question ou le modele a le plus de chances d'en inventer
+       une, et la formule validee dit exactement quoi repondre. */
+    cle: "portes_ouvertes",
+    exige: [/portes ouvertes|porte ouverte|journee decouverte|open day|journees portes/],
+    exclut: [],
+    reponse: {
+      fr: "Aucune date de prochaine journée portes ouvertes n'est annoncée à ce jour. Je peux transmettre votre demande à notre équipe afin que vous soyez informé dès qu'une date sera fixée.",
+      en: "No date for the next open day has been announced so far. I can pass your request on to our team so that you are informed as soon as a date is set.",
+    },
+  },
+  {
+    /* Reponse standard, section 13. Le prix est le sujet ou une invention
+       engage le plus l'entreprise. */
+    cle: "tarifs",
+    exige: [/tarif|prix|cout|couts|combien (ca )?(coute|cout)|devis|tarification|montant|facturation|remise|budget|factur/],
+    exclut: [],
+    reponse: {
+      fr: "Les tarifs dépendent de votre besoin et de la configuration choisie. Je peux transmettre votre demande à notre équipe commerciale afin d'obtenir une proposition adaptée.",
+      en: "Pricing depends on your needs and on the chosen configuration. I can pass your request on to our sales team so that you receive a tailored proposal.",
+    },
+  },
+  {
+    /* Reponse standard, section 30. C'est une interdiction, pas une lacune :
+       repondre « je n'ai pas l'information » laisserait croire que l'equipe
+       communiquerait la liste. Le modele l'a fait deux fois aujourd'hui. */
+    cle: "confidentialite_clients",
+    exige: [/client/, /heberge|heberges|hebergent|nkok|datacenter|data ?cent|chez vous|liste/],
+    exclut: [/devenir client|etre client|nouveau client/],
+    reponse: {
+      fr: "Je ne peux pas communiquer cette information. Elle relève de procédures ou d'informations internes. Je peux toutefois vous orienter vers le service compétent si votre demande est légitime.",
+      en: "I cannot share that information. It falls under internal procedures or internal information. I can however point you to the relevant department if your request is legitimate.",
+    },
+  },
+  {
+    /* Section 4.1 : l'identite de la direction gabonaise n'est PAS confirmee
+       en interne. La base interdit explicitement de citer un nom. */
+    cle: "direction_gabon",
+    exige: [/qui dirige|directrice|directeur|dg\b|pdg|patron|responsable|dirigeant/, /gabon|st ?digital|entreprise|societe|filiale/],
+    exclut: [/datacenter|technique|commercial|securite|accueil/],
+    reponse: {
+      fr: "Je n'ai pas cette information confirmée en interne à vous communiquer avec certitude. Je peux transmettre votre demande à notre équipe pour vous mettre en relation avec la bonne personne.",
+      en: "I do not have that information confirmed internally, so I cannot state it with certainty. I can pass your request on to our team to put you in touch with the right person.",
+    },
+  },
+  {
+    /* Section 19 : Isaac annonce d'abord qu'il ne diagnostique pas, PUIS
+       recueille. L'ordre est une decision de la tutrice du 24/08. */
+    cle: "support_technique",
+    exige: [/panne|ne marche plus|ne fonctionne plus|probleme|bug|indisponib|plante|coupure|incident/],
+    exclut: [/porte|intrusion|force|forcer|suspect|alarme|badge|vol/],
+    reponse: {
+      fr: "Je ne peux pas effectuer de diagnostic technique. Pouvez-vous me décrire le problème rencontré ? Je transmettrai votre demande à l'équipe technique, qui reviendra vers vous.",
+      en: "I cannot carry out any technical diagnosis. Could you describe the problem you are facing? I will pass your request on to the technical team, who will get back to you.",
+    },
+  },
+  {
+    /* Section 20 : un temoin n'est pas un demandeur d'acces. La confusion a
+       ete constatee le 28/09 et corrigee dans la fiche ; ici la bonne reponse
+       est servie directement. */
+    cle: "alerte_securite",
+    exige: [/forcer|force une porte|intrusion|effraction|suspect|s'est introduit|est entre|alarme|vol|voler|cambriol/],
+    exclut: [],
+    reponse: {
+      fr: "Je vous remercie de le signaler. Je transmets immédiatement cette alerte à l'équipe de sécurité pour qu'elle intervienne. Si la situation présente un danger, éloignez-vous et prévenez le personnel autour de vous.",
+      en: "Thank you for reporting it. I am immediately passing this alert to the security team so that they can act. If the situation is dangerous, move away and alert the staff around you.",
+    },
+  },
+  {
+    /* Presentation generale. La base exige le positionnement panafricain et au
+       moins trois domaines : une phrase fixe les garantit tous les deux. */
+    cle: "presentation",
+    exige: [/qu est ce que st ?digital|qui etes vous|que fait st ?digital|presentez vous|c est quoi st ?digital|votre entreprise fait quoi|what (is|does) st ?digital/],
+    exclut: [/cloud|cybersecurite|intelligence artificielle|formation|datacenter/],
+    reponse: {
+      fr: "ST DIGITAL est un groupe panafricain spécialisé dans les solutions numériques : Cloud et infrastructures, datacenters et hébergement, cybersécurité, intelligence artificielle, conseil et formation. Le groupe est présent dans sept pays africains, et dispose au Gabon d'un bureau à Libreville et d'un Datacenter à Nkok.",
+      en: "ST DIGITAL is a pan-African group specialising in digital solutions: Cloud and infrastructure, datacenters and hosting, cybersecurity, artificial intelligence, consulting and training. The group operates in seven African countries, with an office in Libreville and a Datacenter in Nkok, Gabon.",
     },
   },
   {
