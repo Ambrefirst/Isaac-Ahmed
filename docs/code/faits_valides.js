@@ -39,7 +39,14 @@ function normalise(texte) {
   return String(texte || "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
+    /* Les elisions sont RECOLLEES avant le reste. Sans cela l'apostrophe
+       devient une espace, « j'aimerais » s'ecrit « j aimerais », et un motif
+       ecrit naturellement avec « je » ne trouve rien — en silence. Ce piege
+       s'est referme quatre fois en une seule journee : on le traite ici, une
+       fois, plutot qu'un motif a la fois. */
+    .replace(/\b([jnmtsldc])['\u2019]/g, "$1e ")
+    .replace(/\bqu['\u2019]/g, "que ")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
@@ -172,7 +179,7 @@ const FAITS = [
        confirmation et produit le code d'invitation. Promettre de s'en charger
        serait une promesse qu'il ne tient pas. */
     cle: "prendre_rendez_vous",
-    exige: [/prendre (un )?(rendez ?vous|rdv)|je (veux|voudrais|souhaite|aimerais) (prendre )?(un )?(rendez ?vous|rdv)|reserver (un )?(creneau|rendez ?vous|rdv)|demander (un )?(rendez ?vous|rdv)|obtenir (un )?(rendez ?vous|rdv)/],
+    exige: [/(prendre|avoir|obtenir|fixer|caler|demander|reserver|planifier)[^.?!]{0,20}(rendez ?vous|rdv)/],
     exclut: [/j'?ai (un )?(rendez ?vous|rdv)|mon (rendez ?vous|rdv)|annuler|reporter|confirmer/],
     reponse: {
       fr: "Avec plaisir. Sur l'écran d'accueil de la borne, choisissez « Rendez-vous » : c'est là que votre demande s'enregistre, que la personne concernée est prévenue, et que votre code d'invitation vous est envoyé.",
@@ -186,7 +193,7 @@ const FAITS = [
     /* Le texte est normalise avant comparaison : l'apostrophe y devient une
        espace, donc « j'ai » s'ecrit « j ai ». Un motif ecrit avec l'apostrophe
        ne trouve rien. */
-    exige: [/\bj ?'?ai (un )?(rendez ?vous|rdv)|je viens pour (mon|un) (rendez ?vous|rdv)|mon (rendez ?vous|rdv) est|je suis attendu/],
+    exige: [/\bje ai (un |mon )?(rendez ?vous|rdv)|je viens pour (mon|un) (rendez ?vous|rdv)|mon (rendez ?vous|rdv) est|je suis attendu/],
     exclut: [/prendre|reserver|annuler|reporter/],
     reponse: {
       fr: "Bienvenue chez ST DIGITAL. Si vous avez reçu un code d'invitation, saisissez-le dans la rubrique « Rendez-vous » de la borne ; sinon, présentez-vous à l'accueil, on vous orientera.",
@@ -277,7 +284,7 @@ const FAITS = [
     /* Presentation generale. La base exige le positionnement panafricain et au
        moins trois domaines : une phrase fixe les garantit tous les deux. */
     cle: "presentation",
-    exige: [/qu est ce que st ?digital|qui etes vous|que fait st ?digital|presentez vous|c est quoi st ?digital|votre entreprise fait quoi|what (is|does) st ?digital/],
+    exige: [/que est ce que st ?digital|qui etes vous|que fait st ?digital|presentez vous|c est quoi st ?digital|votre entreprise fait quoi|what (is|does) st ?digital/],
     exclut: [/cloud|cybersecurite|intelligence artificielle|formation|datacenter/],
     reponse: {
       fr: "ST DIGITAL est un groupe panafricain spécialisé dans les solutions numériques : Cloud et infrastructures, datacenters et hébergement, cybersécurité, intelligence artificielle, conseil et formation. Le groupe est présent dans sept pays africains, et dispose au Gabon d'un bureau à Libreville et d'un Datacenter à Nkok.",

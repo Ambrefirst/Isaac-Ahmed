@@ -2258,8 +2258,16 @@ button.ghost:hover{color:var(--light-blue);border-color:var(--light-blue);backgr
     if (!list.length) { wrap.innerHTML = '<div class="empty">Aucun membre enregistré pour ce site.</div>'; return; }
     const bySvc = {};
     list.forEach((s) => { (bySvc[s.service] = bySvc[s.service] || []).push(s); });
-    const order = ["site_manager", "commercial", "technique", "securite", "rh"];
-    const rows = order.filter((s) => bySvc[s]).flatMap((svc) => bySvc[svc].map((s) => `
+    /* Cette liste ORDONNE, elle ne filtre pas. Elle filtrait, et un membre
+       ajoute a un service absent d'ici etait enregistre sans jamais
+       s'afficher : la personne croyait avoir mal fait. Tout service inconnu
+       est desormais presente a la suite, donc un service ajoute demain
+       apparaitra sans qu'on revienne ici. */
+    const ORDRE = ["site_manager", "commercial", "technique", "securite", "rh",
+                   "marketing", "admin_financier"];
+    const order = ORDRE.filter((s) => bySvc[s])
+      .concat(Object.keys(bySvc).filter((s) => !ORDRE.includes(s)).sort());
+    const rows = order.flatMap((svc) => bySvc[svc].map((s) => `
       <tr data-id="${s.id}"><td>${hostLabel(svc)}</td><td>${s.name}</td><td>${s.email}</td><td><button style="padding:5px 10px;font-size:.74rem;border-radius:6px;border:1px solid var(--panel-border);background:var(--panel-2);color:var(--bad);cursor:pointer;" data-remove="${s.id}">Retirer</button></td></tr>`)).join("");
     wrap.innerHTML = `<table><thead><tr><th>Service</th><th>Nom</th><th>Email</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
     wrap.querySelectorAll("[data-remove]").forEach((btn) => {
