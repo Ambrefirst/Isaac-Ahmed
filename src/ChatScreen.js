@@ -4,6 +4,7 @@ import "./ChatScreen.css";
 import { useLanguage } from "./i18n";
 import Orb from "./Orb";
 import { audioDisponible, creerEnregistreur, transcrire } from "./services/audioService";
+import ChampContact from "./ChampContact";
 import ConversationVocale from "./ConversationVocale";
 
 function MicroIcon({ actif }) {
@@ -136,7 +137,7 @@ function SequenceAttente({ phase, t }) {
 
 const SUGGESTIONS = ["chat.suggest.hours", "chat.suggest.datacenter", "chat.suggest.visit", "chat.suggest.about"];
 
-export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, onKeepWaiting, onEscalate, onSend, onMenu }) {
+export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, contactDemande, onContact, onPasserContact, onKeepWaiting, onEscalate, onSend, onMenu }) {
   const [input, setInput] = useState("");
   const { t } = useLanguage();
   const scrollRef = useRef(null);
@@ -295,6 +296,17 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
               <button type="button" className="ghost" onClick={onKeepWaiting}>{t("chat.relais.non")}</button>
               <button type="button" className="primary" onClick={onEscalate}>{t("chat.relais.oui")}</button>
             </div>
+          </div>
+        )}
+
+        {/* Le meme champ qu'a l'oral, et pour la meme raison : c'est le seul
+            renseignement qu'Isaac ne peut pas deduire, et le seul sans lequel
+            le commercial ne peut pas repondre. Ici le visiteur a deja un
+            clavier — le champ sert a valider la forme et a envoyer d'un geste,
+            plutot qu'a esperer qu'il ecrive son adresse dans une phrase. */}
+        {contactDemande && (
+          <div className="escalation-card">
+            <ChampContact onEnvoyer={onContact} onPlusTard={onPasserContact} />
           </div>
         )}
 

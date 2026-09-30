@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import "./ConversationVocale.css";
+import ChampContact from "./ChampContact";
 import Orb from "./Orb";
 import { useLanguage } from "./i18n";
 import useConversationParlee from "./useConversationParlee";
@@ -71,7 +72,10 @@ export default function ConversationVocale({ onFermer }) {
         {vocal.entendu && <p className="voix-transcrit">{vocal.entendu}</p>}
         {vocal.reponse && <p className="voix-reponse">{vocal.reponse}</p>}
         {vocal.erreur && <p className="voix-erreur" role="alert">{vocal.erreur}</p>}
-        {vocal.etat === "pause" && !vocal.erreur && (
+        {vocal.contactDemande && (
+          <ChampContact onEnvoyer={vocal.envoyerContact} onPlusTard={vocal.passerContact} />
+        )}
+        {vocal.etat === "pause" && !vocal.erreur && !vocal.contactDemande && (
           <p className="voix-attente">{t("voix.pause.explication")}</p>
         )}
 
@@ -79,7 +83,7 @@ export default function ConversationVocale({ onFermer }) {
             plutot que de garder le micro ouvert. Il faut alors pouvoir la
             reprendre : sans ce bouton, la fenetre restait muette et sans issue
             autre que la fermer. */}
-        {(vocal.etat === "arret" || vocal.etat === "pause") && (
+        {(vocal.etat === "arret" || vocal.etat === "pause") && !vocal.contactDemande && (
           <button
             type="button"
             className="voix-bouton"

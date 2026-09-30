@@ -52,6 +52,8 @@ function App() {
      une. Elle evite d'envoyer un courriel par question a quelqu'un qui insiste,
      et sert d'ancrage quand le visiteur donne son numero deux phrases plus loin. */
   const commercialRef = useRef(null);
+  /* La demande dont on attend une adresse, ou null : elle affiche le champ. */
+  const [contactDemande, setContactDemande] = useState(null);
   /* Minuterie d'effacement du fil. Voir l'en-tete du fichier : une borne est
      partagee, et ce qu'un visiteur a demande ne regarde pas le suivant. */
   const oubliRef = useRef(null);
@@ -94,6 +96,7 @@ function App() {
        sans cette remise a zero, le service ne serait plus prevenu du tout, et
        un numero dicte irait completer le besoin de quelqu'un d'autre. */
     commercialRef.current = null;
+    setContactDemande(null);
   }
 
   function programmeOubli(delai) {
@@ -201,6 +204,7 @@ function App() {
       await typeOutAnswer(
         t(parti ? (ici ? "chat.commercial.surplace" : "chat.commercial.adistance") : "chat.escalateFailed")
       );
+      if (parti) setContactDemande(cleanMessage);
       return;
     }
 
@@ -210,6 +214,7 @@ function App() {
     if (commercialRef.current) {
       const contact = contactDit(cleanMessage);
       if (contact) {
+        setContactDemande(null);
         await prevenirService(commercialRef.current, {
           service: "commercial", surPlace: surPlace(), mode: "chat", contact,
         });
@@ -224,6 +229,17 @@ function App() {
        l'entreprise, et une borne d'accueil n'a pas a s'engager a sa place. */
     const motif = relaisNecessaire(cleanMessage, answer);
     if (motif) setEscalationOffer({ question: cleanMessage, motif });
+  }
+
+  async function envoyerContact(valeur) {
+    const demande = contactDemande || commercialRef.current;
+    if (!valeur || !demande) return false;
+    setContactDemande(null);
+    const parti = await prevenirService(demande, {
+      service: "commercial", surPlace: surPlace(), mode: "chat", contact: valeur,
+    });
+    await typeOutAnswer(t(parti ? "chat.commercial.contact" : "chat.escalateFailed"));
+    return parti;
   }
 
   function keepWaiting() {
@@ -251,6 +267,9 @@ function App() {
   if (screen === "chat")
     return (
       <ChatScreen
+        contactDemande={contactDemande}
+        onContact={envoyerContact}
+        onPasserContact={() => setContactDemande(null)}
         messages={messages}
         phase={phase}
         typingText={typingText}

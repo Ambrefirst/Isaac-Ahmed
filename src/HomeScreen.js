@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./HomeScreen.css";
 import { useLanguage } from "./i18n";
 import Orb from "./Orb";
+import ChampContact from "./ChampContact";
 import { audioDisponible } from "./services/audioService";
 import useConversationParlee from "./useConversationParlee";
 
@@ -217,7 +218,16 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
                 {vocal.entendu && <p className="home-transcript">{vocal.entendu}</p>}
                 {vocal.reponse && <p className="home-vocal-reponse">{vocal.reponse}</p>}
                 {vocal.erreur && <p className="home-vocal-erreur" role="alert">{vocal.erreur}</p>}
-                {vocal.etat === "pause" && !vocal.erreur && (
+                {/* Le seul moment ou l'on ecrit pendant une conversation
+                    parlee. Il vient apres la reponse, jamais a la place. */}
+                {vocal.contactDemande && (
+                  <ChampContact
+                    classe="contact-borne"
+                    onEnvoyer={vocal.envoyerContact}
+                    onPlusTard={vocal.passerContact}
+                  />
+                )}
+                {vocal.etat === "pause" && !vocal.erreur && !vocal.contactDemande && (
                   <p className="home-vocal-pause">{t("voix.pause.explication")}</p>
                 )}
 

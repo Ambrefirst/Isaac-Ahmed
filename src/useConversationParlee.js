@@ -95,6 +95,11 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
      choses : ne pas prevenir le service a chaque phrase d'un meme echange, et
      savoir a quelle demande rattacher un numero donne ensuite. */
   const besoinTransmisRef = useRef(null);
+  /* La demande dont on attend une adresse, ou null. Elle ouvre le champ de
+     saisie et ferme le micro : ecouter pendant qu'on tape n'a pas de sens, et
+     laisserait la borne entendre le hall pendant tout ce temps. */
+  const [contactDemande, setContactDemande] = useState(null);
+  const contactDemandeRef = useRef(null);
   /* Les phrases du relais changent de langue en cours de conversation ; on les
      lit dans une reference pour ne pas reconstruire la boucle d'ecoute a
      chaque rendu, ce qui couperait le micro. */
@@ -320,6 +325,13 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
           .then((parti) => {
             if (!parti && courant() && phrases.transmisEchec) setErreur(phrases.transmisEchec);
           });
+        /* On ouvre le champ de saisie plutot que d'attendre une adresse
+           dictee. Une adresse epelee a voix haute revient fausse bien trop
+           souvent, et une adresse fausse ne vaut pas mieux qu'aucune : le
+           commercial se retrouve avec un besoin qu'il ne peut rattacher a
+           personne. */
+        contactDemandeRef.current = question;
+        setContactDemande(question);
         const suite = ici ? phrases.transmisSurPlace : phrases.transmisADistance;
         if (suite) aDire = dit + " " + suite;
       }
@@ -328,7 +340,12 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
       setAttenteDepuis(null);
 
       await dire(aDire);
-      if (courant()) ecouter();
+      if (!courant()) return;
+      /* Le champ est ouvert : on laisse le visiteur ecrire. Rouvrir le micro
+         par-dessus rendrait la borne bavarde au moment precis ou elle attend
+         quelque chose de precis. */
+      if (contactDemandeRef.current) { setNiveau(0); setEtat(ETATS.PAUSE); return; }
+      ecouter();
     } catch (e) {
       /* Une recherche interrompue volontairement n'est pas une panne : c'est le
          visiteur qui a dit « ce n'est pas ca ». On ne lui affiche pas d'erreur. */
@@ -369,6 +386,35 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     }
   }, [dire, langue]);
 
+  /* Ce que le visiteur a ecrit. On complete le signalement deja parti, puis on
+     reprend la conversation la ou elle s'etait arretee. */
+  const envoyerContact = useCallback(async (valeur) => {
+    const propre = String(valeur || "").trim();
+    const demande = contactDemandeRef.current || besoinTransmisRef.current;
+    if (!propre || !demande) return false;
+    contactDemandeRef.current = null;
+    setContactDemande(null);
+    const parti = await prevenirService(demande, {
+      service: "commercial", surPlace: surPlace(), mode: "vocal", contact: propre,
+    });
+    const phrases = relaisRef.current || {};
+    const mot = parti ? phrases.contactRecu : phrases.transmisEchec;
+    if (mot) {
+      if (parti) setReponse(mot); else setErreur(mot);
+      await dire(mot);
+    }
+    if (vivantRef.current) ecouter();
+    return parti;
+  }, [dire, ecouter]);
+
+  /* « Plus tard » n'annule rien : la demande est deja partie. Le visiteur
+     refuse seulement d'etre rappele, ce qui est son droit. */
+  const passerContact = useCallback(() => {
+    contactDemandeRef.current = null;
+    setContactDemande(null);
+    if (vivantRef.current) ecouter();
+  }, [ecouter]);
+
   /* --- ouverture et fermeture -------------------------------------------- */
   const demarrer = useCallback(async () => {
     vivantRef.current = true;
@@ -378,6 +424,8 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     setErreur("");
     historiqueRef.current = [];
     besoinTransmisRef.current = null;
+    contactDemandeRef.current = null;
+    setContactDemande(null);
     await dire(salutation);
     if (vivantRef.current) ecouter();
   }, [dire, ecouter, salutation]);
@@ -433,6 +481,8 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     enregistreurRef.current = null;
     lecteurRef.current = null;
     analyseRef.current = null;
+    contactDemandeRef.current = null;
+    setContactDemande(null);
     setEtat(ETATS.ARRET);
   }, []);
 
@@ -445,5 +495,6 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     : "repos";
 
   return { etat, etatOrbe, entendu, reponse, erreur, niveau, niveaux, attenteDepuis,
+           contactDemande, envoyerContact, passerContact,
            demarrer, reprendre, corriger, couper, arreter, actif: etat !== ETATS.ARRET };
 }

@@ -297,3 +297,180 @@
   font-size: .78rem;
   cursor: pointer;
 }
+
+/* ------------------------------------------------- champ de contact
+
+   Le seul endroit ou l'on ecrit pendant une conversation parlee. Il doit se
+   voir immediatement, sans ressembler a un formulaire : une invite, un champ,
+   une fleche. Rien de plus, parce que tout le reste a deja ete transmis. */
+.contact-champ {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 26rem);
+  margin: 4px auto 0;
+}
+
+.contact-invite {
+  margin: 0;
+  font-size: .8rem;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--text-muted, #93AFC4);
+}
+
+.contact-ligne {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.contact-saisie {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(146, 186, 214, .34);
+  background: rgba(8, 26, 42, .62);
+  color: #E8F2F8;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.contact-saisie::placeholder { color: rgba(147, 175, 196, .6); }
+
+.contact-saisie:focus {
+  outline: none;
+  border-color: #4E9CC9;
+  box-shadow: 0 0 0 3px rgba(78, 156, 201, .22);
+}
+
+.contact-faux, .contact-faux:focus {
+  border-color: var(--warn, #E8B44A);
+  box-shadow: 0 0 0 3px rgba(232, 180, 74, .2);
+}
+
+.contact-envoyer {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  border: 0;
+  border-radius: 10px;
+  background: #2E7AB5;
+  color: #fff;
+  cursor: pointer;
+}
+
+.contact-envoyer:hover:not(:disabled) { background: #3A8CC9; }
+.contact-envoyer:disabled { opacity: .6; cursor: default; }
+
+/* L'envoi passe par le reseau : sans ce temoin, un appui semble sans effet. */
+.contact-encours {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, .35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: contact-tourne .7s linear infinite;
+}
+
+@keyframes contact-tourne { to { transform: rotate(360deg); } }
+
+.contact-erreur {
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--warn, #E8B44A);
+}
+
+.contact-plustard {
+  border: 0;
+  background: none;
+  padding: 2px 6px;
+  font-size: .78rem;
+  font-family: inherit;
+  color: var(--text-muted, #93AFC4);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.contact-plustard:disabled { opacity: .5; cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-encours { animation-duration: 2s; }
+}
+
+/* Deux boutons de pied : « Plus tard », et de quoi rappeler le clavier si la
+   detection s'est trompee. */
+.contact-pied {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------- clavier a l'ecran
+
+   Il n'apparait que sur une dalle tactile sans clavier physique. Les touches
+   sont dimensionnees pour un doigt, pas pour une souris : en dessous de
+   quarante-quatre pixels, on en manque une sur trois. */
+.clavier {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(8, 26, 42, .72);
+  border: 1px solid rgba(146, 186, 214, .18);
+}
+
+.clavier-rangee {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.clavier-touche {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 2px;
+  border-radius: 8px;
+  border: 1px solid rgba(146, 186, 214, .22);
+  background: rgba(24, 56, 82, .9);
+  color: #E8F2F8;
+  font-family: inherit;
+  font-size: 1.02rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Un appui maintenu sur une dalle selectionne le texte de la touche et fait
+     surgir la loupe du systeme : on la desactive ici. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clavier-touche:active { background: #2E7AB5; border-color: #4E9CC9; }
+
+.clavier-signe { flex-grow: 1.6; font-weight: 600; color: #9FD0EA; }
+.clavier-effacer, .clavier-fermer { flex-grow: 1.2; color: #93AFC4; }
+
+/* Sur une borne large, un clavier etale sur toute la largeur devient une
+   cible impossible a viser : on le garde a portee de main. */
+.contact-borne .clavier { max-width: 30rem; align-self: center; }
+
+@media (max-width: 420px) {
+  .clavier-touche { min-height: 40px; font-size: .94rem; }
+  .clavier { padding: 7px; gap: 5px; }
+  .clavier-rangee { gap: 5px; }
+}

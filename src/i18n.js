@@ -210,8 +210,20 @@ export const translations = {
     /* Ce qu'Isaac ajoute à voix haute quand il vient de transmettre une demande
        commerciale. Il annonce une action RÉELLE et déjà partie — pas une
        visite, pas un rappel promis à la place de quelqu'un d'autre. */
-    "voix.commercial.surplace": "Votre demande est bien enregistrée : je la transmets au service commercial, et un commercial la prendra en charge. Dites-moi votre adresse électronique pour qu'il puisse vous répondre, ou passez à l'accueil.",
-    "voix.commercial.adistance": "Votre demande est bien enregistrée : je la transmets au service commercial, et un commercial la prendra en charge. Dites-moi votre adresse électronique pour qu'il puisse vous répondre.",
+    /* « Écrivez-la sur l'écran », et non « dites-la moi » : une adresse
+       épelée à voix haute revient fausse bien trop souvent, et une adresse
+       fausse ne vaut pas mieux qu'aucune. */
+    "voix.commercial.surplace": "Votre demande est bien enregistrée : je la transmets au service commercial, et un commercial la prendra en charge. Écrivez votre adresse électronique sur l'écran pour qu'il puisse vous répondre, ou passez à l'accueil.",
+    "voix.commercial.adistance": "Votre demande est bien enregistrée : je la transmets au service commercial, et un commercial la prendra en charge. Écrivez votre adresse électronique sur l'écran pour qu'il puisse vous répondre.",
+    "voix.contact.invite": "Votre adresse électronique, pour que le commercial vous réponde",
+    "voix.contact.exemple": "nom@entreprise.com",
+    "voix.contact.envoyer": "Envoyer",
+    "voix.contact.plustard": "Plus tard",
+    "voix.contact.invalide": "Cette adresse ne semble pas complète. Vous pouvez aussi saisir un numéro de téléphone.",
+    "voix.clavier.titre": "Clavier à l'écran",
+    "voix.clavier.effacer": "Effacer le dernier caractère",
+    "voix.clavier.fermer": "Masquer le clavier",
+    "voix.clavier.ouvrir": "Afficher le clavier",
     "voix.commercial.contact": "C'est noté. Votre demande part au service commercial avec cette adresse, et vous recevrez un message de confirmation.",
     "voix.commercial.echec": "Je n'ai pas pu prévenir le service commercial. Vous pouvez les joindre au 66 17 66 41.",
     "voix.corriger": "Ce n'est pas ce que j'ai dit",
@@ -471,8 +483,17 @@ export const translations = {
     "voix.aide": "Press to speak, press again when you have finished. Isaac answers aloud.",
     "voix.etat.pause": "MICROPHONE OFF",
     "voix.pause.explication": "The conversation is kept. Press “Start speaking again” whenever you want to continue.",
-    "voix.commercial.surplace": "Your request is recorded: I am passing it to the sales team, and a sales representative will take it from here. Tell me your email address so they can reply to you, or go to the front desk.",
-    "voix.commercial.adistance": "Your request is recorded: I am passing it to the sales team, and a sales representative will take it from here. Tell me your email address so they can reply to you.",
+    "voix.commercial.surplace": "Your request is recorded: I am passing it to the sales team, and a sales representative will take it from here. Type your email address on the screen so they can reply to you, or go to the front desk.",
+    "voix.commercial.adistance": "Your request is recorded: I am passing it to the sales team, and a sales representative will take it from here. Type your email address on the screen so they can reply to you.",
+    "voix.contact.invite": "Your email address, so the sales team can reply",
+    "voix.contact.exemple": "name@company.com",
+    "voix.contact.envoyer": "Send",
+    "voix.contact.plustard": "Later",
+    "voix.contact.invalide": "That address looks incomplete. You can also enter a phone number.",
+    "voix.clavier.titre": "On-screen keyboard",
+    "voix.clavier.effacer": "Delete the last character",
+    "voix.clavier.fermer": "Hide the keyboard",
+    "voix.clavier.ouvrir": "Show the keyboard",
     "voix.commercial.contact": "Noted. Your request goes to the sales team with that address, and you will receive a confirmation message.",
     "voix.commercial.echec": "I could not reach the sales team. You can call them on 66 17 66 41.",
     "voix.corriger": "That is not what I said",
