@@ -288,6 +288,41 @@ Trois décisions à prendre, dans cet ordre :
 
 ---
 
+## 17. L'adresse de la tour dans les courriels — traitée à moitié le 30/09/2026
+
+Deux constantes des workflows n8n portaient le nom d'hôte de la tour. Elles
+partent dans le **code source des courriels**, que n'importe quel destinataire
+affiche en deux clics.
+
+**`LOGO_URL` — retirée.** Elle chargeait le logo depuis la tour, et figurait
+donc dans *tous* les envois, y compris ceux qu'un client reçoit. Le bandeau
+compose désormais « ST DIGITAL » en lettres. Ce n'est pas un pis-aller : la
+plupart des messageries bloquent les images distantes par défaut, et le
+bandeau soigné arrivait vide chez une bonne part des destinataires. Des lettres
+s'affichent partout, sans rien télécharger.
+
+**`RESPOND_BASE` — conservée, et c'est un choix.** Elle porte les liens « Je
+suis disponible » / « Je ne suis pas disponible » du courriel de confirmation
+de disponibilité. La retirer casserait ce parcours : sans adresse joignable
+depuis une messagerie, les boutons ne mènent nulle part. Deux circonstances
+atténuantes, qui ne sont pas une excuse :
+
+- elle ne figure que dans **un** courriel, envoyé à des adresses ST DIGITAL,
+  jamais à un visiteur ;
+- le lien doit de toute façon être public pour fonctionner.
+
+**Ce qui la fera disparaître :** un nom de domaine propre devant la tour, qui
+est de toute manière nécessaire à une mise en service réelle — personne ne
+confie une borne d'accueil à une adresse qui contient le nom du poste et
+l'identifiant d'un réseau privé. Tant qu'il n'existe pas, remplacer cette
+constante reviendrait à casser une fonction pour masquer une chaîne de
+caractères.
+
+**Le logo reviendra** le jour où il sera hébergé publiquement : c'est une ligne
+à changer dans le gabarit, au même endroit.
+
+---
+
 ## Lire aussi
 
 `ECHECS_SILENCIEUX.md` recense les vingt-cinq pannes qui n'ont produit **aucune erreur** au cours du projet, avec pour chacune comment elle a été trouvée et ce qui l'empêche aujourd'hui. Trois d'entre elles se sont produites **deux fois**, faute d'avoir été consignées la première : c'est la raison d'être de ce document.
