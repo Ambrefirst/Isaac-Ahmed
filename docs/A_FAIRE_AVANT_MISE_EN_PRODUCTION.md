@@ -215,6 +215,24 @@ La frontière reste celle-ci, et elle est appliquée dans le code : l'annuaire
 dit **à qui** s'adresser, jamais **comment** joindre quelqu'un directement.
 Aucune adresse électronique, aucun téléphone direct n'est rendu.
 
+### Ajouter un service : les cinq endroits
+
+Un service — commercial, technique, marketing… — se déclare à **cinq
+endroits**. En oublier un produit une panne qui ne se voit qu'à l'usage.
+
+| # | Où | Ce qui casse si on l'oublie |
+|---|---|---|
+| 1 | `ALLOWED_SERVICES` dans le nœud routeur n8n | Le serveur refuse : « Champs invalides » |
+| 2 | `HOST_VALUES` dans `src/RendezVousScreen.js` | Le service n'est pas proposé comme hôte |
+| 3 | Les clefs `rdv.host.*` de `src/i18n.js` | La borne affiche la clef brute |
+| 4 | `HOST_LABELS` et la liste déroulante de `public/admin/index.html` | L'identifiant s'affiche au lieu du nom |
+| 5 | La table `SERVICES` du nœud « Faits valides » | Isaac ne reconnaît pas la question |
+
+*Constaté le 30/09 : marketing et administratif-financier avaient été ajoutés
+aux quatre derniers mais pas au premier. Le formulaire proposait donc un choix
+que le serveur refusait. Le refus était visible, ce qui est une chance — un
+enregistrement silencieusement ignoré aurait été pire.*
+
 **Ce qui reste à faire, et qui n'est pas technique.** La table contient
 aujourd'hui quatre entrées d'essai — « Site Manager Gabon », « Sophie
 Commercial » — avec des adresses Gmail de test. Il faut y saisir le véritable
