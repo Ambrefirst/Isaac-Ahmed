@@ -40,13 +40,15 @@ export async function askIsaac(message, history = [], lang = "fr", signal, mode 
   return answer;
 }
 
-export async function escalateToStaff(question) {
+export async function escalateToStaff(question, surPlace = true) {
   const webhookUrl = process.env.REACT_APP_N8N_NOTIFICATION_WEBHOOK;
   if (!webhookUrl) return { accepted: true };
   const response = await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ event: "chat_escalate", question, sessionId: getSessionId() }),
+    /* `surPlace` dit a l'equipe si la personne attend dans le hall ou si elle
+       consulte la borne a distance : la conduite a tenir n'est pas la meme. */
+    body: JSON.stringify({ event: "chat_escalate", question, surPlace, sessionId: getSessionId() }),
   });
   if (!response.ok) throw new Error("Impossible de prévenir l'équipe pour le moment.");
   return response.json();

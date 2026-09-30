@@ -151,6 +151,33 @@ const FAITS = [
     },
   },
   {
+    /* Prendre un rendez-vous. Isaac oriente, il ne reserve pas : la rubrique
+       verifie la date, consulte l'equipe, attend ses reponses, envoie la
+       confirmation et produit le code d'invitation. Promettre de s'en charger
+       serait une promesse qu'il ne tient pas. */
+    cle: "prendre_rendez_vous",
+    exige: [/prendre (un )?(rendez ?vous|rdv)|je (veux|voudrais|souhaite|aimerais) (prendre )?(un )?(rendez ?vous|rdv)|reserver (un )?(creneau|rendez ?vous|rdv)|demander (un )?(rendez ?vous|rdv)|obtenir (un )?(rendez ?vous|rdv)/],
+    exclut: [/j'?ai (un )?(rendez ?vous|rdv)|mon (rendez ?vous|rdv)|annuler|reporter|confirmer/],
+    reponse: {
+      fr: "Avec plaisir. Sur l'écran d'accueil de la borne, choisissez « Rendez-vous » : c'est là que votre demande s'enregistre, que la personne concernée est prévenue, et que votre code d'invitation vous est envoyé.",
+      en: "With pleasure. On the kiosk's home screen, choose \"Appointment\": that is where your request is recorded, the person concerned is notified, and your invitation code is sent to you.",
+    },
+  },
+  {
+    /* La personne est deja attendue : elle n'a pas besoin de prendre un
+       rendez-vous, mais de faire reconnaitre celui qu'elle a. */
+    cle: "arrivee_rendez_vous",
+    /* Le texte est normalise avant comparaison : l'apostrophe y devient une
+       espace, donc « j'ai » s'ecrit « j ai ». Un motif ecrit avec l'apostrophe
+       ne trouve rien. */
+    exige: [/\bj ?'?ai (un )?(rendez ?vous|rdv)|je viens pour (mon|un) (rendez ?vous|rdv)|mon (rendez ?vous|rdv) est|je suis attendu/],
+    exclut: [/prendre|reserver|annuler|reporter/],
+    reponse: {
+      fr: "Bienvenue chez ST DIGITAL. Si vous avez reçu un code d'invitation, saisissez-le dans la rubrique « Rendez-vous » de la borne ; sinon, présentez-vous à l'accueil, on vous orientera.",
+      en: "Welcome to ST DIGITAL. If you received an invitation code, enter it in the kiosk's \"Appointment\" section; otherwise, please come to the reception desk and someone will direct you.",
+    },
+  },
+  {
     /* Reponse standard de la base, section 9. Elle est redigee mot pour mot :
        la regenerer ne peut que l'abimer. */
     cle: "visite_datacenter",
@@ -239,6 +266,18 @@ const FAITS = [
     reponse: {
       fr: "ST DIGITAL est un groupe panafricain spécialisé dans les solutions numériques : Cloud et infrastructures, datacenters et hébergement, cybersécurité, intelligence artificielle, conseil et formation. Le groupe est présent dans sept pays africains, et dispose au Gabon d'un bureau à Libreville et d'un Datacenter à Nkok.",
       en: "ST DIGITAL is a pan-African group specialising in digital solutions: Cloud and infrastructure, datacenters and hosting, cybersecurity, artificial intelligence, consulting and training. The group operates in seven African countries, with an office in Libreville and a Datacenter in Nkok, Gabon.",
+    },
+  },
+  {
+    /* Le nombre de salaries n'est pas public : la base le dit, et il n'y a
+       donc rien a chercher. Sans cette entree, la question partait dans la
+       recherche documentaire pour cent dix secondes. */
+    cle: "effectifs",
+    exige: [/combien de (salaries|employes|personnes|collaborateurs)|effectifs?\b|taille de (l'|votre )?equipe|nombre d'?(employes|salaries)/],
+    exclut: [],
+    reponse: {
+      fr: "Le nombre de salariés n'est pas une information publique. Je peux transmettre votre demande à notre équipe si vous en avez besoin.",
+      en: "Headcount is not public information. I can pass your request on to our team if you need it.",
     },
   },
   {

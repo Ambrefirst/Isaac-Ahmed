@@ -5,6 +5,7 @@ import HomeScreen from "./HomeScreen";
 import RendezVousScreen from "./RendezVousScreen";
 import ChatScreen from "./ChatScreen";
 import { askIsaac, escalateToStaff } from "./services/aiService";
+import { surPlace } from "./services/presence";
 import { enregistreDuree } from "./services/attente";
 import { relaisNecessaire } from "./services/relaisHumain";
 import { useLanguage } from "./i18n";
@@ -187,8 +188,11 @@ function App() {
     setEscalationOffer(null);
     setPhase(null);
     try {
-      await escalateToStaff(question);
-      await typeOutAnswer(t("chat.escalated"));
+      /* On dit a l'equipe d'ou vient la demande : sans cela, elle recoit une
+         question sans savoir s'il faut descendre a l'accueil ou rappeler. */
+      const ici = surPlace();
+      await escalateToStaff(question, ici);
+      await typeOutAnswer(t(ici ? "chat.escalated.surplace" : "chat.escalated.adistance"));
     } catch (err) {
       await typeOutAnswer(t("chat.escalateFailed"));
     }
