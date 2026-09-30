@@ -118,11 +118,42 @@ export function relaisCommercial(question, reponse) {
    La reconnaissance vocale écrit les chiffres en chiffres, espacés par deux
    ou par trois selon la diction : on recolle avant de compter. En deçà de
    huit chiffres ce n'est pas un numéro — c'est une date, un étage ou un prix. */
+/* Une adresse électronique DICTÉE ne s'écrit pas comme une adresse tapée.
+
+   « ambre arobase s t point digital » : la reconnaissance rend les mots, pas
+   les signes, et sépare les lettres épelées. Chercher un `@` dans ce texte ne
+   trouve rien — et c'est tout le problème, parce qu'à la borne on parle, on ne
+   tape pas. Promettre un courriel sans pouvoir noter l'adresse serait une
+   promesse creuse.
+
+   On recompose donc avant de chercher : les signes dits en toutes lettres
+   redeviennent des signes, et les lettres épelées se recollent. « s t point
+   digital » redevient « st.digital ». */
+function recomposeAdresse(texte) {
+  let t = String(texte || "").toLowerCase();
+  t = t.replace(/\s*(?:arobase|arrobase|at)\s*/g, "@");
+  t = t.replace(/\s*(?:point|dot)\s*/g, ".");
+  t = t.replace(/\s*(?:tiret|trait d'union|dash)\s*/g, "-");
+  t = t.replace(/\s*(?:underscore|tiret bas|souligne)\s*/g, "_");
+  /* Les lettres épelées une à une se recollent. On répète tant qu'il en
+     reste : une seule passe ne recollerait que les paires. */
+  for (let i = 0; i < 12; i += 1) {
+    const avant = t;
+    t = t.replace(/\b([a-z])\s+(?=[a-z]\b)/g, "$1");
+    if (t === avant) break;
+  }
+  return t;
+}
+
 export function contactDit(texte) {
   const t = String(texte || "");
 
   const courriel = t.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i);
   if (courriel) return courriel[0];
+
+  /* Rien d'écrit : peut-être a-t-elle été dite. */
+  const dicte = recomposeAdresse(t).match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/);
+  if (dicte) return dicte[0];
 
   const suite = t.match(/(?:\+?\d[\d\s.-]{7,}\d)/);
   if (suite) {

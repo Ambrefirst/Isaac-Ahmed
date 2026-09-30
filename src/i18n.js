@@ -210,9 +210,9 @@ export const translations = {
     /* Ce qu'Isaac ajoute à voix haute quand il vient de transmettre une demande
        commerciale. Il annonce une action RÉELLE et déjà partie — pas une
        visite, pas un rappel promis à la place de quelqu'un d'autre. */
-    "voix.commercial.surplace": "Je transmets votre demande au service commercial. Présentez-vous à l'accueil, on vous mettra en relation avec un commercial.",
-    "voix.commercial.adistance": "Je transmets votre demande au service commercial. Dites-moi votre numéro ou votre adresse électronique si vous souhaitez être rappelé.",
-    "voix.commercial.contact": "C'est noté, je le joins à votre demande.",
+    "voix.commercial.surplace": "Votre demande est bien enregistrée : je la transmets au service commercial, et un commercial la prendra en charge. Dites-moi votre adresse électronique pour qu'il puisse vous répondre, ou passez à l'accueil.",
+    "voix.commercial.adistance": "Votre demande est bien enregistrée : je la transmets au service commercial, et un commercial la prendra en charge. Dites-moi votre adresse électronique pour qu'il puisse vous répondre.",
+    "voix.commercial.contact": "C'est noté. Votre demande part au service commercial avec cette adresse, et vous recevrez un message de confirmation.",
     "voix.commercial.echec": "Je n'ai pas pu prévenir le service commercial. Vous pouvez les joindre au 66 17 66 41.",
     "voix.corriger": "Ce n'est pas ce que j'ai dit",
     "voix.couper": "Couper le micro",
@@ -256,9 +256,9 @@ export const translations = {
        calcule avec le client. On ne propose donc pas la mise en relation, on la
        fait, et on le dit au passe — le courriel est deja parti quand la phrase
        s'affiche. */
-    "chat.commercial.surplace": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Je viens de la transmettre au service commercial. Présentez-vous à l'accueil, on vous mettra en relation.",
-    "chat.commercial.adistance": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Je viens de la transmettre au service commercial. Laissez-moi un numéro ou une adresse électronique et ils vous recontacteront.",
-    "chat.commercial.contact": "C'est noté, je l'ajoute à votre demande. Le service commercial vous recontactera.",
+    "chat.commercial.surplace": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Votre demande est bien enregistrée et transmise au service commercial, qui la prendra en charge. Laissez-moi votre adresse électronique pour qu'un commercial vous réponde, ou présentez-vous à l'accueil.",
+    "chat.commercial.adistance": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Votre demande est bien enregistrée et transmise au service commercial, qui la prendra en charge. Laissez-moi votre adresse électronique pour qu'un commercial vous réponde.",
+    "chat.commercial.contact": "C'est noté. Votre demande part au service commercial avec cette adresse, et vous recevrez un message de confirmation.",
 
     "camera.unavailable": "La caméra est inaccessible depuis ce navigateur. Merci de vous présenter à l'accueil.",
     "photo.activate": "Activer la caméra",
@@ -471,9 +471,9 @@ export const translations = {
     "voix.aide": "Press to speak, press again when you have finished. Isaac answers aloud.",
     "voix.etat.pause": "MICROPHONE OFF",
     "voix.pause.explication": "The conversation is kept. Press “Start speaking again” whenever you want to continue.",
-    "voix.commercial.surplace": "I am passing your request to the sales team. Please go to the front desk and they will put you in touch with a sales representative.",
-    "voix.commercial.adistance": "I am passing your request to the sales team. Tell me your phone number or email address if you would like to be called back.",
-    "voix.commercial.contact": "Noted, I am adding it to your request.",
+    "voix.commercial.surplace": "Your request is recorded: I am passing it to the sales team, and a sales representative will take it from here. Tell me your email address so they can reply to you, or go to the front desk.",
+    "voix.commercial.adistance": "Your request is recorded: I am passing it to the sales team, and a sales representative will take it from here. Tell me your email address so they can reply to you.",
+    "voix.commercial.contact": "Noted. Your request goes to the sales team with that address, and you will receive a confirmation message.",
     "voix.commercial.echec": "I could not reach the sales team. You can call them on 66 17 66 41.",
     "voix.corriger": "That is not what I said",
     "voix.couper": "Turn the microphone off",
@@ -513,9 +513,9 @@ export const translations = {
     "chat.escalated.surplace": "Passed on. A team member has been notified and is on their way to the reception desk.",
     "chat.escalated.adistance": "Passed on to the team. So that they can get back to you, please leave me your name and a way to reach you — phone or email.",
     "chat.escalateFailed": "I could not reach the team right now. You can contact us on +241 66 17 66 41 or by email at info@st.digital.",
-    "chat.commercial.surplace": "This depends on your own setup: only a sales representative can price it. I have just passed it to the sales team. Please go to the front desk and they will put you in touch.",
-    "chat.commercial.adistance": "This depends on your own setup: only a sales representative can price it. I have just passed it to the sales team. Leave me a phone number or an email address and they will get back to you.",
-    "chat.commercial.contact": "Noted, I am adding it to your request. The sales team will get back to you.",
+    "chat.commercial.surplace": "This depends on your own setup: only a sales representative can price it. Your request is recorded and passed to the sales team, who will take it from here. Leave me your email address so a sales representative can reply, or go to the front desk.",
+    "chat.commercial.adistance": "This depends on your own setup: only a sales representative can price it. Your request is recorded and passed to the sales team, who will take it from here. Leave me your email address so a sales representative can reply.",
+    "chat.commercial.contact": "Noted. Your request goes to the sales team with that address, and you will receive a confirmation message.",
 
     "camera.unavailable": "The camera is unavailable in this browser. Please come to the reception desk.",
     "photo.activate": "Turn on the camera",
