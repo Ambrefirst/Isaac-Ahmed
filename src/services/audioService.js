@@ -307,8 +307,8 @@ export async function transcrire(blobAudio, { strict = false } = {}) {
    d'attente en plus pour quelqu'un qui est debout. */
 export async function synthetiser(texte, reglages) {
   if (!SYNTHESE) throw new Error("La synthèse vocale n'est pas configurée sur cette borne.");
-  const propre = (texte || "").trim();
-  if (!propre) return null;
+  const propre = Array.isArray(texte) ? "" : (texte || "").trim();
+  if (!propre && !Array.isArray(texte)) return null;
 
   const reponse = await fetch(SYNTHESE, {
     method: "POST",
@@ -316,7 +316,15 @@ export async function synthetiser(texte, reglages) {
     /* Le texte part tel quel : c'est le service qui porte le dictionnaire de
        prononciation, pour que la borne et tout autre appelant disent la même
        chose du même texte. */
-    body: JSON.stringify({ texte: propre, ...(reglages || {}) }),
+    body: JSON.stringify(
+      /* Une SUITE DE SEGMENTS plutot qu'un texte : chacun a son rythme, et le
+         service les rend d'un seul tenant. C'est ce qui permet un « Hmmm »
+         tenu une seconde suivi d'une phrase au debit normal — un reglage
+         unique ne pouvait pas donner les deux. */
+      Array.isArray(texte)
+        ? { segments: texte }
+        : { texte: propre, ...(reglages || {}) }
+    ),
   });
   if (!reponse.ok) throw new Error("La synthèse vocale est indisponible pour le moment.");
 

@@ -47,14 +47,37 @@ import { synthetiser } from "./audioService";
 /* Ecrites en PLUSIEURS PHRASES COURTES, et c'est volontaire : le silence ne
    s'insere qu'entre deux phrases. « Hum, un instant je vous prie » d'un seul
    tenant ne laisse aucun endroit ou respirer, quel que soit le reglage. */
-const CLIPS_FR = [
-  "Hum. Un instant, je vous prie.",
-  "Je regarde cela. Tout de suite.",
+/* LE HUM EST UN SON, PAS UN MOT — et Piper lit ce qu'on lui ecrit.
+
+   Mesure du 01/10, duree de son reellement emis par graphie :
+
+     « Hum. »     0,14 s     <- ce qui etait en place
+     « Hmm. »     0,22 s
+     « Mmm. »     0,56 s
+     « Hmmm. »    0,76 s     (1,00 s etire)
+     « Mmhmm. »   0,96 s
+
+   Cent quarante millisecondes. Piper lisait « Hum » comme un mot d'une
+   syllabe et le claquait : il n'y avait rien a entendre. Il fallait changer
+   la graphie, pas le reglage.
+
+   « Hmmm » est retenu plutot que « Mmhmm », pourtant plus long : « mm-hmm »
+   veut dire oui. Isaac n'a pas encore lu la question — acquiescer serait
+   exactement la faute qu'on s'interdit depuis le debut.
+
+   Un clip peut donc etre une SUITE DE SEGMENTS, chacun a son rythme : le hum
+   gagne a etre etire, la phrase qui suit perdrait a l'etre. */
+const HUM_FR = [
+  { texte: "Hmmm.", vitesse: 1.8, silence: 0.3 },
+  { texte: "Un instant, je vous prie.", vitesse: 1.2, silence: 0 },
 ];
-const CLIPS_EN = [
-  "Mmh. One moment, please.",
-  "I am looking into it. Right away.",
+const HUM_EN = [
+  { texte: "Hmmm.", vitesse: 1.8, silence: 0.3 },
+  { texte: "One moment, please.", vitesse: 1.2, silence: 0 },
 ];
+
+const CLIPS_FR = [HUM_FR, "Je regarde cela. Tout de suite."];
+const CLIPS_EN = [HUM_EN, "I am looking into it. Right away."];
 
 /* MESURE DU 01/10, calee sur une reference fournie.
 
@@ -98,10 +121,18 @@ const ATTENTE_REGLAGES = { vitesse: 1.2, silence: 0.35 };
    Le cas neutre est le défaut, et c'est voulu : un classement raté ne coûte
    alors qu'une phrase passe-partout. */
 const CONTEXTE_FR = {
+  /* Une alerte appelle de la gravite, pas de l'entrain. Pas de « très bien »
+     ici : on ne felicite pas quelqu'un qui signale une porte forcee. */
   securite: "Je prends note. C'est important.",
   technique: "Je note votre problème. Un instant.",
+  /* Vrai au moment ou c'est dit : le courriel au service commercial part
+     pendant qu'Isaac parle. */
   commercial: "Très bien. Je prépare cela.",
-  rendezvous: "Très bien. Je regarde le parcours Rendez-vous.",
+  /* « Je regarde le parcours Rendez-vous » laissait entendre qu'Isaac allait
+     consulter quelque chose. Il ne consulte rien : il le connaît, et il
+     s'apprête à l'expliquer. Dire qu'on cherche ce qu'on sait déjà est une
+     petite fausseté, mais c'est celle qui fait sonner faux. */
+  rendezvous: "Très bien. Je vous explique.",
   renseignement: "Je vérifie cette information.",
   defaut: "Je réfléchis. Un instant.",
 };
@@ -109,10 +140,18 @@ const CONTEXTE_EN = {
   securite: "I am noting this. It matters.",
   technique: "I am noting your problem. One moment.",
   commercial: "Very well. I am preparing that.",
-  rendezvous: "Very well. I am checking the Appointment path.",
+  rendezvous: "Very well. Let me explain.",
   renseignement: "I am checking that information.",
   defaut: "I am thinking. One moment.",
 };
+
+/* Les clefs attendues, declarees ici pour pouvoir etre VERIFIEES. Ajouter une
+   intention dans relaisHumain.js sans lui donner de phrase ne casserait rien
+   de visible : on retomberait sur le cas neutre, en silence, et personne ne
+   s'en apercevrait avant d'avoir trouve la borne fade. */
+export const INTENTIONS_ATTENDUES = [
+  "securite", "technique", "commercial", "rendezvous", "renseignement", "defaut",
+];
 
 /* Avant ce délai, on ne dit rien : une réponse servie par la table arrive en
    deux dixièmes de seconde, et la combler serait la retarder. */
