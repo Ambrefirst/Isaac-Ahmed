@@ -9,10 +9,35 @@ const SYNTHESE = process.env.REACT_APP_AUDIO_SYNTHESE;
    dix enregistrements réels le 27/09 : il fait passer le taux d'erreur mot de
    26,9 % à 15,4 %. Il se passe en PARAMÈTRE D'URL — envoyé en champ de
    formulaire, il est accepté puis purement ignoré, sans le moindre signe. */
+/* L'amorce n'est pas une consigne : c'est un CONTEXTE que la reconnaissance lit
+   avant d'écouter. Elle y pioche des mots qu'elle sait désormais possibles, et
+   cela suffit à lui faire préférer « Nkok » à « une coque » ou « Rodrigue » à
+   « Rodrigues ». Un mot absent d'ici sera écrit comme il sonne.
+
+   Trois familles, et chacune pour une raison :
+
+   LES LIEUX ET LES OFFRES, parce qu'une borne d'accueil n'entend presque que
+   cela et que ce sont des noms propres ou des termes de métier.
+
+   LES PRÉNOMS DE L'ÉQUIPE, parce que « j'ai rendez-vous avec Rodrigue » ne
+   sert à rien si le prénom ressort faux : c'est précisément le mot qui permet
+   d'orienter la personne.
+
+   ⚠ Cette liste est un SEPTIÈME endroit où un membre de l'équipe se déclare.
+   Ajouter quelqu'un au back-office sans l'ajouter ici ne casse rien — son
+   prénom sera simplement mal entendu, en silence. Voir le tableau des six
+   autres dans A_FAIRE_AVANT_MISE_EN_PRODUCTION.
+
+   Whisper n'en retient qu'environ deux cent vingt mots : au-delà, le début est
+   tronqué. On reste donc volontairement court. */
 const AMORCE =
-  "Borne d'accueil de ST Digital. Vocabulaire attendu : datacenter, Nkok, " +
-  "Libreville, Douala, Grand-Bassam, Tier III, cloud souverain, colocation, " +
-  "rendez-vous, Obame, Nguema.";
+  "Borne d'accueil de ST Digital, à Libreville. " +
+  "Vocabulaire attendu : datacenter, Nkok, Libreville, Douala, Grand-Bassam, " +
+  "Tier III, cloud souverain, colocation, hébergement, infogérance, sauvegarde, " +
+  "connectivité, baie, rack, devis, cotation, tarif, rendez-vous, " +
+  "code d'invitation, portes ouvertes, immeuble Cofina, boulevard Triomphal. " +
+  "Prénoms de l'équipe : Rodrigue, Marleth, Olivia, Doviane, Daniel, Aminta, " +
+  "Obame, Nguema.";
 
 /* Ce que la reconnaissance entend mal sur le vocabulaire du site, et que
    l'amorce ne suffit pas à corriger. C'est le miroir exact du dictionnaire de
