@@ -54,6 +54,13 @@ function App() {
   const commercialRef = useRef(null);
   /* La demande dont on attend une adresse, ou null : elle affiche le champ. */
   const [contactDemande, setContactDemande] = useState(null);
+  /* Trois etats possibles du fil : vivant, bientot efface, efface. Le dernier
+     n'est pas un detail d'affichage — sans lui, le visiteur qui revient trouve
+     un ecran vide et croit avoir tout perdu par sa faute. */
+  const [finProche, setFinProche] = useState(false);
+  const [sessionFinie, setSessionFinie] = useState(false);
+  /* Bouge a chaque signe de vie : c'est ce qui relance la minuterie. */
+  const [reveil, setReveil] = useState(0);
   /* Minuterie d'effacement du fil. Voir l'en-tete du fichier : une borne est
      partagee, et ce qu'un visiteur a demande ne regarde pas le suivant. */
   const oubliRef = useRef(null);
@@ -72,6 +79,18 @@ function App() {
   const GRACE_APRES_SORTIE = 2 * 60 * 1000;   // sortir par erreur ne doit pas punir
   const OUBLI_SI_INACTIF = 5 * 60 * 1000;     // parti sans rien dire : il ne revient pas
   const ECHANGES_GARDES = 20;                 // au-dela, les plus anciens tombent
+  /* ON PREVIENT AVANT D'EFFACER.
+
+     Le fil disparaissait d'un coup, sans un mot. La regle est bonne — une
+     borne est partagee, et ce qu'un visiteur a demande ne regarde pas le
+     suivant — mais l'executer en silence donne l'impression d'une panne, et
+     punit celui qui lisait encore sa reponse.
+
+     On annonce donc la fin une minute avant, avec de quoi rester. Quelqu'un
+     qui est toujours la n'est jamais coupe : il repousse l'echeance autant de
+     fois qu'il veut. La purge ne frappe que les fils que PERSONNE ne regarde,
+     ce qui etait son but depuis le debut. */
+  const PREAVIS_AVANT_OUBLI = 60 * 1000;
 
   /* Une borne ne garde pas un historique sans fin : au-dela de vingt echanges,
      les plus anciens tombent. Cela borne ce qu'un curieux peut remonter en
@@ -97,6 +116,7 @@ function App() {
        un numero dicte irait completer le besoin de quelqu'un d'autre. */
     commercialRef.current = null;
     setContactDemande(null);
+    setFinProche(false);
   }
 
   function programmeOubli(delai) {
@@ -118,10 +138,16 @@ function App() {
      repart a chaque message, donc une vraie conversation ne la declenche pas. */
   useEffect(() => {
     if (screen !== "chat" || !messages.length) return undefined;
-    const m = setTimeout(oublieLeFil, OUBLI_SI_INACTIF);
-    return () => clearTimeout(m);
+    const avertit = setTimeout(() => setFinProche(true), OUBLI_SI_INACTIF - PREAVIS_AVANT_OUBLI);
+    const efface = setTimeout(() => {
+      oublieLeFil();
+      /* On le DIT. Un ecran qui se vide sans explication se lit comme une
+         perte, pas comme une protection. */
+      setSessionFinie(true);
+    }, OUBLI_SI_INACTIF);
+    return () => { clearTimeout(avertit); clearTimeout(efface); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, messages]);
+  }, [screen, messages, reveil]);
 
   useEffect(() => () => annuleOubli(), []);
 
@@ -144,9 +170,32 @@ function App() {
     });
   }
 
+  /* TERMINER, TOUT DE SUITE ET SUR DEMANDE.
+
+     Il n'existait aucun moyen de clore soi-meme : la fleche de retour ramene
+     au menu et arme une minuterie de deux minutes, pendant lesquelles le fil
+     reste lisible. Quelqu'un qui vient de poser une question personnelle et
+     qui s'eloigne n'a aucune facon de l'effacer derriere lui.
+
+     La minuterie reste utile — elle rattrape ceux qui partent sans rien dire —
+     mais elle ne remplace pas un geste volontaire. */
+  function terminerSession() {
+    oublieLeFil();
+    setSessionFinie(true);
+  }
+
+  /* « Je suis toujours la » : on repousse l'echeance, sans rien effacer. */
+  function resterLa() {
+    setFinProche(false);
+    setReveil((n) => n + 1);
+  }
+
   async function sendMessage(message) {
     const cleanMessage = message.trim();
     if (!cleanMessage) return;
+    /* Ecrire est un signe de vie : il vaut le bouton. */
+    setFinProche(false);
+    setSessionFinie(false);
     const history = messages;
     setMessages((current) => garde([...current, { sender: "visitor", text: cleanMessage }]));
 
@@ -267,6 +316,10 @@ function App() {
   if (screen === "chat")
     return (
       <ChatScreen
+        onTerminer={terminerSession}
+        finProche={finProche}
+        sessionFinie={sessionFinie}
+        onResterLa={resterLa}
         contactDemande={contactDemande}
         onContact={envoyerContact}
         onPasserContact={() => setContactDemande(null)}

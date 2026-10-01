@@ -332,3 +332,60 @@
      la transition, qui n'est pas une information mais un lissage. */
   .attente-jauge i { transition: none !important; }
 }
+
+/* ------------------------------------------------- fin de session
+
+   Une borne est partagee : le fil s'efface. Ces trois elements existent pour
+   que cela ne ressemble jamais a une panne. */
+
+/* Terminer soi-meme, sans attendre la minuterie. Discret : c'est une sortie,
+   pas l'action principale. */
+.chat-terminer {
+  margin-left: auto;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(146, 186, 214, .3);
+  background: transparent;
+  color: var(--text-muted, #93AFC4);
+  font-family: inherit;
+  font-size: .78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chat-terminer:hover {
+  border-color: rgba(146, 186, 214, .55);
+  color: #D8E8F2;
+}
+
+/* Le preavis. Ton d'indication, pas d'alerte : rien de grave n'arrive. */
+.session-avis {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border-left: 3px solid #7AAFC9;
+  background: rgba(24, 56, 82, .55);
+}
+
+.session-avis p {
+  margin: 0;
+  flex: 1 1 14rem;
+  font-size: .84rem;
+  line-height: 1.5;
+  color: #C3D6E4;
+}
+
+.session-finie {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(18, 44, 66, .5);
+  font-size: .84rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-muted, #93AFC4);
+}

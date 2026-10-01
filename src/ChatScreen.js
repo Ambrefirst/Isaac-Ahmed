@@ -137,7 +137,7 @@ function SequenceAttente({ phase, t }) {
 
 const SUGGESTIONS = ["chat.suggest.hours", "chat.suggest.datacenter", "chat.suggest.visit", "chat.suggest.about"];
 
-export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, contactDemande, onContact, onPasserContact, onKeepWaiting, onEscalate, onSend, onMenu }) {
+export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, contactDemande, finProche, sessionFinie, onResterLa, onTerminer, onContact, onPasserContact, onKeepWaiting, onEscalate, onSend, onMenu }) {
   const [input, setInput] = useState("");
   const { t } = useLanguage();
   const scrollRef = useRef(null);
@@ -244,6 +244,14 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
             <h1>{t("chat.title")}</h1>
             <p>{t("chat.subtitle")}</p>
           </div>
+          {/* Terminer soi-meme, sans attendre une minuterie. Il n'apparait
+              qu'avec une conversation a effacer : un bouton qui ne fait rien
+              apprend a ne plus le regarder. */}
+          {!!messages.length && (
+            <button type="button" className="chat-terminer" onClick={onTerminer}>
+              {t("chat.session.terminer")}
+            </button>
+          )}
           {/* La sphere suit la conversation : au repos, puis en reflexion pendant
               le traitement. Le bouton de conversation parlee se place JUSTE
               DESSOUS, comme sur la borne : c'est la meme sphere, donc le meme
@@ -304,6 +312,23 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
             le commercial ne peut pas repondre. Ici le visiteur a deja un
             clavier — le champ sert a valider la forme et a envoyer d'un geste,
             plutot qu'a esperer qu'il ecrive son adresse dans une phrase. */}
+        {/* La fin approche : on le dit, et on laisse de quoi rester. Quelqu'un
+            qui lit encore sa reponse ne doit pas etre puni de ne pas taper. */}
+        {finProche && !!messages.length && (
+          <div className="session-avis">
+            <p>{t("chat.session.bientot")}</p>
+            <button type="button" className="primary" onClick={onResterLa}>
+              {t("chat.session.rester")}
+            </button>
+          </div>
+        )}
+
+        {/* Et quand c'est fait, on le dit aussi : un ecran vide sans
+            explication se lit comme une perte, pas comme une protection. */}
+        {sessionFinie && !messages.length && (
+          <p className="session-finie" role="status">{t("chat.session.finie")}</p>
+        )}
+
         {contactDemande && (
           <div className="escalation-card">
             <ChampContact onEnvoyer={onContact} onPlusTard={onPasserContact} />

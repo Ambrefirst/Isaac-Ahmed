@@ -264,6 +264,12 @@ export const translations = {
     "chat.escalated.surplace": "C'est transmis. Un membre de l'équipe a été prévenu et vient vous rejoindre à l'accueil.",
     "chat.escalated.adistance": "C'est transmis à l'équipe. Pour qu'elle puisse vous répondre, laissez-moi votre nom et un moyen de vous joindre — téléphone ou adresse électronique.",
     "chat.escalateFailed": "Je n'ai pas pu prévenir l'équipe pour le moment. Vous pouvez nous joindre au +241 66 17 66 41 ou par courriel à info@st.digital.",
+    /* Une borne est partagée : le fil s'efface. Mais on prévient avant, et on
+       le dit après — un écran qui se vide en silence se lit comme une panne. */
+    "chat.session.terminer": "Terminer",
+    "chat.session.bientot": "Cette conversation va s'effacer dans un instant, faute d'activité.",
+    "chat.session.rester": "Je suis toujours là",
+    "chat.session.finie": "Conversation effacée. La borne est prête pour la personne suivante.",
     /* Un prix dimensionne sur un besoin ne se trouve pas dans une base : il se
        calcule avec le client. On ne propose donc pas la mise en relation, on la
        fait, et on le dit au passe — le courriel est deja parti quand la phrase
@@ -534,6 +540,10 @@ export const translations = {
     "chat.escalated.surplace": "Passed on. A team member has been notified and is on their way to the reception desk.",
     "chat.escalated.adistance": "Passed on to the team. So that they can get back to you, please leave me your name and a way to reach you — phone or email.",
     "chat.escalateFailed": "I could not reach the team right now. You can contact us on +241 66 17 66 41 or by email at info@st.digital.",
+    "chat.session.terminer": "End",
+    "chat.session.bientot": "This conversation will be cleared shortly, after a period without activity.",
+    "chat.session.rester": "I am still here",
+    "chat.session.finie": "Conversation cleared. The kiosk is ready for the next person.",
     "chat.commercial.surplace": "This depends on your own setup: only a sales representative can price it. Your request is recorded and passed to the sales team, who will take it from here. Leave me your email address so a sales representative can reply, or go to the front desk.",
     "chat.commercial.adistance": "This depends on your own setup: only a sales representative can price it. Your request is recorded and passed to the sales team, who will take it from here. Leave me your email address so a sales representative can reply.",
     "chat.commercial.contact": "Noted. Your request goes to the sales team with that address, and you will receive a confirmation message.",
