@@ -492,10 +492,10 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
        On ne l'attend pas — si la synthese traine, la conversation commence
        sans eux et le premier tour sera simplement silencieux, comme avant. */
     libereAttente(attenteRef.current);
-    attenteRef.current = [];
-    prepareAttente(langue).then((clips) => {
-      if (vivantRef.current) attenteRef.current = clips;
-      else libereAttente(clips);
+    attenteRef.current = null;
+    prepareAttente(langue).then((prepare) => {
+      if (vivantRef.current) attenteRef.current = prepare;
+      else libereAttente(prepare);
     });
 
     await dire(salutation);
@@ -548,7 +548,7 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     tourRef.current += 1;
     if (comblementRef.current) { comblementRef.current.couper(); comblementRef.current = null; }
     libereAttente(attenteRef.current);
-    attenteRef.current = [];
+    attenteRef.current = null;
     if (requeteRef.current) { requeteRef.current.abort(); requeteRef.current = null; }
     if (enregistreurRef.current) enregistreurRef.current.liberer();
     if (lecteurRef.current) lecteurRef.current.pause();

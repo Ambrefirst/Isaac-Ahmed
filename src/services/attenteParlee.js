@@ -44,14 +44,66 @@ import { synthetiser } from "./audioService";
    On dit donc des phrases complètes, et moins souvent. Elles restent
    neutres : elles parlent de ce qu'Isaac fait, jamais de ce qu'il aurait
    compris — il n'a pas encore lu la question. */
+/* Ecrites en PLUSIEURS PHRASES COURTES, et c'est volontaire : le silence ne
+   s'insere qu'entre deux phrases. « Hum, un instant je vous prie » d'un seul
+   tenant ne laisse aucun endroit ou respirer, quel que soit le reglage. */
 const CLIPS_FR = [
-  "Hum, un instant je vous prie.",
-  "Je regarde cela tout de suite.",
+  "Hum. Un instant, je vous prie.",
+  "Je regarde cela. Tout de suite.",
 ];
 const CLIPS_EN = [
-  "Mmh, one moment please.",
-  "I am looking into it right away.",
+  "Mmh. One moment, please.",
+  "I am looking into it. Right away.",
 ];
+
+/* MESURE DU 01/10. Un memo de telephone, compare a Piper disant les memes
+   mots, puis a plusieurs reglages :
+
+                        la personne   reglages d'origine   ce qui est retenu
+     debit              5,4 syll/s    7,6 syll/s           4,7 syll/s
+     silence            64 % du temps 28 %                 55 %
+     pause la plus longue  1,40 s     0,50 s               0,92 s
+     dynamique          18,4 dB       17,0 dB              18,6 dB
+
+   La derniere ligne est la bonne nouvelle, et c'etait la plus difficile :
+   l'ecart entre passages forts et faibles etait DEJA celui d'une voix humaine.
+   Ce qui manquait n'etait pas le timbre, c'etait le temps — et le temps se
+   regle.
+
+   Ces valeurs ne valent que pour l'attente. Une reponse garde le debit normal. */
+const ATTENTE_REGLAGES = { vitesse: 1.45, silence: 0.6 };
+
+/* SECOND TEMPS : une fois la question connue.
+
+   Pendant la transcription, Isaac ignore tout de ce qu'on lui a dit, et ses
+   phrases doivent donc rester neutres. Après, c'est l'inverse : il a la
+   question sous les yeux, et continuer à dire « un instant » gâche ce qu'il
+   vient d'apprendre.
+
+   Chaque phrase décrit CE QU'IL FAIT du sujet, jamais ce qu'il en penserait.
+   « C'est une très belle proposition » serait charmant sur une offre de
+   partenariat et grotesque sur un incident, et rien ici ne permet de
+   distinguer les deux à coup sûr. Le classement est grossier ; une phrase qui
+   ne juge rien ne peut pas tomber à côté.
+
+   Le cas neutre est le défaut, et c'est voulu : un classement raté ne coûte
+   alors qu'une phrase passe-partout. */
+const CONTEXTE_FR = {
+  securite: "Je prends note. C'est important.",
+  technique: "Je note votre problème. Un instant.",
+  commercial: "Très bien. Je prépare cela.",
+  rendezvous: "Très bien. Je regarde le parcours Rendez-vous.",
+  renseignement: "Je vérifie cette information.",
+  defaut: "Je réfléchis. Un instant.",
+};
+const CONTEXTE_EN = {
+  securite: "I am noting this. It matters.",
+  technique: "I am noting your problem. One moment.",
+  commercial: "Very well. I am preparing that.",
+  rendezvous: "Very well. I am checking the Appointment path.",
+  renseignement: "I am checking that information.",
+  defaut: "I am thinking. One moment.",
+};
 
 /* Avant ce délai, on ne dit rien : une réponse servie par la table arrive en
    deux dixièmes de seconde, et la combler serait la retarder. */
@@ -82,20 +134,48 @@ function patiente(ms, encore) {
    de répondre parce qu'un bruit d'attente n'a pas pu être synthétisé. */
 export async function prepareAttente(langue) {
   const textes = langue === "en" ? CLIPS_EN : CLIPS_FR;
+  const contextes = langue === "en" ? CONTEXTE_EN : CONTEXTE_FR;
+
+  const fabrique = async (texte) => {
+    try {
+      return await synthetiser(texte, ATTENTE_REGLAGES);
+    } catch (e) {
+      return null;
+    }
+  };
+
   const clips = [];
   for (const texte of textes) {
-    try {
-      const url = await synthetiser(texte);
-      if (url) clips.push(url);
-    } catch (e) {
-      /* On garde ceux qui ont abouti. */
-    }
+    const url = await fabrique(texte);
+    if (url) clips.push(url);
   }
-  return clips;
+
+  /* Les phrases de contexte viennent APRES les neutres : ce sont les neutres
+     qu'on entend a chaque echange, et elles doivent etre pretes les premieres
+     si la synthese traine. */
+  const selonContexte = {};
+  for (const cle of Object.keys(contextes)) {
+    const url = await fabrique(contextes[cle]);
+    if (url) selonContexte[cle] = url;
+  }
+
+  return { clips, selonContexte };
 }
 
-export function libereAttente(clips) {
-  for (const url of clips || []) {
+/* Une seule phrase, choisie par le sujet, pendant que le modele ecrit. */
+export function comblerContexte(prepare, intention, estVivant) {
+  const table = (prepare && prepare.selonContexte) || {};
+  const url = table[intention || "defaut"] || table.defaut;
+  if (!url) return { arreter() {}, couper() {}, fini: Promise.resolve() };
+  return comblerAttente([url], estVivant);
+}
+
+export function libereAttente(prepare) {
+  const clips = Array.isArray(prepare)
+    ? prepare
+    : [...((prepare && prepare.clips) || []),
+       ...Object.values((prepare && prepare.selonContexte) || {})];
+  for (const url of clips) {
     try {
       URL.revokeObjectURL(url);
     } catch (e) {

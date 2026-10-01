@@ -301,7 +301,11 @@ export async function transcrire(blobAudio, { strict = false } = {}) {
 
 /* ------------------------------------------------------------- synthèse */
 
-export async function synthetiser(texte) {
+/* `reglages` peut porter `vitesse` (etirement des phonemes) et `silence`
+   (duree inseree entre deux phrases). Ils ne servent QUE pour les phrases
+   d'attente : ralentir une reponse de trente pour cent, c'est trente pour cent
+   d'attente en plus pour quelqu'un qui est debout. */
+export async function synthetiser(texte, reglages) {
   if (!SYNTHESE) throw new Error("La synthèse vocale n'est pas configurée sur cette borne.");
   const propre = (texte || "").trim();
   if (!propre) return null;
@@ -312,7 +316,7 @@ export async function synthetiser(texte) {
     /* Le texte part tel quel : c'est le service qui porte le dictionnaire de
        prononciation, pour que la borne et tout autre appelant disent la même
        chose du même texte. */
-    body: JSON.stringify({ texte: propre }),
+    body: JSON.stringify({ texte: propre, ...(reglages || {}) }),
   });
   if (!reponse.ok) throw new Error("La synthèse vocale est indisponible pour le moment.");
 

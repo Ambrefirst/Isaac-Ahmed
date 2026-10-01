@@ -163,6 +163,47 @@ export function contactDit(texte) {
   return null;
 }
 
+/* DE QUOI PARLE-T-ON ? — reconnaissance grossière, et assumée comme telle.
+
+   Sert uniquement à choisir ce qu'Isaac dit PENDANT qu'il cherche. Une fois la
+   question transcrite, il sait de quoi il s'agit : lui faire répéter « hum »
+   serait gâcher ce qu'il vient d'apprendre.
+
+   Trois précautions, parce qu'une erreur de classement s'entend.
+
+   Les motifs sont ceux qui servent déjà ailleurs, pas des nouveaux : un
+   second jeu de règles finirait par diverger du premier, et personne ne
+   saurait lequel fait foi.
+
+   Chaque phrase décrit CE QU'ISAAC FAIT, jamais ce qu'il penserait de la
+   demande. « C'est une très belle proposition » serait charmant sur une offre
+   de partenariat et grotesque sur un incident ; et rien ici ne permet de
+   distinguer les deux à coup sûr.
+
+   Le défaut est le cas neutre. Un classement raté ne doit coûter qu'une
+   phrase passe-partout, jamais une phrase à côté. */
+export function intentionApparente(question) {
+  const t = String(question || "");
+  /* Pas de \b apres « é » : en JavaScript un caractere accentue n'est pas un
+     caractere de mot, et la frontiere attendue apres lui n'existe jamais. Les
+     formes verbales sont donnees en entier plutot que suffixees — « forcer »
+     ne se deduit pas de « forcé ». */
+  if (/\b(alerte|intrusion|forc(er|ée?|ant)|effraction|suspect|incident|urgence)/i.test(t)) {
+    return "securite";
+  }
+  if (/\b(panne|bug|hors service|support)\b|ne (marche|fonctionne) plus|probl[èe]me technique/i.test(t)) {
+    return "technique";
+  }
+  if (besoinCommercial(t)) return "commercial";
+  /* « rendez-vous » s'ecrit avec un trait d'union neuf fois sur dix, et le
+     motif ne l'acceptait pas. */
+  if (/\b(rendez[ -]?vous|rdv|invitation|visite)\b/i.test(t)) return "rendezvous";
+  if (/\b(o[uù]|adresse|situ[ée]|horaires?|ouvert|ferm[ée]|t[ée]l[ée]phone|contact)\b/i.test(t)) {
+    return "renseignement";
+  }
+  return null;
+}
+
 export function sujetReserve(question) {
   return SUJETS_RESERVES.some((motif) => motif.test(question || ""));
 }
