@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { askIsaac, prevenirService } from "./services/aiService";
 import { creerEnregistreur, synthetiser, transcrire } from "./services/audioService";
+import { comblerAttente, libereAttente, prepareAttente } from "./services/attenteParlee";
 import { surPlace } from "./services/presence";
 import { contactDit, relaisCommercial } from "./services/relaisHumain";
 
@@ -95,6 +96,11 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
      choses : ne pas prevenir le service a chaque phrase d'un meme echange, et
      savoir a quelle demande rattacher un numero donne ensuite. */
   const besoinTransmisRef = useRef(null);
+  /* Les bruits d'attente, synthetises une fois au demarrage. Les fabriquer au
+     moment ou l'on a besoin de combler une attente ajouterait une attente pour
+     combler une attente. */
+  const attenteRef = useRef([]);
+  const comblementRef = useRef(null);
   /* La demande dont on attend une adresse, ou null. Elle ouvre le champ de
      saisie et ferme le micro : ecouter pendant qu'on tape n'a pas de sens, et
      laisserait la borne entendre le hall pendant tout ce temps. */
@@ -273,8 +279,31 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
       setNiveau(0);
       setEtat(ETATS.REFLECHIT);
       setAttenteDepuis(Date.now());
-      const question = await transcrire(blob);
-      if (!courant()) return;
+
+      /* ON COMBLE LE SILENCE, SANS FAIRE SEMBLANT D'AVOIR COMPRIS.
+
+         Entre le moment ou le visiteur se tait et celui ou Isaac repond, rien
+         n'est audible : la reconnaissance travaille, puis le modele ecrit.
+         Debout devant une sphere muette, rien ne distingue une borne qui
+         cherche d'une borne en panne.
+
+         Les bruits emis ici le sont AVANT que la transcription soit lue :
+         Isaac ne sait donc pas encore ce qui lui a ete dit, et ne peut pas
+         dire « d'accord » ni « je vois ». Voir l'en-tete de attenteParlee.js —
+         la regle tient surtout dans le cas qui compte, celui ou quelqu'un
+         signale un incident. */
+      const comblement = comblerAttente(attenteRef.current, courant);
+      comblementRef.current = comblement;
+
+      let question;
+      try {
+        question = await transcrire(blob);
+      } catch (e) {
+        comblement.couper();
+        comblementRef.current = null;
+        throw e;
+      }
+      if (!courant()) { comblement.couper(); comblementRef.current = null; return; }
       malEntenduRef.current = 0;
       setEntendu(question);
 
@@ -339,6 +368,13 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
       setReponse(aDire);
       setAttenteDepuis(null);
 
+      /* On attend que le bruit d'attente se soit TU avant de repondre : deux
+         voix qui se recouvrent s'entendent comme un bogue, et couper un mot au
+         milieu s'entend comme une panne. */
+      comblement.arreter();
+      await comblement.fini;
+      comblementRef.current = null;
+
       await dire(aDire);
       if (!courant()) return;
       /* Le champ est ouvert : on laisse le visiteur ecrire. Rouvrir le micro
@@ -347,6 +383,11 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
       if (contactDemandeRef.current) { setNiveau(0); setEtat(ETATS.PAUSE); return; }
       ecouter();
     } catch (e) {
+      /* Le bruit d'attente tourne en boucle tant que le tour est le sien : une
+         recherche qui echoue le laisserait donc marmonner indefiniment. On le
+         coupe ICI, au seul endroit par lequel passent toutes les pannes. */
+      if (comblementRef.current) { comblementRef.current.couper(); comblementRef.current = null; }
+
       /* Une recherche interrompue volontairement n'est pas une panne : c'est le
          visiteur qui a dit « ce n'est pas ca ». On ne lui affiche pas d'erreur. */
       if (e && e.name === "AbortError") return;
@@ -426,9 +467,20 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     besoinTransmisRef.current = null;
     contactDemandeRef.current = null;
     setContactDemande(null);
+
+    /* Les clips sont fabriques PENDANT la salutation : du temps deja paye.
+       On ne l'attend pas — si la synthese traine, la conversation commence
+       sans eux et le premier tour sera simplement silencieux, comme avant. */
+    libereAttente(attenteRef.current);
+    attenteRef.current = [];
+    prepareAttente(langue).then((clips) => {
+      if (vivantRef.current) attenteRef.current = clips;
+      else libereAttente(clips);
+    });
+
     await dire(salutation);
     if (vivantRef.current) ecouter();
-  }, [dire, ecouter, salutation]);
+  }, [dire, ecouter, salutation, langue]);
 
   /* Reprendre apres un silence trop long : on rouvre le micro sans refaire la
      salutation, qui n'aurait aucun sens au milieu d'une conversation. */
@@ -446,6 +498,7 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
      n'a pas ete posee. */
   const corriger = useCallback(() => {
     if (requeteRef.current) { requeteRef.current.abort(); requeteRef.current = null; }
+    if (comblementRef.current) { comblementRef.current.couper(); comblementRef.current = null; }
     tourRef.current += 1;
     setEntendu("");
     setReponse("");
@@ -461,6 +514,7 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
   const couper = useCallback(() => {
     tourRef.current += 1;
     if (requeteRef.current) { requeteRef.current.abort(); requeteRef.current = null; }
+    if (comblementRef.current) { comblementRef.current.couper(); comblementRef.current = null; }
     if (enregistreurRef.current) { enregistreurRef.current.liberer(); enregistreurRef.current = null; }
     if (analyseRef.current) { try { analyseRef.current.contexte.close(); } catch (e) {} }
     analyseRef.current = null;
@@ -472,6 +526,9 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
   const arreter = useCallback(() => {
     vivantRef.current = false;
     tourRef.current += 1;
+    if (comblementRef.current) { comblementRef.current.couper(); comblementRef.current = null; }
+    libereAttente(attenteRef.current);
+    attenteRef.current = [];
     if (requeteRef.current) { requeteRef.current.abort(); requeteRef.current = null; }
     if (enregistreurRef.current) enregistreurRef.current.liberer();
     if (lecteurRef.current) lecteurRef.current.pause();
