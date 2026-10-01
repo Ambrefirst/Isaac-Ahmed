@@ -72,7 +72,7 @@ const JAMAIS_RACCOURCI = [
    motif construit sur « ou se trouve » n'attrape. Une fois les accents retires,
    « ou » interrogatif et « ou » conjonction se confondent : on n'accepte donc
    le mot seul qu'en fin de phrase ou apres un verbe d'etat. */
-const LOCALISATION = /ou se trouve|ou est|ou sont|adresse|situe|situee|localis|comment venir|comment vous rendre|(?:est|sont|situe|trouve)\s+ou\b|\bou\s*$|where is|where are|where can i find|address|located|location|how do i get|how to get/;
+const LOCALISATION = /ou se trouve|ou est|ou sont|adresse|situe|situee|localis|comment venir|comment vous rendre|(?:est|sont|situe|trouve)\s+ou\b|\bou\s*$|where is|where are|where can i find|address|located|\blocation of\b|\byour location\b|how do i get|how to get/;
 
 const FAITS = [
   {
@@ -94,7 +94,7 @@ const FAITS = [
     cle: "remerciement",
     /* Un acquiescement peut preceder le remerciement : « parfait, merci ».
        Sans cette tolerance, la phrase n'etait reconnue par aucun des deux. */
-    exige: [/^(ok|okay|d accord|daccord|parfait|super|tres bien|genial|nickel)?[ ,]*(merci|thanks|thank you|je vous remercie)\b/],
+    exige: [/^(ok|okay|de accord|daccord|parfait|super|tres bien|genial|nickel)?[ ,]*(merci|thanks|thank you|je vous remercie)\b/],
     exclut: [/\?|horaire|adresse|datacenter|tarif|visite|contact/],
     reponse: {
       fr: "Je vous en prie. N'hésitez pas si vous avez une autre question.",
@@ -107,7 +107,7 @@ const FAITS = [
        entree, ces phrases partaient au modele, qui les prenait pour une
        demande et repartait dans un accueil complet. */
     cle: "acquiescement",
-    exige: [/^(ok|okay|d accord|daccord|tres bien|parfait|super|genial|impeccable|nickel|c est note|entendu|compris|ca marche|tres bien merci)\b/],
+    exige: [/^(ok|okay|de accord|daccord|tres bien|parfait|super|genial|impeccable|nickel|ce est note|entendu|compris|ca marche|tres bien merci)\b/],
     /* Un acquiescement suivi d'une vraie question n'en est plus un. */
     exclut: [/\?|horaire|adresse|datacenter|tarif|prix|visite|contact|rendez ?vous|rdv|qui |quel|comment|combien|merci\b/],
     reponse: {
@@ -164,6 +164,31 @@ const FAITS = [
     },
   },
   {
+    /* LA COLOCATION. Le visiteur demande s'il peut apporter son propre
+       materiel : c'est la definition meme du service, et la documentation
+       publique l'ecrit deja — le client deploie et gere son materiel dans
+       un Datacenter ST DIGITAL, dans son environnement securise.
+
+       Avant cette entree, la question recevait l'ADRESSE du Datacenter,
+       parce que « colocation » contient « location ». La frontiere de mot
+       a ete posee au-dessus ; ce bloc-ci donne la reponse qui manquait.
+
+       La reponse dit oui, puis s'arrete net sur la configuration : le
+       dimensionnement et les conditions appartiennent au commercial, et
+       l'annonce de la transmission declenche vraiment le courriel.
+
+       Une question de colocation qui parle d'argent est ecartee : elle
+       appartient a « tarifs », qui porte la formule validee de la
+       section 13. */
+    cle: "colocation",
+    exige: [/\bcolocations?\b|\bco location\b|(apporter|amener|installer|deployer|mettre|placer|loger|heberger)[^.?!]{0,30}\b(mes|nos|mon|notre|propres)\b[^.?!]{0,25}(serveurs?|materiel|equipements?|machines?|baies?|racks?)|(bring|install|deploy|host|place|put)[^.?!]{0,30}\b(my|our|their|own)\b[^.?!]{0,25}(servers?|hardware|equipment|machines?|racks?)/],
+    exclut: [/tarif|prix|cout|couts|combien|devis|tarification|montant|facturation|budget|price|pricing|\bcost|how much/],
+    reponse: {
+      fr: "Oui. La colocation vous permet d'installer et de gérer votre propre matériel dans un Datacenter ST DIGITAL, en bénéficiant de son environnement sécurisé. La configuration et les conditions se définissent avec notre équipe commerciale : je peux lui transmettre votre demande.",
+      en: "Yes. Colocation lets you install and manage your own hardware in an ST DIGITAL Datacenter, within its secured environment. The configuration and the terms are defined with our sales team: I can pass your request on to them.",
+    },
+  },
+  {
     cle: "adresse_datacenter",
     exige: [LOCALISATION,
             /datacenter|data center|data centre|centre de donnees/],
@@ -182,11 +207,11 @@ const FAITS = [
     exige: [/(prendre|avoir|obtenir|fixer|caler|demander|reserver|planifier)[^.?!]{0,20}(rendez ?vous|rdv)/],
     exclut: [/j'?ai (un )?(rendez ?vous|rdv)|mon (rendez ?vous|rdv)|annuler|reporter|confirmer/],
     reponse: {
-      fr: "Avec plaisir. Sur l'écran d'accueil de la borne, choisissez « Rendez-vous » : c'est là que votre demande s'enregistre, que la personne concernée est prévenue, et que votre code d'invitation vous est envoyé.",
+      fr: "Avec plaisir. Sur l'écran d'accueil, touchez « Rendez-vous », puis « Prendre un rendez-vous ». Vous y choisissez l'hôte souhaité — commercial pour les offres et les tarifs, mais aussi technique, sécurité, RH, marketing ou administratif — ainsi que la date qui vous arrange et le motif. Votre demande part aussitôt à l'équipe concernée, et votre code d'invitation vous est envoyé dès qu'elle est confirmée.",
       /* Des guillemets ne s'entendent pas, et une phrase longue se suit mal a
          l'oral : on va au geste a faire. */
-      fr_vocal: "Avec plaisir. Touchez Rendez-vous sur l'écran d'accueil : votre demande y sera enregistrée et la personne concernée prévenue.",
-      en: "With pleasure. On the kiosk's home screen, choose \"Appointment\": that is where your request is recorded, the person concerned is notified, and your invitation code is sent to you.",
+      fr_vocal: "Avec plaisir. Touchez Rendez-vous sur l'écran d'accueil, puis Prendre un rendez-vous. Vous y choisissez qui vous souhaitez rencontrer — le commercial pour les offres et les tarifs, par exemple — la date et le motif. L'équipe concernée est prévenue aussitôt, et votre code d'invitation vous arrive dès que c'est confirmé.",
+      en: "With pleasure. On the home screen, tap \"Appointment\", then \"Request an appointment\". You choose the host you want — sales for offers and pricing, but also technical, security, HR, marketing or administration — along with the date that suits you and the purpose. Your request goes straight to the team concerned, and your invitation code is sent as soon as it is confirmed.",
     },
   },
   {
@@ -231,7 +256,7 @@ const FAITS = [
     /* Reponse standard, section 13. Le prix est le sujet ou une invention
        engage le plus l'entreprise. */
     cle: "tarifs",
-    exige: [/tarif|prix|cout|couts|combien (ca )?(coute|cout)|devis|tarification|montant|facturation|remise|budget|factur/],
+    exige: [/tarif|prix|cout|couts|combien (ca )?(coute|cout)|devis|tarification|montant|facturation|remise|budget|factur|price|pricing|\bcost|how much|\bquote\b|\bfees?\b|\brates?\b|discount/],
     exclut: [],
     reponse: {
       fr: "Les tarifs dépendent de votre besoin et de la configuration choisie. Je peux transmettre votre demande à notre équipe commerciale afin d'obtenir une proposition adaptée.",
@@ -243,7 +268,7 @@ const FAITS = [
        repondre « je n'ai pas l'information » laisserait croire que l'equipe
        communiquerait la liste. Le modele l'a fait deux fois aujourd'hui. */
     cle: "confidentialite_clients",
-    exige: [/client/, /heberge|heberges|hebergent|nkok|datacenter|data ?cent|chez vous|liste/],
+    exige: [/client/, /heberge|heberges|hebergent|nkok|datacenter|data ?cent|chez vous|liste|qui sont vos clients|vos clients sont/],
     exclut: [/devenir client|etre client|nouveau client/],
     reponse: {
       fr: "Je ne peux pas communiquer cette information. Elle relève de procédures ou d'informations internes. Je peux toutefois vous orienter vers le service compétent si votre demande est légitime.",

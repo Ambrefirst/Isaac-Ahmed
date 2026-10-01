@@ -50,6 +50,18 @@ function SendIcon() {
     </svg>
   );
 }
+/* Une porte et une fleche qui sort. Le symbole d'arret — un cercle barre —
+   aurait dit « eteindre la borne », ce que ce bouton ne fait pas : il clot une
+   conversation, et la borne reste allumee pour le visiteur suivant. */
+function PorteIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+      <polyline points="16 16 20 12 16 8" />
+      <line x1="20" y1="12" x2="10" y2="12" />
+    </svg>
+  );
+}
 function CheckIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -244,14 +256,6 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
             <h1>{t("chat.title")}</h1>
             <p>{t("chat.subtitle")}</p>
           </div>
-          {/* Terminer soi-meme, sans attendre une minuterie. Il n'apparait
-              qu'avec une conversation a effacer : un bouton qui ne fait rien
-              apprend a ne plus le regarder. */}
-          {!!messages.length && (
-            <button type="button" className="chat-terminer" onClick={onTerminer}>
-              {t("chat.session.terminer")}
-            </button>
-          )}
           {/* La sphere suit la conversation : au repos, puis en reflexion pendant
               le traitement. Le bouton de conversation parlee se place JUSTE
               DESSOUS, comme sur la borne : c'est la meme sphere, donc le meme
@@ -345,10 +349,31 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
             jamais laisser son adresse, sauf a refaire toute sa demande. La
             demande, elle, est deja partie — il ne manque qu'un moyen de
             repondre, et on doit pouvoir le donner quand on veut. */}
-        {!contactDemande && contactPossible && !!messages.length && (
-          <button type="button" className="contact-rouvrir" onClick={onRouvrirContact}>
-            {t("chat.commercial.rouvrir")}
-          </button>
+        {/* LE PIED DE CONVERSATION. « Terminer » vivait dans l'en-tete, coince
+            entre le titre et la sphere : la regle generale des boutons d'en-tete
+            lui imposait un cercle de 48 pixels, dans lequel le mot debordait
+            sans cadre visible. Il n'avait l'air ni d'un bouton ni d'un lien.
+
+            Il descend ici, au bas du fil, du cote ou l'on finit une
+            conversation — a cote de la reprise de contact, et non plus en
+            concurrence avec « Parler », qui est l'action principale de
+            l'en-tete. Il reste au-DESSUS du champ de saisie : un clavier a
+            l'ecran recouvre le bas de la page, et un bouton recouvert n'existe
+            pas. */}
+        {!!messages.length && (
+          <div className="chat-pied">
+            {!contactDemande && contactPossible ? (
+              <button type="button" className="contact-rouvrir" onClick={onRouvrirContact}>
+                {t("chat.commercial.rouvrir")}
+              </button>
+            ) : <span />}
+            {/* Il n'apparait qu'avec une conversation a effacer : un bouton qui
+                ne fait rien apprend a ne plus le regarder. */}
+            <button type="button" className="chat-terminer" onClick={onTerminer}>
+              <PorteIcon />
+              <span>{t("chat.session.terminer")}</span>
+            </button>
+          </div>
         )}
 
         {erreurVoix && <p className="chat-voix-erreur" role="alert">{erreurVoix}</p>}

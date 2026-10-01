@@ -9,7 +9,7 @@
    parce qu'une proposition affichée à chaque question deviendrait un bruit de
    fond qu'on cesse de lire. */
 
-import { avoueIgnorer, relaisNecessaire, sujetReserve } from "./relaisHumain";
+import { annonceRelaisCommercial, avoueIgnorer, relaisCommercial, relaisNecessaire, sujetReserve } from "./relaisHumain";
 
 describe("quand une question appelle une personne plutot qu'un modele", () => {
   describe("sujets qui engagent l'entreprise", () => {
@@ -99,6 +99,55 @@ describe("quand une question appelle une personne plutot qu'un modele", () => {
       expect(relaisNecessaire("Bonjour", "Bonjour, comment puis-je vous aider ?")).toBeNull();
       expect(relaisNecessaire("", "")).toBeNull();
       expect(relaisNecessaire(undefined, undefined)).toBeNull();
+    });
+  });
+
+  /* UNE PROMESSE FAITE A VOIX HAUTE DOIT ETRE TENUE.
+
+     Le 01/10, un visiteur a demande s'il pouvait apporter ses serveurs en
+     colocation. La reponse validee se termine par « je peux lui transmettre
+     votre demande » — et rien ne partait, parce que le relais ne lisait que
+     la QUESTION (qui ne parlait pas d'argent) et les aveux d'ignorance (il
+     n'y en avait pas). Isaac promettait, et personne n'etait prevenu.
+
+     Ces essais gardent le troisieme signal : ce qu'Isaac annonce lui-meme. */
+  describe("ce qu'Isaac promet, le relais le fait", () => {
+    const annonces = [
+      "Oui. La colocation vous permet d'installer et de gérer votre propre matériel dans un Datacenter ST DIGITAL, en bénéficiant de son environnement sécurisé. La configuration et les conditions se définissent avec notre équipe commerciale : je peux lui transmettre votre demande.",
+      "Je peux transmettre votre demande à notre équipe commerciale afin d'obtenir une proposition adaptée.",
+      "Je peux transmettre votre demande à notre équipe spécialisée afin qu'elle vous communique une proposition adaptée.",
+      /* Le cas demande le 30/09 : pas de rendez-vous a prendre, on dit
+         simplement qu'un commercial est disponible. */
+      "Notre équipe commerciale se tient à votre disposition pour en discuter.",
+      "Yes. Colocation lets you install and manage your own hardware in an ST DIGITAL Datacenter, within its secured environment. The configuration and the terms are defined with our sales team: I can pass your request on to them.",
+    ];
+    test.each(annonces)("annonce reconnue : %s", (reponse) => {
+      expect(annonceRelaisCommercial(reponse)).toBe(true);
+      expect(relaisCommercial("Est-ce que je peux apporter mes serveurs ?", reponse)).toBe(true);
+    });
+
+    /* NOMMER LE SERVICE N'EST PAS LE SAISIR. Sans cette limite, toute reponse
+       qui prononce le mot « commercial » enverrait un courriel — et un service
+       qui recoit ce qui ne le concerne pas cesse vite de lire ce qu'il
+       recoit. */
+    const simplesMentions = [
+      "Le service commercial est ouvert du lundi au vendredi, de 8h00 à 17h00.",
+      "Vous pouvez choisir un hôte commercial dans la rubrique Rendez-vous de la borne.",
+      "Le Datacenter de ST DIGITAL au Gabon se trouve à Nkok, dans la zone économique spéciale, à proximité de Libreville.",
+      "Je transmets immédiatement cette alerte à l'équipe de sécurité pour qu'elle intervienne.",
+      "",
+      undefined,
+    ];
+    test.each(simplesMentions)("une simple mention ne declenche rien : %s", (reponse) => {
+      expect(annonceRelaisCommercial(reponse)).toBe(false);
+    });
+
+    /* Le signal s'AJOUTE, il ne remplace pas : les deux autres repondent comme
+       avant. */
+    it("les deux signaux d'origine sont intacts", () => {
+      expect(relaisCommercial("Quel est le prix de l'hébergement ?", "Une réponse quelconque.")).toBe(true);
+      expect(relaisCommercial("Combien coûte un hébergement ?", "Je ne dispose pas de cette information.")).toBe(true);
+      expect(relaisCommercial("Quels sont vos horaires ?", "Le bureau est ouvert de 8h00 à 17h00.")).toBe(false);
     });
   });
 });

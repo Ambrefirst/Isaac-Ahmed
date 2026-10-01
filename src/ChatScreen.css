@@ -338,24 +338,68 @@
    Une borne est partagee : le fil s'efface. Ces trois elements existent pour
    que cela ne ressemble jamais a une panne. */
 
-/* Terminer soi-meme, sans attendre la minuterie. Discret : c'est une sortie,
-   pas l'action principale. */
-.chat-terminer {
-  margin-left: auto;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(146, 186, 214, .3);
-  background: transparent;
-  color: var(--text-muted, #93AFC4);
-  font-family: inherit;
-  font-size: .78rem;
-  cursor: pointer;
-  white-space: nowrap;
+/* Le pied du fil : la reprise de contact a gauche, la sortie a droite. Les
+   deux ne se ressemblent pas, et c'est voulu — l'une rouvre quelque chose,
+   l'autre ferme tout. */
+.chat-pied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  min-height: 44px;
 }
 
-.chat-terminer:hover {
-  border-color: rgba(146, 186, 214, .55);
+/* La reprise de contact est dans le pied : elle n'a plus a se centrer
+   elle-meme. */
+.chat-pied .contact-rouvrir { margin: 0; }
+
+/* Terminer soi-meme, sans attendre la minuterie.
+
+   IL EST ECRIT AVEC LE SELECTEUR DU PIED, pas seul. Place dans l'en-tete, il
+   heritait de « .screen-header button », qui impose a tout bouton d'en-tete un
+   cercle de 48 pixels : la largeur, la hauteur et l'arrondi de ce bouton-ci
+   etaient ecrases, le mot debordait d'un rond, et ni le cadre ni le fond
+   ecrits ici n'apparaissaient. C'est ce que montrait la capture du 01/10.
+
+   Discret, mais pas efface : c'est une sortie, pas l'action principale, et sur
+   une borne partagee elle doit rester trouvable du premier coup d'oeil. */
+.chat-pied .chat-terminer {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  /* Une cible tactile tient 44 pixels de haut. En dessous, on la rate. */
+  min-height: 44px;
+  width: auto;
+  height: auto;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(146, 186, 214, .28);
+  background: rgba(16, 42, 64, .55);
+  color: var(--text-muted, #93AFC4);
+  font-family: inherit;
+  font-size: .85rem;
+  letter-spacing: .01em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .18s var(--ease, ease), background .18s var(--ease, ease),
+              color .18s var(--ease, ease), transform .18s var(--ease, ease);
+}
+
+.chat-pied .chat-terminer svg { flex-shrink: 0; opacity: .85; }
+
+.chat-pied .chat-terminer:hover {
+  border-color: rgba(159, 208, 234, .6);
+  background: rgba(24, 60, 88, .75);
   color: #D8E8F2;
+  transform: translateY(-1px);
+}
+
+.chat-pied .chat-terminer:active { transform: scale(.97); }
+
+.chat-pied .chat-terminer:focus-visible {
+  outline: 2px solid #9FD0EA;
+  outline-offset: 3px;
 }
 
 /* Le preavis. Ton d'indication, pas d'alerte : rien de grave n'arrive. */

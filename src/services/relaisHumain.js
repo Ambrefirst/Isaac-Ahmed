@@ -95,17 +95,71 @@ export function besoinCommercial(question) {
    les mettre en face d'un montant. Chercher plus loin dans la base ne sert
    à rien — c'est une question qui se transmet, pas qui se résout.
 
-   Deux façons de le reconnaître, et une seule suffit :
+   Trois façons de le reconnaître, et une seule suffit :
 
    1. LA DEMANDE elle-même est commerciale : un devis, une cotation, un prix,
       une envie de souscrire, une demande de parler à un commercial.
 
-   2. ISAAC AVOUE ne pas savoir, ET la question portait sur quelque chose que
-      ST DIGITAL vend. Le second test compte autant que le premier : sans lui,
+   2. ISAAC L'A ANNONCÉ. Plusieurs réponses validées se terminent par « je
+      peux transmettre votre demande à notre équipe commerciale » — celle des
+      tarifs, celle de la colocation, celles de la section 12 de la base.
+      C'est une promesse faite au visiteur à voix haute. Sans ce test, elle
+      était tenue une fois sur deux : le courriel partait quand la QUESTION
+      contenait le mot « prix », et pas quand c'était la RÉPONSE qui
+      proposait le relais. Un visiteur de colocation à qui Isaac disait
+      « je transmets » repartait sans que personne ne soit prévenu.
+
+   3. ISAAC AVOUE ne pas savoir, ET la question portait sur quelque chose que
+      ST DIGITAL vend. Ce test compte autant que les autres : sans lui,
       « je ne dispose pas de cette information » sur les horaires du parking
       déclencherait un courriel au service commercial. */
+
+/* Les tournures par lesquelles Isaac annonce lui-même le relais commercial.
+   Elles sont tirées des réponses validées, où elles sont écrites mot pour
+   mot : on lit ce qu'il a réellement dit, on ne le devine pas.
+
+   LE MOT « COMMERCIAL » NE SUFFIT PAS. « Le service commercial est ouvert de
+   8h à 17h » le contient et n'annonce rien du tout. Ce qu'on cherche, c'est
+   une PROMESSE : transmettre, faire suivre, ou se tenir à disposition. Sans
+   cette exigence, toute réponse qui nomme le service enverrait un courriel,
+   et un service qui reçoit ce qui ne le concerne pas cesse vite de lire. */
+/* La promesse, et celui à qui elle renvoie. Les deux doivent se trouver dans
+   la MÊME phrase — d'où le `[^.?!]` entre eux : « Nos tarifs dépendent de
+   votre besoin. Le service commercial est ouvert de 8h à 17h. » contient les
+   deux mots et ne promet rien.
+
+   Et dans LES DEUX ORDRES. La réponse de la colocation dit « ...avec notre
+   équipe commerciale : je peux lui transmettre votre demande » : le verbe y
+   vient après, et un seul sens de lecture laissait passer exactement la
+   réponse pour laquelle ce signal a été écrit. */
+const PROMESSE = "(transmets|transmettre|transmettrai|transmise?|faire\\s+suivre|fais\\s+suivre"
+  + "|signale|signaler|pr[ée]viens|pr[ée]venir|mettre\\s+en\\s+relation"
+  + "|pass\\w*\\s+(?:your\\s+request|it|this)|forward\\w*|notif\\w+)";
+/* Pas de \b après « spécialisé » : il se termine par un caractère accentué,
+   et en JavaScript la frontière de mot attendue après lui n'existe jamais.
+   C'est le piège du cas 15 du catalogue des échecs silencieux. */
+const CIBLE = "([ée]quipe\\s+commerciale|service\\s+commercial|[ée]quipe\\s+sp[ée]cialis"
+  + "|sales\\s+team|\\bcommercial\\b)";
+const ANNONCES_DE_RELAIS = [
+  new RegExp(PROMESSE + "[^.?!]{0,80}" + CIBLE, "i"),
+  new RegExp(CIBLE + "[^.?!]{0,80}" + PROMESSE, "i"),
+  /* « L'équipe commerciale se tient à votre disposition. » C'est le cas
+     demandé le 30/09 : quand le besoin n'appelle pas de rendez-vous, Isaac
+     dit simplement qu'un commercial est disponible — et c'est précisément là
+     qu'un courriel doit partir, sans quoi personne ne sait que quelqu'un
+     attend. */
+  new RegExp(CIBLE + "[^.?!]{0,40}(se\\s+tien\\w+|est|sont|reste\\w*|demeure\\w*)\\s+[àa]\\s+(votre|sa|leur)\\s+disposition", "i"),
+  new RegExp("[àa]\\s+votre\\s+disposition[^.?!]{0,40}" + CIBLE, "i"),
+  /\bsales\s+team\b[^.?!]{0,40}(is\s+)?(at\s+your\s+disposal|available|happy\s+to)/i,
+];
+
+export function annonceRelaisCommercial(reponse) {
+  return ANNONCES_DE_RELAIS.some((motif) => motif.test(reponse || ""));
+}
+
 export function relaisCommercial(question, reponse) {
   if (besoinCommercial(question)) return true;
+  if (annonceRelaisCommercial(reponse)) return true;
   return avoueIgnorer(reponse) && OBJETS_VENDABLES.test(question || "");
 }
 
@@ -181,24 +235,46 @@ export function contactDit(texte) {
    distinguer les deux à coup sûr.
 
    Le défaut est le cas neutre. Un classement raté ne doit coûter qu'une
-   phrase passe-partout, jamais une phrase à côté. */
+   phrase passe-partout, jamais une phrase à côté.
+
+   L'ANGLAIS A LES MÊMES DROITS. Les motifs n'étaient écrits qu'en français :
+   un visiteur anglophone tombait donc toujours sur la phrase passe-partout,
+   quoi qu'il dise. Les six intentions avaient pourtant leur phrase anglaise
+   dans attenteParlee.js — cinq d'entre elles n'étaient jamais atteintes. */
 export function intentionApparente(question) {
   const t = String(question || "");
   /* Pas de \b apres « é » : en JavaScript un caractere accentue n'est pas un
      caractere de mot, et la frontiere attendue apres lui n'existe jamais. Les
      formes verbales sont donnees en entier plutot que suffixees — « forcer »
      ne se deduit pas de « forcé ». */
-  if (/\b(alerte|intrusion|forc(er|ée?|ant)|effraction|suspect|incident|urgence)/i.test(t)) {
+  if (/\b(alerte|intrusion|forc(er|ée?|ant)|effraction|suspect|incident|urgence)/i.test(t)
+      || /\b(alarm|intrusion|break[- ]?in|broke in|forced|suspicious|incident|emergency|theft|stolen)\b/i.test(t)) {
     return "securite";
   }
-  if (/\b(panne|bug|hors service|support)\b|ne (marche|fonctionne) plus|probl[èe]me technique/i.test(t)) {
+  if (/\b(panne|bug|hors service|support)\b|ne (marche|fonctionne) plus|probl[èe]me technique/i.test(t)
+      || /\b(outage|bug|down|broken|not working|technical (problem|issue)|support)\b|doesn'?t work/i.test(t)) {
     return "technique";
   }
-  if (besoinCommercial(t)) return "commercial";
+  /* Le commercial en anglais : on lit la QUESTION, parce que le second
+     signal — ce qu'Isaac annonce — n'a pas encore été dit au moment où l'on
+     choisit la phrase d'attente. */
+  if (besoinCommercial(t)
+      || /\b(price|pricing|cost|costs|quote|quotation|how much|subscribe|rate card|fees?)\b/i.test(t)) {
+    return "commercial";
+  }
   /* « rendez-vous » s'ecrit avec un trait d'union neuf fois sur dix, et le
      motif ne l'acceptait pas. */
-  if (/\b(rendez[ -]?vous|rdv|invitation|visite)\b/i.test(t)) return "rendezvous";
-  if (/\b(o[uù]|adresse|situ[ée]|horaires?|ouvert|ferm[ée]|t[ée]l[ée]phone|contact)\b/i.test(t)) {
+  if (/\b(rendez[ -]?vous|rdv|invitation|visite)\b/i.test(t)
+      || /\b(appointment|meeting|invitation|visit|tour)\b/i.test(t)) {
+    return "rendezvous";
+  }
+  /* Pas de frontiere de mot FINALE : « où », « situé » et « fermé » se
+     terminent par un caractere accentue, et la frontiere attendue apres lui
+     n'existe pas en JavaScript. Ces trois formes ne correspondaient donc
+     jamais. « où » recoit une garde explicite a la place, sans quoi le motif
+     trouverait « ou » dans « oublier ». */
+  if (/\bo[uù](?![a-z\u00e0-\u00ff])|\badresse|\bsitu[ée]|\bhoraire|\bouvert|\bferm[ée]|\bt[ée]l[ée]phone|\bcontact/i.test(t)
+      || /\b(where|address|located|location|opening|hours|open|closed|phone|contact)\b/i.test(t)) {
     return "renseignement";
   }
   return null;

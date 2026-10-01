@@ -266,7 +266,7 @@ export const translations = {
     "chat.escalateFailed": "Je n'ai pas pu prévenir l'équipe pour le moment. Vous pouvez nous joindre au +241 66 17 66 41 ou par courriel à info@st.digital.",
     /* Une borne est partagée : le fil s'efface. Mais on prévient avant, et on
        le dit après — un écran qui se vide en silence se lit comme une panne. */
-    "chat.session.terminer": "Terminer",
+    "chat.session.terminer": "Terminer la session",
     "chat.session.bientot": "Cette conversation va s'effacer dans un instant, faute d'activité.",
     "chat.session.rester": "Je suis toujours là",
     "chat.session.finie": "Conversation effacée. La borne est prête pour la personne suivante.",
@@ -543,7 +543,7 @@ export const translations = {
     "chat.escalated.surplace": "Passed on. A team member has been notified and is on their way to the reception desk.",
     "chat.escalated.adistance": "Passed on to the team. So that they can get back to you, please leave me your name and a way to reach you — phone or email.",
     "chat.escalateFailed": "I could not reach the team right now. You can contact us on +241 66 17 66 41 or by email at info@st.digital.",
-    "chat.session.terminer": "End",
+    "chat.session.terminer": "End the session",
     "chat.session.bientot": "This conversation will be cleared shortly, after a period without activity.",
     "chat.session.rester": "I am still here",
     "chat.session.finie": "Conversation cleared. The kiosk is ready for the next person.",
