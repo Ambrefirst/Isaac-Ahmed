@@ -56,22 +56,31 @@ const CLIPS_EN = [
   "I am looking into it. Right away.",
 ];
 
-/* MESURE DU 01/10. Un memo de telephone, compare a Piper disant les memes
-   mots, puis a plusieurs reglages :
+/* MESURE DU 01/10, calee sur une reference fournie.
 
-                        la personne   reglages d'origine   ce qui est retenu
-     debit              5,4 syll/s    7,6 syll/s           4,7 syll/s
-     silence            64 % du temps 28 %                 55 %
-     pause la plus longue  1,40 s     0,50 s               0,92 s
-     dynamique          18,4 dB       17,0 dB              18,6 dB
+   Premiere tentative : un memo de telephone comme cible. Mauvaise idee — un
+   memo dicte contient des hesitations et de longs silences de reflexion, 64 %
+   du temps. J'y ai cale Piper a 4,7 syllabes par seconde et 56 % de silence :
+   plus lent et plus vide qu'il ne fallait.
 
-   La derniere ligne est la bonne nouvelle, et c'etait la plus difficile :
-   l'ecart entre passages forts et faibles etait DEJA celui d'une voix humaine.
-   Ce qui manquait n'etait pas le timbre, c'etait le temps — et le temps se
-   regle.
+   La bonne cible est une phrase PRODUITE pour etre entendue, pas une pensee
+   dite a voix haute :
 
-   Ces valeurs ne valent que pour l'attente. Une reponse garde le debit normal. */
-const ATTENTE_REGLAGES = { vitesse: 1.45, silence: 0.6 };
+                            la reference   d'origine   retenu
+     debit                  5,6 syll/s     7,6         5,2
+     silence                38 % du temps  28 %        42 %
+     pauses                 0,70 / 0,50 s  0,50 max    0,70 / 0,50 s
+     dynamique              15,5 dB        17,0 dB     17,6 dB
+
+   La structure de pauses tombe au centieme pres sur celle de la reference. La
+   dynamique, elle, n'a jamais eu besoin d'etre corrigee : l'ecart entre
+   passages forts et faibles etait deja celui d'une voix humaine. Ce qui
+   manquait n'etait pas le timbre, c'etait le temps — et le temps se regle.
+
+   Ces valeurs ne valent que pour l'attente. Une reponse garde le debit
+   normal : la ralentir de vingt pour cent, c'est vingt pour cent d'attente en
+   plus pour quelqu'un qui est debout. */
+const ATTENTE_REGLAGES = { vitesse: 1.2, silence: 0.35 };
 
 /* SECOND TEMPS : une fois la question connue.
 
