@@ -389,3 +389,21 @@
   text-align: center;
   color: var(--text-muted, #93AFC4);
 }
+
+/* « Plus tard » n'est pas un refus definitif : ce lien rouvre le champ tant
+   qu'une demande commerciale attend un moyen de reponse. Discret, parce qu'il
+   ne doit pas concurrencer le champ de saisie du fil. */
+.contact-rouvrir {
+  display: block;
+  margin: 0 auto 12px;
+  border: 0;
+  background: none;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: .8rem;
+  color: #9FD0EA;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.contact-rouvrir:hover { color: #D8E8F2; }

@@ -137,7 +137,7 @@ function SequenceAttente({ phase, t }) {
 
 const SUGGESTIONS = ["chat.suggest.hours", "chat.suggest.datacenter", "chat.suggest.visit", "chat.suggest.about"];
 
-export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, contactDemande, finProche, sessionFinie, onResterLa, onTerminer, onContact, onPasserContact, onKeepWaiting, onEscalate, onSend, onMenu }) {
+export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, contactDemande, contactPossible, finProche, sessionFinie, onResterLa, onTerminer, onContact, onPasserContact, onRouvrirContact, onKeepWaiting, onEscalate, onSend, onMenu }) {
   const [input, setInput] = useState("");
   const { t } = useLanguage();
   const scrollRef = useRef(null);
@@ -331,8 +331,24 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
 
         {contactDemande && (
           <div className="escalation-card">
-            <ChampContact onEnvoyer={onContact} onPlusTard={onPasserContact} />
+            {/* PAS DE CLAVIER A L'ECRAN ICI. Le fil de discussion a deja son
+                champ de saisie, juste en dessous : en superposer un second
+                fait doublon, et le visiteur ne sait plus lequel sert a quoi.
+                Il n'a de sens que sur la borne, en conversation parlee, ou il
+                n'y a rien d'autre pour ecrire. */}
+            <ChampContact onEnvoyer={onContact} onPlusTard={onPasserContact} clavier={false} />
           </div>
+        )}
+
+        {/* « PLUS TARD » N'EST PAS UN REFUS DEFINITIF. Le champ disparaissait
+            pour de bon : quelqu'un qui remettait a plus tard ne pouvait plus
+            jamais laisser son adresse, sauf a refaire toute sa demande. La
+            demande, elle, est deja partie — il ne manque qu'un moyen de
+            repondre, et on doit pouvoir le donner quand on veut. */}
+        {!contactDemande && contactPossible && !!messages.length && (
+          <button type="button" className="contact-rouvrir" onClick={onRouvrirContact}>
+            {t("chat.commercial.rouvrir")}
+          </button>
         )}
 
         {erreurVoix && <p className="chat-voix-erreur" role="alert">{erreurVoix}</p>}

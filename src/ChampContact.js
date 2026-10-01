@@ -54,12 +54,15 @@ function sansClavierPhysique() {
   return doigt && !precis;
 }
 
-export default function ChampContact({ onEnvoyer, onPlusTard, classe = "" }) {
+/* `clavier` force l'absence de clavier a l'ecran. Le fil de discussion a deja
+   son champ de saisie : en superposer un second fait doublon. Par defaut on
+   laisse la detection decider, ce qui convient a la borne parlee. */
+export default function ChampContact({ onEnvoyer, onPlusTard, classe = "", clavier: autorise = true }) {
   const { t } = useLanguage();
   const [valeur, setValeur] = useState("");
   const [faux, setFaux] = useState(false);
   const [envoi, setEnvoi] = useState(false);
-  const [clavier, setClavier] = useState(sansClavierPhysique);
+  const [clavier, setClavier] = useState(() => autorise && sansClavierPhysique());
   const saisieRef = useRef(null);
 
   function ecrire(touche) {
@@ -128,7 +131,7 @@ export default function ChampContact({ onEnvoyer, onPlusTard, classe = "" }) {
         <button type="button" className="contact-plustard" onClick={onPlusTard} disabled={envoi}>
           {t("voix.contact.plustard")}
         </button>
-        {!clavier && !envoi && (
+        {autorise && !clavier && !envoi && (
           <button type="button" className="contact-plustard" onClick={() => setClavier(true)}>
             {t("voix.clavier.ouvrir")}
           </button>

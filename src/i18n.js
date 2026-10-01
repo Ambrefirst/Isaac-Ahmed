@@ -277,6 +277,9 @@ export const translations = {
     "chat.commercial.surplace": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Votre demande est bien enregistrée et transmise au service commercial, qui la prendra en charge. Laissez-moi votre adresse électronique pour qu'un commercial vous réponde, ou présentez-vous à l'accueil.",
     "chat.commercial.adistance": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Votre demande est bien enregistrée et transmise au service commercial, qui la prendra en charge. Laissez-moi votre adresse électronique pour qu'un commercial vous réponde.",
     "chat.commercial.contact": "C'est noté. Votre demande part au service commercial avec cette adresse, et vous recevrez un message de confirmation.",
+    /* « Plus tard » ne doit pas etre definitif : la demande est deja partie,
+       il ne manque qu'un moyen d'y repondre. */
+    "chat.commercial.rouvrir": "Laisser mon adresse au service commercial",
 
     "camera.unavailable": "La caméra est inaccessible depuis ce navigateur. Merci de vous présenter à l'accueil.",
     "photo.activate": "Activer la caméra",
@@ -547,6 +550,7 @@ export const translations = {
     "chat.commercial.surplace": "This depends on your own setup: only a sales representative can price it. Your request is recorded and passed to the sales team, who will take it from here. Leave me your email address so a sales representative can reply, or go to the front desk.",
     "chat.commercial.adistance": "This depends on your own setup: only a sales representative can price it. Your request is recorded and passed to the sales team, who will take it from here. Leave me your email address so a sales representative can reply.",
     "chat.commercial.contact": "Noted. Your request goes to the sales team with that address, and you will receive a confirmation message.",
+    "chat.commercial.rouvrir": "Leave my address for the sales team",
 
     "camera.unavailable": "The camera is unavailable in this browser. Please come to the reception desk.",
     "photo.activate": "Turn on the camera",

@@ -199,6 +199,28 @@ function App() {
     const history = messages;
     setMessages((current) => garde([...current, { sender: "visitor", text: cleanMessage }]));
 
+    /* UNE ADRESSE N'EST PAS UNE QUESTION.
+
+       Quand Isaac vient de demander un moyen de contact, ce que le visiteur
+       ecrit ensuite est une reponse a cette demande — pas une nouvelle
+       question. La poser au modele produit ce qu'elle a produit le 01/10 :
+       « Pouvez-vous me dire quel service vous souhaitez contacter ? », suivi
+       seulement apres du « c'est note » qui etait la vraie reponse. Deux
+       messages, dont un absurde, et huit secondes d'attente pour l'obtenir.
+
+       On traite donc le contact AVANT d'appeler le modele, et on s'arrete la. */
+    if (commercialRef.current) {
+      const contact = contactDit(cleanMessage);
+      if (contact) {
+        setContactDemande(null);
+        const parti = await prevenirService(commercialRef.current, {
+          service: "commercial", surPlace: surPlace(), mode: "chat", contact,
+        });
+        await typeOutAnswer(t(parti ? "chat.commercial.contact" : "chat.escalateFailed"));
+        return;
+      }
+    }
+
     const controller = new AbortController();
     abortRef.current = controller;
     escalatedRef.current = false;
@@ -257,21 +279,6 @@ function App() {
       return;
     }
 
-    /* Le visiteur laisse un moyen de le joindre après coup : on complète le
-       signalement déjà parti plutôt que d'en ouvrir un second. Sans cela,
-       l'équipe reçoit un besoin qu'elle ne peut rattacher à personne. */
-    if (commercialRef.current) {
-      const contact = contactDit(cleanMessage);
-      if (contact) {
-        setContactDemande(null);
-        await prevenirService(commercialRef.current, {
-          service: "commercial", surPlace: surPlace(), mode: "chat", contact,
-        });
-        await typeOutAnswer(t("chat.commercial.contact"));
-        return;
-      }
-    }
-
     /* La proposition de mise en relation vient APRES la reponse, et depend de
        ce qui a ete demande — plus de la duree de l'attente. Un tarif, un
        contrat, une disponibilite reelle : ce sont des sujets qui engagent
@@ -323,6 +330,8 @@ function App() {
         contactDemande={contactDemande}
         onContact={envoyerContact}
         onPasserContact={() => setContactDemande(null)}
+        onRouvrirContact={() => setContactDemande(commercialRef.current)}
+        contactPossible={!!commercialRef.current}
         messages={messages}
         phase={phase}
         typingText={typingText}
