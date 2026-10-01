@@ -32,18 +32,33 @@ import { synthetiser } from "./audioService";
    la conversation, pendant qu'Isaac prononce sa salutation — c'est-à-dire sur
    du temps déjà payé. */
 
-/* Rendus dans l'ordre, puis en boucle. Les premiers sont les plus courts :
-   c'est celui-là qu'on entend presque toujours, les suivants n'arrivent que
-   sur les recherches longues. */
-const CLIPS_FR = ["Hum...", "Un instant.", "Je cherche...", "Je regarde ça."];
-const CLIPS_EN = ["Hmm...", "One moment.", "I'm looking...", "Let me check."];
+/* DES PHRASES, PAS DES INTERJECTIONS.
+
+   Première version : « Hum... », « Un instant. », « Je cherche... », « Je
+   regarde ça. » — quatre fragments courts, joués l'un après l'autre avec des
+   silences entre eux. À l'écoute, cela ne ressemblait pas à quelqu'un qui
+   réfléchit : cela ressemblait à une machine qui bégaie. Une synthèse vocale
+   a besoin d'une phrase entière pour poser une intonation ; sur deux
+   syllabes, elle n'a rien à poser, et le résultat est haché.
+
+   On dit donc des phrases complètes, et moins souvent. Elles restent
+   neutres : elles parlent de ce qu'Isaac fait, jamais de ce qu'il aurait
+   compris — il n'a pas encore lu la question. */
+const CLIPS_FR = [
+  "Hum, un instant je vous prie.",
+  "Je regarde cela tout de suite.",
+];
+const CLIPS_EN = [
+  "Mmh, one moment please.",
+  "I am looking into it right away.",
+];
 
 /* Avant ce délai, on ne dit rien : une réponse servie par la table arrive en
    deux dixièmes de seconde, et la combler serait la retarder. */
-const AVANT_PREMIER = 600;
-/* Silence entre deux clips. Trop court, Isaac bavarde ; trop long, le vide
-   revient. */
-const ENTRE_DEUX = 2600;
+const AVANT_PREMIER = 700;
+/* Silence entre deux phrases. Assez long pour que la seconde n'ait pas l'air
+   de poursuivre la première. */
+const ENTRE_DEUX = 3400;
 
 function patiente(ms, encore) {
   return new Promise((resolve) => {
@@ -113,14 +128,16 @@ export function comblerAttente(clips, estVivant) {
       audio.play().catch(fin);
     });
 
+  /* La boucle est FINIE. Elle tournait tant qu'on cherchait : sur une
+     recherche de quinze secondes, le visiteur entendait six fragments
+     d'affilée et croyait la borne bloquée. Deux phrases suffisent à dire
+     « je m'en occupe » ; au-delà, c'est le compteur à l'écran qui informe,
+     et il le fait sans parler. */
   const fini = (async () => {
     await patiente(AVANT_PREMIER, encore);
-    let i = 0;
-    while (encore()) {
-      await joue(clips[i % clips.length]);
-      i += 1;
-      if (!encore()) break;
-      await patiente(ENTRE_DEUX, encore);
+    for (let i = 0; i < clips.length && encore(); i += 1) {
+      await joue(clips[i]);
+      if (i + 1 < clips.length) await patiente(ENTRE_DEUX, encore);
     }
   })();
 

@@ -304,6 +304,25 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
         throw e;
       }
       if (!courant()) { comblement.couper(); comblementRef.current = null; return; }
+
+      /* ON NE COMBLE QUE LA TRANSCRIPTION.
+
+         Des que la phrase est reconnue, elle s'AFFICHE a l'ecran : le visiteur
+         voit qu'Isaac a compris, et le compteur lui dit que la recherche
+         continue. Entendre « un instant... je regarde cela » par-dessus cette
+         preuve ne rassure plus, cela inquiete — on croit la borne bloquee sur
+         une question qu'elle a pourtant sous les yeux.
+
+         La premiere version comblait jusqu'a la reponse. Sur une recherche de
+         quinze secondes, cela faisait parler Isaac six fois pour ne rien dire.
+         C'est le defaut signale le 01/10, et il venait d'une erreur de ma
+         part : j'ai comble l'attente entiere la ou il ne fallait couvrir que
+         le moment ou l'on ne sait meme pas ce qui a ete demande.
+
+         `arreter` et non `couper` : on ne tranche pas une phrase en cours, qui
+         s'entendrait comme une panne. On cesse d'en lancer d'autres, et la
+         derniere finit pendant que le modele travaille. */
+      comblement.arreter();
       malEntenduRef.current = 0;
       setEntendu(question);
 
@@ -370,8 +389,9 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
 
       /* On attend que le bruit d'attente se soit TU avant de repondre : deux
          voix qui se recouvrent s'entendent comme un bogue, et couper un mot au
-         milieu s'entend comme une panne. */
-      comblement.arreter();
+         milieu s'entend comme une panne. En pratique il s'est deja tu — il a
+         cesse des la transcription — mais une recherche servie par la table
+         revient en deux dixiemes de seconde, et la phrase peut courir encore. */
       await comblement.fini;
       comblementRef.current = null;
 
