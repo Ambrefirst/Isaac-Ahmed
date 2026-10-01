@@ -209,6 +209,43 @@ describe("chaine audio de la borne", () => {
       expect(echec.message).toMatch(/indisponible/i);
     });
 
+    /* LE 01/10, LA BORNE A AFFICHE « ISAAC CHERCHE LA REPONSE — 6977 s ».
+
+       Presque deux heures. `fetch` n'a pas de delai : un service qui cesse de
+       repondre en cours de route ne rejette jamais, la promesse reste en
+       suspens, et le tour de parole ne se termine pas. La conversation parlee
+       restait bloquee jusqu'a ce que quelqu'un ferme l'onglet.
+
+       Cet essai garde la seule chose qui compte ici : un appel sans reponse
+       FINIT. Peu importe au bout de combien de temps — ce qui etait casse,
+       c'est qu'il ne finissait pas. */
+    test("un service qui ne repond jamais finit par rendre la main", async () => {
+      jest.useFakeTimers();
+      /* Un faux « fetch » fidele : il ne repond pas, mais il respecte le
+         signal. Un faux qui ignorerait l'abandon ne prouverait rien. */
+      global.fetch = (url, options) => new Promise((_, rejeter) => {
+        options.signal.addEventListener("abort", () => {
+          const e = new Error("aborted");
+          e.name = "AbortError";
+          rejeter(e);
+        });
+      });
+
+      const attente = service.transcrire(blobFactice());
+      const echec = attente.catch((e) => e);
+      /* La conversion en WAV est asynchrone : on la laisse finir avant
+         d'avancer l'horloge, sans quoi le delai n'est pas encore arme. */
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      jest.advanceTimersByTime(service.DELAI_TRANSCRIPTION + 1000);
+
+      const e = await echec;
+      expect(e).toBeInstanceOf(Error);
+      expect(e.message).toMatch(/pas répondu/i);
+      jest.useRealTimers();
+    });
+
     test("une phrase nette et sure passe normalement", async () => {
       global.fetch = () => reponse({
         text: "Quels sont vos horaires ?",

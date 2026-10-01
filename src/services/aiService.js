@@ -25,16 +25,44 @@ function getSessionId() {
 /* `mode` vaut "vocal" quand la reponse sera lue a voix haute. Le workflow
    ajoute alors une consigne de brievete : une reponse longue est acceptable a
    l'ecrit, ou on la survole, mais pas a l'oral, ou l'on attend debout. */
+/* Cinq minutes. Une reponse documentaire demande de cent a cent soixante-
+   quinze secondes sur cette machine ; au-dela du double, ce n'est plus une
+   machine lente, c'est un appel qui ne reviendra pas. Sans ce delai, la
+   conversation parlee restait bloquee indefiniment — 6977 secondes mesurees
+   a la borne le 01/10. */
+export const DELAI_REPONSE = 300000;
+
 export async function askIsaac(message, history = [], lang = "fr", signal, mode = null) {
   const webhookUrl = process.env.REACT_APP_N8N_CHAT_WEBHOOK;
   if (!webhookUrl) return fallbackAnswer(message);
 
-  const response = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ event: "visitor_question", message, history, lang, mode, sessionId: getSessionId() }),
-    signal,
-  });
+  /* Deux facons d'arreter, et il faut les deux : le signal de l'appelant —
+     le bouton « ce n'est pas ce que j'ai dit » — sert a renoncer, le delai
+     sert a ne pas attendre l'impossible. */
+  const arret = new AbortController();
+  const minuterie = setTimeout(() => arret.abort(), DELAI_REPONSE);
+  const relai = signal ? () => arret.abort() : null;
+  if (signal) signal.addEventListener("abort", relai);
+
+  let response;
+  try {
+    response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "visitor_question", message, history, lang, mode, sessionId: getSessionId() }),
+      signal: arret.signal,
+    });
+  } catch (e) {
+    /* Une annulation du visiteur reste une annulation : le crochet vocal la
+       reconnait a son nom et n'affiche rien. Le delai, lui, est une panne et
+       doit se dire. */
+    if (signal && signal.aborted) throw e;
+    if (e && e.name === "AbortError") throw new Error("Isaac n'a pas pu répondre pour le moment.");
+    throw e;
+  } finally {
+    clearTimeout(minuterie);
+    if (signal) signal.removeEventListener("abort", relai);
+  }
   if (!response.ok) throw new Error("Isaac n'a pas pu répondre pour le moment.");
   const { answer } = await response.json();
   return answer;

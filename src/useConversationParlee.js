@@ -4,6 +4,7 @@ import { creerEnregistreur, synthetiser, transcrire } from "./services/audioServ
 import { comblerAttente, libereAttente, prepareAttente } from "./services/attenteParlee";
 import { surPlace } from "./services/presence";
 import { contactDit, relaisCommercial } from "./services/relaisHumain";
+import { creerRelaisDiffere } from "./services/relaisDiffere";
 
 /* Conversation parlee, sans fenetre et sans fil de texte.
 
@@ -58,6 +59,15 @@ export const ETATS = {
    la borne doit proposer autre chose plutot que de tourner en rond. */
 const ESSAIS_AVANT_ABANDON = 2;
 
+/* GARDE-FOU DU TOUR DE PAROLE. Plus long que le plus long enchainement
+   legitime — deux minutes de reconnaissance puis cinq minutes de reponse —
+   parce qu'il ne doit JAMAIS couper quelqu'un qui allait etre servi. Il ne
+   sert qu'a rattraper ce que les delais des appels n'ont pas rattrape.
+
+   Sans lui, la borne est restee a « Isaac cherche la reponse » pendant
+   6977 secondes le 01/10. */
+const DELAI_TOUR = 8 * 60 * 1000;
+
 export default function useConversationParlee({ salutation, langue = "fr", relais = {} }) {
   const [etat, setEtat] = useState(ETATS.ARRET);
   const [entendu, setEntendu] = useState("");
@@ -96,6 +106,11 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
      choses : ne pas prevenir le service a chaque phrase d'un meme echange, et
      savoir a quelle demande rattacher un numero donne ensuite. */
   const besoinTransmisRef = useRef(null);
+  /* Le courriel au service commercial attend l'adresse avant de partir. Voir
+     relaisDiffere.js : il partait jusqu'ici AVANT qu'Isaac ait pu demander ou
+     joindre la personne, donc toujours marque « non communique ». */
+  const courrielRef = useRef(null);
+  if (!courrielRef.current) courrielRef.current = creerRelaisDiffere(prevenirService);
   /* Les bruits d'attente, synthetises une fois au demarrage. Les fabriquer au
      moment ou l'on a besoin de combler une attente ajouterait une attente pour
      combler une attente. */
@@ -109,6 +124,10 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
   /* Les phrases du relais changent de langue en cours de conversation ; on les
      lit dans une reference pour ne pas reconstruire la boucle d'ecoute a
      chaque rendu, ce qui couperait le micro. */
+  /* La langue de la conversation, pour les quelques phrases que le crochet
+     dit lui-meme. Elles etaient ecrites en francais en dur : un visiteur
+     anglophone lisait une panne francaise au milieu d'un echange anglais. */
+  const anglais = String(langue || "fr").toLowerCase().startsWith("en");
   const relaisRef = useRef(relais);
   relaisRef.current = relais;
 
@@ -360,22 +379,25 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
       const contact = contactDit(question);
 
       if (besoinTransmisRef.current && contact) {
-        /* Il vient de laisser de quoi le rappeler : on COMPLETE le signalement
-           deja parti, au lieu d'en ouvrir un second pour le meme besoin. */
-        prevenirService(besoinTransmisRef.current, {
-          service: "commercial", surPlace: ici, mode: "vocal", contact,
-        });
+        /* Il vient de laisser de quoi le rappeler, a voix haute : l'adresse
+           rejoint la demande qui attendait, et UN seul courriel part. */
+        courrielRef.current.avecContact(contact);
         if (phrases.contactRecu) aDire = dit + " " + phrases.contactRecu;
       } else if (!besoinTransmisRef.current && relaisCommercial(question, dit)) {
         besoinTransmisRef.current = question;
-        /* On n'ATTEND PAS l'envoi pour parler. Le visiteur est debout ; lui
-           faire patienter une requete de plus pour une action qui ne le
-           concerne pas serait payer deux fois la lenteur de la borne. Si
-           l'envoi echoue, on le dit apres coup plutot que de l'avoir promis. */
-        prevenirService(question, { service: "commercial", surPlace: ici, mode: "vocal" })
-          .then((parti) => {
-            if (!parti && courant() && phrases.transmisEchec) setErreur(phrases.transmisEchec);
-          });
+        /* On n'ATTEND RIEN pour parler. Le visiteur est debout ; lui faire
+           patienter une requete de plus pour une action qui ne le concerne
+           pas serait payer deux fois la lenteur de la borne.
+
+           Le courriel, lui, patiente : une minute, le temps qu'on demande ou
+           joindre la personne et qu'elle reponde. C'est la seule facon qu'il
+           parte avec une adresse — il partait jusqu'ici avant meme que la
+           question soit posee. Son echec eventuel ne se dit donc plus ici :
+           il se dira au moment ou l'adresse est recue, qui est le seul moment
+           ou le visiteur attend quelque chose de nous. */
+        courrielRef.current.ouvrir(question, {
+          service: "commercial", surPlace: ici, mode: "vocal",
+        });
         /* On ouvre le champ de saisie plutot que d'attendre une adresse
            dictee. Une adresse epelee a voix haute revient fausse bien trop
            souvent, et une adresse fausse ne vaut pas mieux qu'aucune : le
@@ -428,7 +450,9 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
           return;
         }
         malEntenduRef.current = 0;
-        setErreur("Je n'arrive pas a vous entendre d'ici. Vous pouvez ecrire votre question a Isaac.");
+        setErreur(anglais
+          ? "I cannot hear you from here. You can type your question to Isaac."
+          : "Je n'arrive pas à vous entendre d'ici. Vous pouvez écrire votre question à Isaac.");
         setEtat(ETATS.PAUSE);
         return;
       }
@@ -448,7 +472,7 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
       setErreur(e.message);
       setEtat(ETATS.PAUSE);
     }
-  }, [dire, langue]);
+  }, [dire, langue, anglais]);
 
   /* Ce que le visiteur a ecrit. On complete le signalement deja parti, puis on
      reprend la conversation la ou elle s'etait arretee. */
@@ -458,9 +482,7 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     if (!propre || !demande) return false;
     contactDemandeRef.current = null;
     setContactDemande(null);
-    const parti = await prevenirService(demande, {
-      service: "commercial", surPlace: surPlace(), mode: "vocal", contact: propre,
-    });
+    const parti = await courrielRef.current.avecContact(propre);
     const phrases = relaisRef.current || {};
     const mot = parti ? phrases.contactRecu : phrases.transmisEchec;
     if (mot) {
@@ -488,6 +510,7 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     setErreur("");
     historiqueRef.current = [];
     besoinTransmisRef.current = null;
+    courrielRef.current.cloturer();
     contactDemandeRef.current = null;
     setContactDemande(null);
 
@@ -561,10 +584,34 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     enregistreurRef.current = null;
     lecteurRef.current = null;
     analyseRef.current = null;
+    /* La conversation se ferme : une demande qui attendait encore une adresse
+       part maintenant, sans elle. Mieux vaut un besoin sans adresse qu'un
+       besoin perdu. */
+    courrielRef.current.cloturer();
     contactDemandeRef.current = null;
     setContactDemande(null);
     setEtat(ETATS.ARRET);
   }, []);
+
+  /* Le garde-fou. Il INVALIDE le tour (`tourRef`) en plus d'annuler la
+     requete : sans cela, un appel qui reviendrait apres coup reprendrait le
+     fil, et le visiteur entendrait la reponse a une question qu'il a vue
+     abandonner. */
+  useEffect(() => {
+    if (etat !== ETATS.REFLECHIT || !attenteDepuis) return undefined;
+    const m = setTimeout(() => {
+      tourRef.current += 1;
+      if (requeteRef.current) { requeteRef.current.abort(); requeteRef.current = null; }
+      if (comblementRef.current) { comblementRef.current.couper(); comblementRef.current = null; }
+      setNiveau(0);
+      setAttenteDepuis(null);
+      setErreur(anglais
+        ? "The search did not complete. You can speak again."
+        : "La recherche n'a pas abouti. Vous pouvez reprendre la parole.");
+      setEtat(ETATS.PAUSE);
+    }, DELAI_TOUR);
+    return () => clearTimeout(m);
+  }, [etat, attenteDepuis, anglais]);
 
   useEffect(() => arreter, [arreter]);
 

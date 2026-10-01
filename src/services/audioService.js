@@ -23,7 +23,8 @@ const SYNTHESE = process.env.REACT_APP_AUDIO_SYNTHESE;
    sert à rien si le prénom ressort faux : c'est précisément le mot qui permet
    d'orienter la personne.
 
-   ⚠ Cette liste est un SEPTIÈME endroit où un membre de l'équipe se déclare.
+   ATTENTION : cette liste est un SEPTIÈME endroit où un membre de l'équipe se
+   déclare.
    Ajouter quelqu'un au back-office sans l'ajouter ici ne casse rien — son
    prénom sera simplement mal entendu, en silence. Voir le tableau des six
    autres dans A_FAIRE_AVANT_MISE_EN_PRODUCTION.
@@ -266,8 +267,62 @@ function enveloppeWav(echantillons, frequence) {
    alors des mots francais qui sonnent comme l'anglais entendu, ce qui est
    pire qu'une transcription vide — c'est du charabia qui a l'air d'une
    reponse. */
+/* UN APPEL QUI NE REPOND PAS DOIT FINIR PAR ECHOUER.
+
+   `fetch` n'a pas de delai. Si le service cesse de repondre en cours de
+   route, la promesse reste en suspens pour toujours : pas d'erreur, pas de
+   reponse, rien. La borne a ainsi affiche « Isaac cherche la reponse »
+   pendant 6977 secondes, le 01/10.
+
+   Les valeurs viennent de ce qu'on a mesure sur cette machine, doublees :
+   la reconnaissance rend en moins de dix secondes avec le modele medium, la
+   synthese est plus rapide encore. Large, parce qu'un delai trop court
+   renverrait un visiteur qui allait etre servi. */
+export const DELAI_TRANSCRIPTION = 120000;
+export const DELAI_SYNTHESE = 60000;
+
+/* Un `fetch` qui abandonne au bout de `delai`, avec un message qui dit ce
+   qui s'est passe plutot que « Failed to fetch ». */
+async function fetchAvecDelai(url, options, delai, quoi) {
+  const arret = new AbortController();
+  const minuterie = setTimeout(() => arret.abort(), delai);
+  try {
+    return await fetch(url, Object.assign({}, options, { signal: arret.signal }));
+  } catch (e) {
+    if (e && e.name === "AbortError") throw new Error(quoi);
+    throw e;
+  } finally {
+    clearTimeout(minuterie);
+  }
+}
+
+/* Ce que le visiteur lit quand la chaine audio tombe. Les deux langues, ou
+   la panne se raconte en francais a quelqu'un qui parle anglais. */
+const PANNES = {
+  fr: {
+    nonConfiguree: "La reconnaissance vocale n'est pas configurée sur cette borne.",
+    debit: "Trop de demandes en peu de temps. Patientez quelques secondes et réessayez.",
+    mauvaisLien: "La voix n'est pas disponible depuis ce lien. Ouvrez la borne par son adresse du réseau interne.",
+    indisponible: "La reconnaissance vocale est indisponible pour le moment.",
+    syntheseAbsente: "La synthèse vocale n'est pas configurée sur cette borne.",
+    syntheseEnPanne: "La synthèse vocale est indisponible pour le moment.",
+  },
+  en: {
+    nonConfiguree: "Speech recognition is not configured on this kiosk.",
+    debit: "Too many requests in a short time. Please wait a few seconds and try again.",
+    mauvaisLien: "The voice service is not available from this link. Please open the kiosk using its internal network address.",
+    indisponible: "Speech recognition is unavailable at the moment.",
+    syntheseAbsente: "Speech synthesis is not configured on this kiosk.",
+    syntheseEnPanne: "Speech synthesis is unavailable at the moment.",
+  },
+};
+function panne(langue, cle) {
+  const table = String(langue || "fr").toLowerCase().startsWith("en") ? PANNES.en : PANNES.fr;
+  return new Error(table[cle]);
+}
+
 export async function transcrire(blobAudio, { strict = false, langue = "fr" } = {}) {
-  if (!TRANSCRIPTION) throw new Error("La reconnaissance vocale n'est pas configurée sur cette borne.");
+  if (!TRANSCRIPTION) throw panne(langue, "nonConfiguree");
 
   const wav = await versWav16k(blobAudio);
   const formulaire = new FormData();
@@ -280,7 +335,10 @@ export async function transcrire(blobAudio, { strict = false, langue = "fr" } = 
     "&output=json&vad_filter=true&initial_prompt=" +
     encodeURIComponent(amorceDe(langue));
 
-  const reponse = await fetch(url, { method: "POST", body: formulaire });
+  const reponse = await fetchAvecDelai(url, { method: "POST", body: formulaire },
+    DELAI_TRANSCRIPTION, String(langue || "fr").toLowerCase().startsWith("en")
+      ? "Speech recognition did not respond. You can try again."
+      : "La reconnaissance vocale n'a pas répondu. Vous pouvez réessayer.");
   if (!reponse.ok) {
     /* Un 404 ne veut pas dire la meme chose qu'une panne : il signifie que la
        chaine audio n'est pas servie sur cette adresse. Le cas s'est produit en
@@ -290,14 +348,12 @@ export async function transcrire(blobAudio, { strict = false, langue = "fr" } = 
       /* Trop de requetes : la surface publique limite le debit. Ce n'est pas
          une panne, et le message doit le dire pour ne pas envoyer chercher
          ailleurs. */
-      throw new Error("Trop de demandes en peu de temps. Patientez quelques secondes et reessayez.");
+      throw panne(langue, "debit");
     }
     if (reponse.status === 404) {
-      throw new Error(
-        "La voix n'est pas disponible depuis ce lien. Ouvrez la borne par son adresse du reseau interne."
-      );
+      throw panne(langue, "mauvaisLien");
     }
-    throw new Error("La reconnaissance vocale est indisponible pour le moment.");
+    throw panne(langue, "indisponible");
   }
 
   const donnees = await reponse.json().catch(() => ({}));
@@ -329,11 +385,11 @@ export async function transcrire(blobAudio, { strict = false, langue = "fr" } = 
    d'attente : ralentir une reponse de trente pour cent, c'est trente pour cent
    d'attente en plus pour quelqu'un qui est debout. */
 export async function synthetiser(texte, reglages) {
-  if (!SYNTHESE) throw new Error("La synthèse vocale n'est pas configurée sur cette borne.");
+  if (!SYNTHESE) throw panne(reglages && reglages.langue, "syntheseAbsente");
   const propre = Array.isArray(texte) ? "" : (texte || "").trim();
   if (!propre && !Array.isArray(texte)) return null;
 
-  const reponse = await fetch(SYNTHESE, {
+  const reponse = await fetchAvecDelai(SYNTHESE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     /* Le texte part tel quel : c'est le service qui porte le dictionnaire de
@@ -348,8 +404,10 @@ export async function synthetiser(texte, reglages) {
         ? { segments: texte }
         : { texte: propre, ...(reglages || {}) }
     ),
-  });
-  if (!reponse.ok) throw new Error("La synthèse vocale est indisponible pour le moment.");
+  }, DELAI_SYNTHESE, String((reglages && reglages.langue) || "fr").toLowerCase().startsWith("en")
+    ? "Speech synthesis did not respond. You can try again."
+    : "La synthèse vocale n'a pas répondu. Vous pouvez réessayer.");
+  if (!reponse.ok) throw panne(reglages && reglages.langue, "syntheseEnPanne");
 
   return URL.createObjectURL(await reponse.blob());
 }
