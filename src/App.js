@@ -8,6 +8,7 @@ import { askIsaac, escalateToStaff, prevenirService } from "./services/aiService
 import { surPlace } from "./services/presence";
 import { enregistreDuree } from "./services/attente";
 import { contactDit, relaisCommercial, relaisNecessaire } from "./services/relaisHumain";
+import { creerRelaisDiffere } from "./services/relaisDiffere";
 import { useLanguage } from "./i18n";
 
 const TYPE_CHAR_DELAY_MS = 18;
@@ -52,6 +53,12 @@ function App() {
      une. Elle evite d'envoyer un courriel par question a quelqu'un qui insiste,
      et sert d'ancrage quand le visiteur donne son numero deux phrases plus loin. */
   const commercialRef = useRef(null);
+  /* Le courriel au service commercial attend l'adresse avant de partir — une
+     minute, pas davantage. Voir relaisDiffere.js : le commercial recevait
+     jusqu'ici une demande marquee « Pour le recontacter : non communique »,
+     parce qu'elle partait avant qu'on ait pu poser la question. */
+  const relaisRef = useRef(null);
+  if (!relaisRef.current) relaisRef.current = creerRelaisDiffere(prevenirService);
   /* La demande dont on attend une adresse, ou null : elle affiche le champ. */
   const [contactDemande, setContactDemande] = useState(null);
   /* Trois etats possibles du fil : vivant, bientot efface, efface. Le dernier
@@ -115,6 +122,10 @@ function App() {
        sans cette remise a zero, le service ne serait plus prevenu du tout, et
        un numero dicte irait completer le besoin de quelqu'un d'autre. */
     commercialRef.current = null;
+    /* On VIDE avant d'oublier. Une demande qui attendait encore une adresse
+       doit partir : la clore en silence ferait disparaitre le besoin que tout
+       ce mecanisme existe pour faire remonter. */
+    relaisRef.current.cloturer();
     setContactDemande(null);
     setFinProche(false);
   }
@@ -213,9 +224,7 @@ function App() {
       const contact = contactDit(cleanMessage);
       if (contact) {
         setContactDemande(null);
-        const parti = await prevenirService(commercialRef.current, {
-          service: "commercial", surPlace: surPlace(), mode: "chat", contact,
-        });
+        const parti = await relaisRef.current.avecContact(contact);
         await typeOutAnswer(t(parti ? "chat.commercial.contact" : "chat.escalateFailed"));
         return;
       }
@@ -269,13 +278,15 @@ function App() {
     if (relaisCommercial(cleanMessage, answer) && !commercialRef.current) {
       commercialRef.current = cleanMessage;
       const ici = surPlace();
-      const parti = await prevenirService(cleanMessage, {
+      /* On OUVRE l'attente au lieu d'envoyer : le courriel part avec
+         l'adresse si elle arrive dans la minute, sans elle sinon, et une
+         seule fois dans les deux cas. Le visiteur, lui, n'attend rien —
+         la reponse ci-dessous s'affiche tout de suite. */
+      relaisRef.current.ouvrir(cleanMessage, {
         service: "commercial", surPlace: ici, mode: "chat",
       });
-      await typeOutAnswer(
-        t(parti ? (ici ? "chat.commercial.surplace" : "chat.commercial.adistance") : "chat.escalateFailed")
-      );
-      if (parti) setContactDemande(cleanMessage);
+      await typeOutAnswer(t(ici ? "chat.commercial.surplace" : "chat.commercial.adistance"));
+      setContactDemande(cleanMessage);
       return;
     }
 
@@ -291,9 +302,7 @@ function App() {
     const demande = contactDemande || commercialRef.current;
     if (!valeur || !demande) return false;
     setContactDemande(null);
-    const parti = await prevenirService(demande, {
-      service: "commercial", surPlace: surPlace(), mode: "chat", contact: valeur,
-    });
+    const parti = await relaisRef.current.avecContact(valeur);
     await typeOutAnswer(t(parti ? "chat.commercial.contact" : "chat.escalateFailed"));
     return parti;
   }
