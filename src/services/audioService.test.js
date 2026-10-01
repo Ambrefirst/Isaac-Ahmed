@@ -98,12 +98,34 @@ describe("chaine audio de la borne", () => {
       ["Où se trouve le détestateur de Libreville ?", /datacenter/],
       ["Le data santé de Douala", /datacenter/],
       ["Le datacenter de grand bassam", /Grand-Bassam/],
-      ["rendez-vous avec monsieur Aubame", /Obame/],
-      ["madame Nguma au service technique", /Nguema/],
       ["certifié tier 3", /Tier III/],
     ];
     test.each(cas)("%s", (entree, attendu) => {
       expect(service.corrigeTranscription(entree)).toMatch(attendu);
+    });
+
+    /* LES NOMS DE PERSONNES NE SONT PLUS CORRIGES — retrait du 01/10.
+
+       « Aubame » devenait « Obame » et « Nguma » devenait « Nguema ». Ces
+       deux regles imposaient des noms qui ne figurent pas a l'organigramme.
+       Le meme jour, un visiteur a dit « Obone » et la borne a ecrit
+       « Obame », parce qu'« Obame » venait d'etre ajoute a l'amorce : lui
+       apprendre un nom lui a fait preferer celui-la.
+
+       Ecorcher le nom de quelqu'un a un accueil est pire que de l'ecrire
+       comme il sonne. Corriger un nom propre n'est legitime que VERS un nom
+       qu'on sait exister ici — et l'annuaire ne connait ni l'un ni l'autre.
+
+       Ces deux cas restent donc ecrits, en negatif : si quelqu'un remet une
+       correction de nom sans que le nom soit a l'organigramme, l'essai le
+       dira. */
+    const nomsLaissesTels = [
+      "rendez-vous avec monsieur Aubame",
+      "madame Nguma au service technique",
+      "je viens voir Obone",
+    ];
+    test.each(nomsLaissesTels)("le nom n'est pas remplace : %s", (phrase) => {
+      expect(service.corrigeTranscription(phrase)).toBe(phrase);
     });
 
     test("une phrase correcte n'est pas abimee", () => {

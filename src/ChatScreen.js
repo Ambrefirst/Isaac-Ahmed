@@ -139,7 +139,7 @@ const SUGGESTIONS = ["chat.suggest.hours", "chat.suggest.datacenter", "chat.sugg
 
 export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, contactDemande, contactPossible, finProche, sessionFinie, onResterLa, onTerminer, onContact, onPasserContact, onRouvrirContact, onKeepWaiting, onEscalate, onSend, onMenu }) {
   const [input, setInput] = useState("");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const scrollRef = useRef(null);
 
   /* --- voix ---------------------------------------------------------------
@@ -169,7 +169,7 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
       setTranscription(true);
       try {
         const blob = await enregistreurRef.current.arreter();
-        const texte = await transcrire(blob);
+        const texte = await transcrire(blob, { langue: language });
         /* La dictee remplit le champ de saisie, et rien de plus. C'est tout ce
            qu'on lui demande : ecrire a la place du clavier. L'envoi reste un
            geste du visiteur, sur la fleche, comme pour un texte tape.

@@ -30,7 +30,7 @@ const SYNTHESE = process.env.REACT_APP_AUDIO_SYNTHESE;
 
    Whisper n'en retient qu'environ deux cent vingt mots : au-delà, le début est
    tronqué. On reste donc volontairement court. */
-const AMORCE =
+const AMORCE_FR =
   "Borne d'accueil de ST Digital, à Libreville. " +
   "Vocabulaire attendu : datacenter, Nkok, Libreville, Douala, Grand-Bassam, " +
   "Tier III, cloud souverain, colocation, hébergement, infogérance, sauvegarde, " +
@@ -46,6 +46,22 @@ const AMORCE =
      nom du VISITEUR, lui, n'a pas à être transcrit : Isaac ne recueille plus
      d'identité, c'est la rubrique Rendez-vous qui s'en charge. */
   "Prénoms de l'équipe : Rodrigue, Marleth, Olivia, Doviane, Daniel, Aminta.";
+
+/* La meme chose en anglais. Une amorce francaise sur un visiteur anglophone
+   n'aide pas : elle oriente la reconnaissance vers des mots qui ne seront pas
+   prononces, et le vocabulaire metier — qui est la seule raison d'etre de
+   cette liste — n'y figure plus dans la bonne langue. */
+const AMORCE_EN =
+  "ST Digital reception kiosk, in Libreville. " +
+  "Expected vocabulary: datacenter, Nkok, Libreville, Douala, Grand-Bassam, " +
+  "Tier III, sovereign cloud, colocation, hosting, managed services, backup, " +
+  "connectivity, rack, quote, pricing, appointment, " +
+  "invitation code, open day, Cofina building, Boulevard Triomphal. " +
+  "Team first names: Rodrigue, Marleth, Olivia, Doviane, Daniel, Aminta.";
+
+function amorceDe(langue) {
+  return String(langue || "fr").toLowerCase().startsWith("en") ? AMORCE_EN : AMORCE_FR;
+}
 
 /* Ce que la reconnaissance entend mal sur le vocabulaire du site, et que
    l'amorce ne suffit pas à corriger. C'est le miroir exact du dictionnaire de
@@ -245,7 +261,12 @@ function enveloppeWav(echantillons, frequence) {
 
 /* --------------------------------------------------------- reconnaissance */
 
-export async function transcrire(blobAudio, { strict = false } = {}) {
+/* `langue` choisit la langue de reconnaissance ET l'amorce. Figee sur le
+   francais, Whisper forcait le francais sur une phrase anglaise : il rendait
+   alors des mots francais qui sonnent comme l'anglais entendu, ce qui est
+   pire qu'une transcription vide — c'est du charabia qui a l'air d'une
+   reponse. */
+export async function transcrire(blobAudio, { strict = false, langue = "fr" } = {}) {
   if (!TRANSCRIPTION) throw new Error("La reconnaissance vocale n'est pas configurée sur cette borne.");
 
   const wav = await versWav16k(blobAudio);
@@ -254,8 +275,10 @@ export async function transcrire(blobAudio, { strict = false } = {}) {
 
   const url =
     TRANSCRIPTION +
-    "?task=transcribe&language=fr&output=json&vad_filter=true&initial_prompt=" +
-    encodeURIComponent(AMORCE);
+    "?task=transcribe&language=" +
+    (String(langue || "fr").toLowerCase().startsWith("en") ? "en" : "fr") +
+    "&output=json&vad_filter=true&initial_prompt=" +
+    encodeURIComponent(amorceDe(langue));
 
   const reponse = await fetch(url, { method: "POST", body: formulaire });
   if (!reponse.ok) {

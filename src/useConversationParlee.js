@@ -117,7 +117,7 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     if (!texte || !vivantRef.current) return;
     setEtat(ETATS.PARLE);
     try {
-      const url = await synthetiser(texte);
+      const url = await synthetiser(texte, { langue });
       if (!url || !vivantRef.current) return;
       await new Promise((resolve) => {
         const audio = new Audio(url);
@@ -178,7 +178,10 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
     } catch (e) {
       /* Isaac muet n'arrete pas la conversation : on passe a l'ecoute. */
     }
-  }, []);
+    /* `langue` est une dependance reelle : sans elle, cette fonction garderait
+       la langue du premier rendu, et un visiteur qui bascule en anglais
+       continuerait d'entendre la voix francaise. */
+  }, [langue]);
 
   /* --- ecouter, et rendre la parole au silence --------------------------- */
   const ecouter = useCallback(async () => {
@@ -297,7 +300,7 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
 
       let question;
       try {
-        question = await transcrire(blob);
+        question = await transcrire(blob, { langue });
       } catch (e) {
         comblement.couper();
         comblementRef.current = null;

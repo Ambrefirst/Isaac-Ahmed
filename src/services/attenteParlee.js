@@ -186,7 +186,7 @@ export async function prepareAttente(langue) {
 
   const fabrique = async (texte) => {
     try {
-      return await synthetiser(texte, ATTENTE_REGLAGES);
+      return await synthetiser(texte, { ...ATTENTE_REGLAGES, langue });
     } catch (e) {
       return null;
     }
