@@ -596,3 +596,70 @@ couche de réponses directes.
 Elle devra alors être jouée dans les deux sens, et le rapport devra indiquer
 quelle question a été servie par quel chemin. Sans cela, on présenterait un
 score qui ne mesure pas ce qu'il prétend mesurer.
+
+---
+
+## Reconnaissance vocale : bascule de `small` vers `medium` — 01/10/2026
+
+### Ce qui a decide
+
+Deux enregistrements reels, dictes au telephone par la stagiaire. Pas de voix
+de synthese : un banc construit en faisant parler Piper pour que Whisper
+l'ecoute ne mesure que la boucle, pas la realite.
+
+**Enregistrement A — demande d'hebergement (20,4 s)**
+
+| modele | transcription | temps |
+|---|---|---|
+| `small` | « j'aimerais vraiment **liberer ces** ST Digital… **en mettre** en relation… plus **posement** » | 3,5 s |
+| `medium` | « j'aimerais vraiment **liberer** ST Digital… **me mettre** en relation… **proposement** » | 9,9 s |
+
+Match nul. Les deux ratent « l'**heberger** » et ecrivent « liberer ».
+
+**Enregistrement B — question sur l'IPv4/IPv6 et le datacenter (14,4 s)**
+
+| modele | transcription | temps |
+|---|---|---|
+| `small` | « Je sais **pour vous qu'on essaie** tout ce qui concerne le IPv4, IPv6… sur **notre** datacenter, est-ce que vous **venez** nous donner ? » | 3,3 s |
+| `medium` | « Je sais **que vous connaissez** tout ce qui concerne le IPv4, IPv6… sur **votre** datacenter. Est-ce que vous **pourriez** nous donner ? » | 8,9 s |
+
+`medium` l'emporte nettement. « pour vous qu'on essaie » n'a aucun sens, et
+« notre » au lieu de « votre » inverse le proprietaire du datacenter.
+
+### L'amorce est saturee
+
+Enrichie de `heberger`, puis d'`IPv4`, `IPv6`, `adressage IP`, `bande
+passante` : **aucun changement**, sur aucun des deux modeles, sur aucun des
+deux enregistrements. Ce levier est au bout de ce qu'il peut donner ; il reste
+utile pour le vocabulaire qu'il couvre deja, il ne reglera pas davantage.
+
+### Le cout, et ce qui le rend acceptable
+
+| audio | `small` | `medium` |
+|---|---|---|
+| 5,3 s | 1,9 s | 5,6 s |
+| 14,4 s | 3,3 s | 8,9 s |
+| 20,4 s | 3,5 s | 9,4 s |
+
+Environ trois fois plus lent. Ce cout n'etait pas tenable tant que l'attente
+etait muette ; il l'est depuis que la borne la comble — voir `attenteParlee.js`.
+Le visiteur entend « Hum… », « Je cherche… » pendant que le modele travaille,
+au lieu de regarder une sphere silencieuse.
+
+### Revenir en arriere
+
+Le conteneur precedent est conserve, arrete, sous le nom
+`isaac-whisper-small-avant-bascule`. Pour revenir :
+
+```
+docker stop isaac-whisper && docker rm isaac-whisper
+docker rename isaac-whisper-small-avant-bascule isaac-whisper
+docker start isaac-whisper
+```
+
+### Ce que la mesure ne dit pas
+
+Deux enregistrements ne font pas une statistique. `medium` gagne clairement sur
+l'un et fait match nul sur l'autre : c'est assez pour basculer, pas pour
+affirmer un gain general. Si une phrase lui resiste la ou `small` reussissait,
+elle doit etre consignee ici.

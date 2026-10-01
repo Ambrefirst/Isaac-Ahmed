@@ -36,8 +36,16 @@ const AMORCE =
   "Tier III, cloud souverain, colocation, hébergement, infogérance, sauvegarde, " +
   "connectivité, baie, rack, devis, cotation, tarif, rendez-vous, " +
   "code d'invitation, portes ouvertes, immeuble Cofina, boulevard Triomphal. " +
-  "Prénoms de l'équipe : Rodrigue, Marleth, Olivia, Doviane, Daniel, Aminta, " +
-  "Obame, Nguema.";
+  /* LA LISTE DE NOMS EST COURTE, ET FERMÉE À L'ORGANIGRAMME. Chaque nom ajouté
+     ici rend les noms voisins plus probables : le 01/10, un visiteur a dit
+     « Obone » et la reconnaissance a écrit « Obame », parce qu'« Obame »
+     venait d'être ajouté. Écorcher le nom de quelqu'un à un accueil est pire
+     que de l'écrire comme il sonne.
+     On n'y met donc que les prénoms du personnel — ceux qu'un visiteur
+     prononce pour demander qui il vient voir, et qui servent à l'orienter. Le
+     nom du VISITEUR, lui, n'a pas à être transcrit : Isaac ne recueille plus
+     d'identité, c'est la rubrique Rendez-vous qui s'en charge. */
+  "Prénoms de l'équipe : Rodrigue, Marleth, Olivia, Doviane, Daniel, Aminta.";
 
 /* Ce que la reconnaissance entend mal sur le vocabulaire du site, et que
    l'amorce ne suffit pas à corriger. C'est le miroir exact du dictionnaire de
@@ -61,8 +69,11 @@ const CORRECTIONS = [
      rien, en silence. */
   [/\bdata\s+sant[ée]/gi, "datacenter"],
   [/\bgrand\s+bass?[ea]m?\b/gi, "Grand-Bassam"],
-  [/\bAubame\b/g, "Obame"],
-  [/\bNguma\b/gi, "Nguema"],
+  /* « Aubame » → « Obame » et « Nguma » → « Nguema » ont été retirés le
+     01/10, pour la même raison que les prénoms de l'amorce : ces deux noms ne
+     figurent pas à l'organigramme, et les imposer revient à écrire le nom de
+     quelqu'un d'autre à la place de celui qu'on a entendu. Corriger un nom
+     propre n'est légitime que vers un nom qu'on sait exister ici. */
   [/\btier\s*(?:3|iii)\b/gi, "Tier III"],
 ];
 
