@@ -1,0 +1,26 @@
+# Certificat auto-signe de la borne.
+#
+# Les navigateurs ne donnent l'acces au microphone qu'en HTTPS : sans ce
+# certificat, la conversation parlee ne demarre pas du tout.
+#
+# Mettez dans [alt_names] TOUS les noms et adresses par lesquels la borne sera
+# appelee. Un nom absent d'ici produit un avertissement supplementaire, meme
+# avec le certificat installe.
+
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+CN = isaac-app.local
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment, digitalSignature
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+IP.1 = 192.0.2.10
+DNS.1 = NOM-PUBLIC-DE-LA-BORNE
+DNS.2 = localhost

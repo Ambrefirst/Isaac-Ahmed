@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Isaac Ahmed — Disponibilité</title>
+<style>
+  :root {
+    --navy: #1A4D7A; --navy-deep: #0f3355; --blue: #2E7AB5; --light-blue: #7AAFC9; --pale: #C8DCF0;
+    --bg: #0a1420; --panel: #142B42; --panel-border: #24405a; --text: #eef4fa; --text-muted: #91a8bf;
+    --ok: #4fce8e; --bad: #ef7a7a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(120% 120% at 20% 10%, var(--navy) 0%, var(--navy-deep) 45%, #081b2e 100%); font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: var(--text); padding: 24px; }
+  .card { width: 100%; max-width: 440px; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 16px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  .card img { height: 40px; margin-bottom: 18px; }
+  h1 { font-size: 1.2rem; margin: 0 0 6px; }
+  p.lead { color: var(--text-muted); font-size: .88rem; margin: 0 0 22px; }
+  .detail { background: #0c1826; border-radius: 10px; padding: 14px 16px; font-size: .85rem; margin-bottom: 22px; line-height: 1.7; }
+  .detail b { color: var(--pale); }
+  textarea { width: 100%; min-height: 80px; padding: 12px; border-radius: 9px; border: 1px solid var(--panel-border); background: #0c1826; color: var(--text); font-size: .9rem; font-family: inherit; margin-bottom: 16px; resize: vertical; }
+  textarea:focus { outline: none; border-color: var(--blue); }
+  button.primary { width: 100%; border: 0; border-radius: 9px; padding: 14px; font-weight: 700; font-size: .95rem; cursor: pointer; color: #fff; }
+  button.accept { background: linear-gradient(135deg, var(--blue), var(--navy)); }
+  button.decline { background: linear-gradient(135deg, #9b6cf0, #5a3ea8); }
+  button.primary:disabled { opacity: .6; cursor: default; }
+  .status-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 16px; font-size: 1.6rem; }
+  .status-icon.ok { background: rgba(79,206,142,.18); color: var(--ok); }
+  .status-icon.bad { background: rgba(239,122,122,.18); color: var(--bad); }
+  .error { color: var(--bad); text-align: center; padding: 20px 0; }
+  .muted { color: var(--text-muted); font-size: .82rem; }
+</style>
+</head>
+<body>
+<div class="card" id="card">Chargement…</div>
+
+<script>
+(function () {
+  const WEBHOOK = window.location.origin + "/webhook/isaac-respond";
+  const card = document.getElementById("card");
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+  const action = params.get("action") || "accept";
+
+  async function callRdv(payload) {
+    const res = await fetch(WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+    return data;
+  }
+
+  const BRAND = `<div style="margin-bottom:18px;text-align:center;"><img src="/assets/logo-st-digital.png" alt="ST Digital" style="height:44px;mix-blend-mode:screen;" /></div>`;
+
+  function renderError(msg) {
+    card.innerHTML = `${BRAND}<div class="error">${msg}</div>`;
+  }
+
+  function renderDone(available, name) {
+    card.innerHTML = `${BRAND}
+      <div class="status-icon ${available ? "ok" : "bad"}">${available ? "✓" : "✕"}</div>
+      <h1>Merci${name ? ", " + name : ""} !</h1>
+      <p class="lead">Votre réponse a bien été enregistrée${available ? " — vous avez indiqué être disponible." : " — vous avez indiqué ne pas être disponible."}</p>
+      <p class="muted">Vous pouvez fermer cette page.</p>`;
+  }
+
+  function renderForm(data) {
+    const isAccept = action === "accept";
+    card.innerHTML = `${BRAND}
+      <h1>${isAccept ? "Confirmer votre disponibilité" : "Signaler votre indisponibilité"}</h1>
+      <p class="lead">Bonjour ${data.name || ""}, une demande de rendez-vous concerne votre service.</p>
+      <div class="detail">
+        <div><b>Visiteur :</b> ${data.visitor || ""}${data.company ? " (" + data.company + ")" : ""}</div>
+        <div><b>Date :</b> ${data.date || "-"} ${data.time || ""}</div>
+        <div><b>Motif :</b> ${data.purpose || ""}</div>
+      </div>
+      ${data.alreadyResponded ? `<p class="muted" style="margin-bottom:16px;">Vous avez déjà répondu (${data.available ? "disponible" : "indisponible"}). Vous pouvez modifier votre réponse ci-dessous.</p>` : ""}
+      ${!isAccept ? `<textarea id="reasonInput" placeholder="Raison de votre indisponibilité (optionnel)"></textarea>` : ""}
+      <button class="primary ${isAccept ? "accept" : "decline"}" id="submitBtn">${isAccept ? "Je confirme être disponible" : "Je confirme ne pas être disponible"}</button>
+    `;
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.textContent = "Envoi…";
+      try {
+        const reason = isAccept ? "" : (document.getElementById("reasonInput") || {}).value || "";
+        const res = await callRdv({ event: "staff_respond", token, available: isAccept, reason });
+        renderDone(isAccept, res.name);
+      } catch (e) {
+        renderError("Erreur : " + e.message);
+      }
+    });
+  }
+
+  if (!token) {
+    renderError("Lien invalide.");
+  } else {
+    callRdv({ event: "staff_get_request", token }).then(renderForm).catch((e) => renderError(e.message));
+  }
+})();
+</script>
+</body>
+</html>

@@ -154,7 +154,16 @@ routeur*.js
 rdv_*.json
 chat_*.json
 
-# Configuration nginx de la tour : elle donne la carte des services internes,
-# les ports et les adresses du reseau prive. Le depot est public.
+# Configuration nginx de la tour. Les copies de travail nommaient la machine
+# et le reseau prive : elles restent hors du depot, qui est public. La version
+# d'installation, dans infra/, ne connait que 127.0.0.1 et fait exception.
 docs/code/nginx_default.conf
 *default.conf
+!infra/nginx/default.conf
+
+# Les trois fichiers d'identifiants lus par les noeuds n8n a l'execution.
+# Ils vivent dans le volume de n8n, sur la machine, et nulle part ailleurs.
+# Le depot n'en porte que la forme : infra/n8n/*.exemple.json.
+isaac-pg.json
+isaac-comptes.json
+isaac-site.json
