@@ -4,6 +4,10 @@
 
 Assistant IA multimodal pour automation de gestion des rendez-vous visiteurs : chat conversationnel (RAG), réservation QR-code, notification hôte, self-hosted (Ollama + n8n).
 
+**Pour remonter Isaac sur une autre machine : [INSTALLATION.md](INSTALLATION.md).**
+Tout y est — l'interface, les six flux n8n, la configuration nginx, le serveur de
+synthèse vocale et le schéma des bases sont dans ce dépôt, sous `infra/`.
+
 ## Architecture
 
 ```
@@ -141,7 +145,7 @@ accueil-app/
 
 ### Network
 - **Tailscale** — VPN mesh for secure backend access. **Always use the MagicDNS name**, never a
-  hardcoded tailnet IP: the tower's address changed from 100.71.79.97 to 100.71.79.98 on 27/09/2026
+  hardcoded tailnet IP: the tower's address changed on 27/09/2026
   and every hardcoded link broke.
 - **Funnel** — Live. Serves port 8444 publicly: visitor app, chat, team-response page.
   The admin panel and the appointment router return 404 on that surface (closed 21/09/2026).
@@ -206,7 +210,7 @@ See `docs/05_Documentation_deploiement.docx` for:
 npm test
 
 # Manual end-to-end
-1. Open http://localhost:3000 (or https://aminta-hp-elitedesk-800-g2-twr.tail51ab0e.ts.net:8443 on the tailnet)
+1. Open http://localhost:3000 (or https://NOM-PUBLIC-DE-LA-BORNE:8443 on the tailnet)
 2. Chat with Isaac (should answer from RAG KB)
 3. Book appointment (creates JSON record on tower)
 4. Confirm as admin → QR code generated + email sent

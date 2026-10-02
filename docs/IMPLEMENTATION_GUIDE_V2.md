@@ -63,7 +63,7 @@ docs/
 
 #### 1.1 Configurer OAuth Microsoft 365 dans n8n UI
 
-1. Ouvrir n8n interface web : `http://100.71.79.97:5678/`
+1. Ouvrir n8n interface web : `http://ADRESSE-DE-LA-TOUR:5678/`
 2. Menu "Credentials" → "Create new"
 3. Type : "Microsoft 365 Outlook"
 4. Connexion OAuth :
@@ -327,9 +327,9 @@ Expected: [ { date: "2026-09-13", time: "14:00", available: true }, ... ]
 
 ```
 # Webhooks - UNCHANGED (mais vérifier qu'ils pointent vers la tour v2)
-REACT_APP_N8N_APPOINTMENT_WEBHOOK=http://100.71.79.97:5678/webhook/isaac-rdv
-REACT_APP_N8N_APPOINTMENTS_LOOKUP_WEBHOOK=http://100.71.79.97:5678/webhook/isaac-rdv
-REACT_APP_N8N_APPOINTMENT_CANCEL_WEBHOOK=http://100.71.79.97:5678/webhook/isaac-rdv
+REACT_APP_N8N_APPOINTMENT_WEBHOOK=http://ADRESSE-DE-LA-TOUR:5678/webhook/isaac-rdv
+REACT_APP_N8N_APPOINTMENTS_LOOKUP_WEBHOOK=http://ADRESSE-DE-LA-TOUR:5678/webhook/isaac-rdv
+REACT_APP_N8N_APPOINTMENT_CANCEL_WEBHOOK=http://ADRESSE-DE-LA-TOUR:5678/webhook/isaac-rdv
 
 # CRM source (NOUVEAU)
 REACT_APP_CRM_SOURCE=file

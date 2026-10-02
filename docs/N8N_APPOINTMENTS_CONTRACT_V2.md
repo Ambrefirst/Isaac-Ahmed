@@ -3,7 +3,7 @@
 **Version** : 2.0  
 **Date** : 2026-09-09  
 **Architecture** : Tour auto-hébergée, Tailscale, Docker  
-**Workflow** : `Isaac - Rendez-vous` (`http://100.71.79.97:5678/webhook/isaac-rdv`)
+**Workflow** : `Isaac - Rendez-vous` (`http://ADRESSE-DE-LA-TOUR:5678/webhook/isaac-rdv`)
 
 ---
 
@@ -500,9 +500,9 @@ Visitor confirmation status : En attente
 
 ```
 # Webhooks (unchanged)
-REACT_APP_N8N_APPOINTMENT_WEBHOOK=http://100.71.79.97:5678/webhook/isaac-rdv
-REACT_APP_N8N_APPOINTMENTS_LOOKUP_WEBHOOK=http://100.71.79.97:5678/webhook/isaac-rdv
-REACT_APP_N8N_APPOINTMENT_CANCEL_WEBHOOK=http://100.71.79.97:5678/webhook/isaac-rdv
+REACT_APP_N8N_APPOINTMENT_WEBHOOK=http://ADRESSE-DE-LA-TOUR:5678/webhook/isaac-rdv
+REACT_APP_N8N_APPOINTMENTS_LOOKUP_WEBHOOK=http://ADRESSE-DE-LA-TOUR:5678/webhook/isaac-rdv
+REACT_APP_N8N_APPOINTMENT_CANCEL_WEBHOOK=http://ADRESSE-DE-LA-TOUR:5678/webhook/isaac-rdv
 
 # CRM source (new)
 REACT_APP_CRM_SOURCE=file

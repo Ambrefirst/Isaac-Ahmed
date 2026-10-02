@@ -2,7 +2,7 @@
 
 **Date d'exécution :** 21 septembre 2026, quatre passages successifs.
 **Environnement :** tour auto-hébergée, workflow n8n `Isaac - Chat`, Ollama `qwen2.5:7b-instruct-q4_K_M`, base vectorielle en mémoire réindexée avant chaque passage.
-**Endpoint :** `POST http://100.71.79.97:5678/webhook/isaac`, événement `visitor_question`.
+**Endpoint :** `POST http://ADRESSE-DE-LA-TOUR:5678/webhook/isaac`, événement `visitor_question`.
 **Méthode :** un `sessionId` distinct par question, pour éviter toute contamination de contexte. Questions et critères repris de `JEU_20_QUESTIONS_REFERENCE.md`.
 
 > Ces passages remplacent celui du 24/08/2026, exécuté contre l'ancien backend n8n.cloud et avant la correction du bug RAG. Les critères de validation restent ceux proposés par la stagiaire et **ne sont pas validés formellement par la tutrice**.

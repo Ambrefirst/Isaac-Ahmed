@@ -2,7 +2,7 @@
 
 ## Architecture (mise à jour du 04/09/2026 — migration vers la tour auto-hébergée)
 
-`REACT_APP_N8N_NOTIFICATION_WEBHOOK` pointe vers `http://100.71.79.97:5678/webhook/isaac-rdv` — le webhook du workflow **"Isaac - Rendez-vous"**, auto-hébergé sur la tour, routé en interne selon le champ `event` (`visitor_arrival_confirmed` pour cette notification). La recherche de l'hôte se fait dans `hosts.json` (fichier, pas de Data Table — voir `N8N_APPOINTMENTS_CONTRACT.md` pour la justification) ; si l'hôte n'y figure pas, la notification part vers l'adresse d'accueil générique en secours (le message de réponse au frontend le précise).
+`REACT_APP_N8N_NOTIFICATION_WEBHOOK` pointe vers `http://ADRESSE-DE-LA-TOUR:5678/webhook/isaac-rdv` — le webhook du workflow **"Isaac - Rendez-vous"**, auto-hébergé sur la tour, routé en interne selon le champ `event` (`visitor_arrival_confirmed` pour cette notification). La recherche de l'hôte se fait dans `hosts.json` (fichier, pas de Data Table — voir `N8N_APPOINTMENTS_CONTRACT.md` pour la justification) ; si l'hôte n'y figure pas, la notification part vers l'adresse d'accueil générique en secours (le message de réponse au frontend le précise).
 
 ✅ **Statut au 04/09/2026 : testé de bout en bout avec un envoi réel confirmé (email reçu et vérifié par la stagiaire).** Canal SMTP = Gmail personnel + mot de passe d'application (voir ci-dessous), pas Outlook/Teams. Best-effort (`onError: continueRegularOutput`) : un échec d'envoi ne bloque jamais la réponse au frontend.
 

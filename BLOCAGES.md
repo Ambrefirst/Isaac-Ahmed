@@ -76,7 +76,7 @@ Projet Isaac Ahmed (reception-kiosk app) - Livraison M1 avant 23/09/2026.
 
 **Solution Appliquée:**
 - Configuré Tailscale Funnel avec flag `--bg` pour utiliser port alternatif
-- Funnel accessible sur: `https://aminta-hp-elitedesk-800-g2-twr.tail51ab0e.ts.net/`
+- Funnel accessible sur: `https://NOM-PUBLIC-DE-LA-BORNE/`
 
 **Résultat :** Public access restauré et validé
 
