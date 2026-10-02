@@ -47,35 +47,30 @@ import { synthetiser } from "./audioService";
 /* Ecrites en PLUSIEURS PHRASES COURTES, et c'est volontaire : le silence ne
    s'insere qu'entre deux phrases. « Hum, un instant je vous prie » d'un seul
    tenant ne laisse aucun endroit ou respirer, quel que soit le reglage. */
-/* LE HUM EST UN SON, PAS UN MOT — et Piper lit ce qu'on lui ecrit.
+/* PAS DE « HUM ». PIPER LIT CE QU'ON LUI ECRIT, LETTRE A LETTRE.
 
-   Mesure du 01/10, duree de son reellement emis par graphie :
+   Le 01/10, huit graphies ont ete mesurees pour trouver celle qui durait le
+   plus longtemps : « Hum. » 0,14 s, « Hmm. » 0,22 s, « Mmm. » 0,56 s,
+   « Hmmm. » 0,76 s. « Hmmm » a ete retenu.
 
-     « Hum. »     0,14 s     <- ce qui etait en place
-     « Hmm. »     0,22 s
-     « Mmm. »     0,56 s
-     « Hmmm. »    0,76 s     (1,00 s etire)
-     « Mmhmm. »   0,96 s
+   La mesure etait juste et la conclusion fausse : elle comparait des DUREES
+   sans jamais verifier ce qu'on entendait. 0,76 s de « h m m m » epelees
+   durent bien 0,76 s. Personne ne s'en est apercu parce que les clips
+   d'attente ne jouaient pas — un objet passe la ou un tableau etait attendu,
+   corrige le 02/10. Le defaut a attendu que le son revienne pour s'entendre.
 
-   Cent quarante millisecondes. Piper lisait « Hum » comme un mot d'une
-   syllabe et le claquait : il n'y avait rien a entendre. Il fallait changer
-   la graphie, pas le reglage.
+   La phrase seule dit la meme chose et se dit bien. Un segment au lieu de
+   deux, c'est aussi un son de moins a fabriquer au demarrage.
 
-   « Hmmm » est retenu plutot que « Mmhmm », pourtant plus long : « mm-hmm »
-   veut dire oui. Isaac n'a pas encore lu la question — acquiescer serait
-   exactement la faute qu'on s'interdit depuis le debut.
-
-   Un clip peut donc etre une SUITE DE SEGMENTS, chacun a son rythme : le hum
-   gagne a etre etire, la phrase qui suit perdrait a l'etre. */
+   LA FORME EN SEGMENTS RESTE. Elle ne servait pas qu'au hum : c'est elle qui
+   porte le debit et le silence final, et le silence ne s'insere qu'entre
+   deux phrases. */
 const HUM_FR = [
-  { texte: "Hmmm.", vitesse: 1.8, silence: 0.3 },
   { texte: "Un instant, je vous prie.", vitesse: 1.2, silence: 0 },
 ];
 const HUM_EN = [
-  { texte: "Hmmm.", vitesse: 1.8, silence: 0.3 },
   { texte: "One moment, please.", vitesse: 1.2, silence: 0 },
 ];
-
 const CLIPS_FR = [HUM_FR, "Je regarde cela. Tout de suite."];
 const CLIPS_EN = [HUM_EN, "I am looking into it. Right away."];
 
@@ -236,7 +231,11 @@ export function libereAttente(prepare) {
    soit tu — on ne parle jamais par-dessus soi-même. */
 export function comblerAttente(clips, estVivant) {
   if (!clips || !clips.length) {
-    return { arreter() {}, fini: Promise.resolve() };
+    /* L'OBJET INERTE DOIT AVOIR LA MEME FORME QUE L'AUTRE. Il lui manquait
+       `couper`, que l'appelant invoque a six endroits : le premier qui
+       passait levait une erreur, attrapee par le filet du tour de parole,
+       et l'echange s'arretait sur un message qui parlait d'autre chose. */
+    return { arreter() {}, couper() {}, fini: Promise.resolve() };
   }
 
   let actif = true;

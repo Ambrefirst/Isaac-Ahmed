@@ -7,7 +7,7 @@ import ChatScreen from "./ChatScreen";
 import { askIsaac, escalateToStaff, prevenirService } from "./services/aiService";
 import { surPlace } from "./services/presence";
 import { enregistreDuree } from "./services/attente";
-import { contactDit, relaisCommercial, relaisNecessaire } from "./services/relaisHumain";
+import { accordDonne, contactDit, relaisCommercial, relaisNecessaire, tentativeAdresse } from "./services/relaisHumain";
 import { creerRelaisDiffere } from "./services/relaisDiffere";
 import { useLanguage } from "./i18n";
 
@@ -57,6 +57,9 @@ function App() {
      minute, pas davantage. Voir relaisDiffere.js : le commercial recevait
      jusqu'ici une demande marquee « Pour le recontacter : non communique »,
      parce qu'elle partait avant qu'on ait pu poser la question. */
+  /* La demande pour laquelle Isaac attend un oui ou un non. Tant qu'elle
+     est posee, rien n'est transmis : « c'est fait » suppose un accord. */
+  const accordRef = useRef(null);
   const relaisRef = useRef(null);
   if (!relaisRef.current) relaisRef.current = creerRelaisDiffere(prevenirService);
   /* La demande dont on attend une adresse, ou null : elle affiche le champ. */
@@ -122,6 +125,7 @@ function App() {
        sans cette remise a zero, le service ne serait plus prevenu du tout, et
        un numero dicte irait completer le besoin de quelqu'un d'autre. */
     commercialRef.current = null;
+    accordRef.current = null;
     /* On VIDE avant d'oublier. Une demande qui attendait encore une adresse
        doit partir : la clore en silence ferait disparaitre le besoin que tout
        ce mecanisme existe pour faire remonter. */
@@ -220,12 +224,67 @@ function App() {
        messages, dont un absurde, et huit secondes d'attente pour l'obtenir.
 
        On traite donc le contact AVANT d'appeler le modele, et on s'arrete la. */
+    /* UN OUI OU UN NON SE LIT AVANT D'APPELER LE MODELE. Isaac vient de poser
+       une question fermee ; y repondre par une recherche documentaire serait
+       absurde, et couterait deux minutes pour dire « entendu ». */
+    if (accordRef.current) {
+      const accord = accordDonne(cleanMessage);
+      if (accord === true) {
+        const demande = accordRef.current;
+        accordRef.current = null;
+        const ici = surPlace();
+        relaisRef.current.ouvrir(demande, { service: "commercial", surPlace: ici, mode: "chat" });
+        setContactDemande(demande);
+        await typeOutAnswer(t("chat.commercial.suite"));
+        return;
+      }
+      if (accord === false) {
+        accordRef.current = null;
+        commercialRef.current = null;
+        await typeOutAnswer(t("chat.commercial.refus"));
+        return;
+      }
+      /* Ni oui ni non : peut-etre l'adresse, peut-etre autre chose. On laisse
+         la suite decider plutot que d'insister. */
+    }
+
     if (commercialRef.current) {
       const contact = contactDit(cleanMessage);
       if (contact) {
         setContactDemande(null);
+        /* UNE ADRESSE VAUT UN OUI, et plus clairement qu'un oui. Si l'accord
+           etait encore en attente, on ouvre le relais maintenant. */
+        if (accordRef.current) {
+          relaisRef.current.ouvrir(accordRef.current, {
+            service: "commercial", surPlace: surPlace(), mode: "chat",
+          });
+          accordRef.current = null;
+        }
         const parti = await relaisRef.current.avecContact(contact);
         await typeOutAnswer(t(parti ? "chat.commercial.contact" : "chat.escalateFailed"));
+        return;
+      }
+    }
+
+    /* ON ATTEND UNE ADRESSE, ET CE N'EN EST PAS UNE.
+
+       La borne repondait « je n'ai pas bien saisi votre demande » — la
+       reponse d'un assistant qui ne comprend pas une QUESTION, alors qu'il
+       n'attendait pas une question. Et le champ, juste en dessous,
+       continuait d'afficher qu'on attendait une adresse. Les deux se
+       contredisaient.
+
+       Une vraie question posee pendant ce temps suit son chemin normal :
+       seule une TENTATIVE ratee — courte, sans interrogation — recoit la
+       demande de corriger. */
+    if (contactDemande) {
+      if (accordDonne(cleanMessage) === false) {
+        setContactDemande(null);
+        await typeOutAnswer(t("chat.commercial.sansAdresse"));
+        return;
+      }
+      if (tentativeAdresse(cleanMessage)) {
+        await typeOutAnswer(t("chat.commercial.invalide"));
         return;
       }
     }
@@ -277,16 +336,15 @@ function App() {
        aider sans qu'on sache encore laquelle. */
     if (relaisCommercial(cleanMessage, answer) && !commercialRef.current) {
       commercialRef.current = cleanMessage;
-      const ici = surPlace();
-      /* On OUVRE l'attente au lieu d'envoyer : le courriel part avec
-         l'adresse si elle arrive dans la minute, sans elle sinon, et une
-         seule fois dans les deux cas. Le visiteur, lui, n'attend rien —
-         la reponse ci-dessous s'affiche tout de suite. */
-      relaisRef.current.ouvrir(cleanMessage, {
-        service: "commercial", surPlace: ici, mode: "chat",
-      });
-      await typeOutAnswer(t(ici ? "chat.commercial.surplace" : "chat.commercial.adistance"));
-      setContactDemande(cleanMessage);
+      /* ON NE TRANSMET PAS ENCORE : ON DEMANDE. « C'est fait » suppose que
+         quelqu'un a dit oui, et personne n'avait rien dit. La question est
+         fermee — oui ou non — parce qu'une question ouverte posee a
+         quelqu'un qui est debout ne recoit pas de reponse.
+
+         Le prix de cet accord explicite : celui qui s'en va sans repondre
+         ne sera pas signale. C'est assume. */
+      accordRef.current = cleanMessage;
+      await typeOutAnswer(t("chat.commercial.demande"));
       return;
     }
 
@@ -338,9 +396,6 @@ function App() {
         onResterLa={resterLa}
         contactDemande={contactDemande}
         onContact={envoyerContact}
-        onPasserContact={() => setContactDemande(null)}
-        onRouvrirContact={() => setContactDemande(commercialRef.current)}
-        contactPossible={!!commercialRef.current}
         messages={messages}
         phase={phase}
         typingText={typingText}

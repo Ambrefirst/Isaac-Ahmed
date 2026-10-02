@@ -126,6 +126,9 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
     relais: {
       transmisSurPlace: t("voix.commercial.surplace"),
       transmisADistance: t("voix.commercial.adistance"),
+      transmisSuite: t("voix.commercial.suite"),
+      transmisDemande: t("voix.commercial.demande"),
+      transmisRefus: t("voix.commercial.refus"),
       contactRecu: t("voix.commercial.contact"),
       transmisEchec: t("voix.commercial.echec"),
     },
@@ -215,6 +218,15 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
               <>
                 <p className="home-etat-txt" aria-live="polite">{t(`voix.etat.${vocal.etat}`)}</p>
                 {vocal.etat === "reflechit" && <CompteurAttente depuis={vocal.attenteDepuis} t={t} />}
+                {/* Une phrase par etat, et chacune dit ce qui est utile a ce
+                    moment-la : articuler avant de parler, ne pas couvrir sa voix
+                    pendant qu'il repond. Pendant la recherche, c'est le compteur
+                    au-dessus qui parle. */}
+                {(vocal.etat === "ecoute" || vocal.etat === "parle") && (
+                  <p className="voix-consigne">
+                    {t(vocal.etat === "ecoute" ? "voix.ecoute.consigne" : "voix.parle.consigne")}
+                  </p>
+                )}
                 {vocal.entendu && <p className="home-transcript">{vocal.entendu}</p>}
                 {vocal.reponse && <p className="home-vocal-reponse">{vocal.reponse}</p>}
                 {vocal.erreur && <p className="home-vocal-erreur" role="alert">{vocal.erreur}</p>}
@@ -226,6 +238,26 @@ function HomeScreen({ onAppointment, onAssistant, onWelcome }) {
                     onEnvoyer={vocal.envoyerContact}
                     onPlusTard={vocal.passerContact}
                   />
+                )}
+                {/* OUI ET NON SE TOUCHENT, ILS NE SE DISENT PLUS. Un mot d'une
+                    syllabe est ce que la reconnaissance rate le plus, et c'est
+                    celui dont depend toute la suite. */}
+                {vocal.accordDemande && (
+                  <div className="voix-accord">
+                    <button type="button" className="voix-accord-oui" onClick={vocal.accepterAccord}>
+                      {t("voix.accord.oui")}
+                    </button>
+                    <button type="button" className="voix-accord-non" onClick={vocal.refuserAccord}>
+                      {t("voix.accord.non")}
+                    </button>
+                  </div>
+                )}
+                {/* Plus tard n'est pas un refus definitif : la demande est
+                    deja partie, il ne manque qu'un moyen de repondre. */}
+                {!vocal.contactDemande && vocal.contactPossible && (
+                  <button type="button" className="contact-rouvrir" onClick={vocal.rouvrirContact}>
+                    {t("chat.commercial.rouvrir")}
+                  </button>
                 )}
                 {vocal.etat === "pause" && !vocal.erreur && !vocal.contactDemande && (
                   <p className="home-vocal-pause">{t("voix.pause.explication")}</p>

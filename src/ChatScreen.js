@@ -4,7 +4,6 @@ import "./ChatScreen.css";
 import { useLanguage } from "./i18n";
 import Orb from "./Orb";
 import { audioDisponible, creerEnregistreur, transcrire } from "./services/audioService";
-import ChampContact from "./ChampContact";
 import ConversationVocale from "./ConversationVocale";
 
 function MicroIcon({ actif }) {
@@ -149,7 +148,7 @@ function SequenceAttente({ phase, t }) {
 
 const SUGGESTIONS = ["chat.suggest.hours", "chat.suggest.datacenter", "chat.suggest.visit", "chat.suggest.about"];
 
-export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, contactDemande, contactPossible, finProche, sessionFinie, onResterLa, onTerminer, onContact, onPasserContact, onRouvrirContact, onKeepWaiting, onEscalate, onSend, onMenu }) {
+export default function ChatScreen({ messages, phase, typingText, busy, escalationOffer, contactDemande, finProche, sessionFinie, onResterLa, onTerminer, onKeepWaiting, onEscalate, onSend, onMenu }) {
   const [input, setInput] = useState("");
   const { t, language } = useLanguage();
   const scrollRef = useRef(null);
@@ -333,22 +332,18 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
           <p className="session-finie" role="status">{t("chat.session.finie")}</p>
         )}
 
-        {contactDemande && (
-          <div className="escalation-card">
-            {/* PAS DE CLAVIER A L'ECRAN ICI. Le fil de discussion a deja son
-                champ de saisie, juste en dessous : en superposer un second
-                fait doublon, et le visiteur ne sait plus lequel sert a quoi.
-                Il n'a de sens que sur la borne, en conversation parlee, ou il
-                n'y a rien d'autre pour ecrire. */}
-            <ChampContact onEnvoyer={onContact} onPlusTard={onPasserContact} clavier={false} />
-          </div>
-        )}
+        {/* PAS D'ENCADRE DE SAISIE ICI — IL Y EN AVAIT UN, ET C'ETAIT UN
+            DOUBLON. Un champ « votre adresse electronique » avec son bouton
+            et son lien « plus tard », pose a dix pixels au-dessus du champ
+            de la conversation : deux endroits pour taper, deux boutons pour
+            envoyer, et il fallait deviner lequel servait a quoi.
 
-        {/* « PLUS TARD » N'EST PAS UN REFUS DEFINITIF. Le champ disparaissait
-            pour de bon : quelqu'un qui remettait a plus tard ne pouvait plus
-            jamais laisser son adresse, sauf a refaire toute sa demande. La
-            demande, elle, est deja partie — il ne manque qu'un moyen de
-            repondre, et on doit pouvoir le donner quand on veut. */}
+            Sur la borne, en conversation PARLEE, ce champ a un sens : il n'y
+            a rien d'autre pour ecrire. Dans un fil de discussion, aucun. On
+            le dit donc dans le champ qui existe deja — voir le texte
+            d'invite plus bas — et le visiteur repond comme il repond a tout
+            le reste. L'application reconnait l'adresse avant d'appeler le
+            modele ; ce chemin existe, il etait cache derriere l'encadre. */}
         {/* LE PIED DE CONVERSATION. « Terminer » vivait dans l'en-tete, coince
             entre le titre et la sphere : la regle generale des boutons d'en-tete
             lui imposait un cercle de 48 pixels, dans lequel le mot debordait
@@ -362,11 +357,10 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
             pas. */}
         {!!messages.length && (
           <div className="chat-pied">
-            {!contactDemande && contactPossible ? (
-              <button type="button" className="contact-rouvrir" onClick={onRouvrirContact}>
-                {t("chat.commercial.rouvrir")}
-              </button>
-            ) : <span />}
+            {/* Plus de lien « laisser mon adresse » : il rouvrait un encadre
+                qui n'existe plus. L'adresse se donne a tout moment, en la
+                tapant dans le champ de la conversation. */}
+            <span />
             {/* Il n'apparait qu'avec une conversation a effacer : un bouton qui
                 ne fait rien apprend a ne plus le regarder. */}
             <button type="button" className="chat-terminer" onClick={onTerminer}>
@@ -398,7 +392,13 @@ export default function ChatScreen({ messages, phase, typingText, busy, escalati
             value={input}
             onChange={(event) => setInput(event.target.value)}
             aria-label={t("chat.ariaLabel")}
-            placeholder={t(ecoute ? "chat.voice.listening" : transcription ? "chat.voice.working" : "chat.placeholder")}
+            /* QUAND ISAAC ATTEND UNE ADRESSE, LE CHAMP LE DIT. C'est ce qui
+               remplace l'encadre : pas un second endroit pour ecrire, mais
+               le meme, qui annonce ce qu'on attend de vous. */
+            placeholder={t(ecoute ? "chat.voice.listening"
+              : transcription ? "chat.voice.working"
+              : contactDemande ? "chat.commercial.placeholder"
+              : "chat.placeholder")}
           />
           <button disabled={busy || ecoute} aria-label={t("chat.send")}><SendIcon /></button>
         </form>

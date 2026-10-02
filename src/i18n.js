@@ -193,13 +193,24 @@ export const translations = {
     "voix.salutation": "Bonjour, je suis Isaac, l'assistant d'accueil de ST Digital. Comment puis-je vous aider ?",
     "voix.etat.arret": "",
     "voix.etat.ecoute": "ISAAC VOUS ÉCOUTE",
+    /* Sous le libellé d'écoute : c'est le seul moment où la consigne peut
+       encore changer quelque chose à ce qui sera entendu. */
+    "voix.ecoute.consigne": "Parlez haut et articulez bien",
+    /* Pendant qu'il parle, la seule chose utile est de ne pas parler
+       par-dessus : une voix superposée à la sienne dégrade la
+       reconnaissance du tour suivant. */
+    "voix.parle.consigne": "Vous pourrez parler dès qu'il a terminé",
     "voix.etat.parle": "ISAAC RÉPOND",
     "voix.etat.reflechit": "ISAAC CHERCHE LA RÉPONSE",
     "voix.etat.pret": "Appuyez pour parler",
     "voix.terminer": "Terminer",
     "voix.appuyez": "APPUYEZ POUR PARLER",
     "voix.attentecourt": "Cela peut prendre une minute.",
-    "voix.attente": "Cela peut prendre une minute sur cette borne. {s} s",
+    /* « Une minute » datait du temps ou une question coûtait cent secondes.
+       À la place, une consigne qui sert vraiment : mieux on articule, mieux
+       la reconnaissance entend. Le compteur reste — c'est le seul signe que
+       la demande est vivante. */
+    "voix.attente": "Un instant, je vous prie. Je prépare votre réponse. {s} s",
     "voix.bouton.parler": "Parler",
     "voix.bouton.fini": "J'ai fini de parler",
     "voix.aide": "Appuyez pour parler, appuyez de nouveau quand vous avez fini. Isaac vous répond à voix haute.",
@@ -214,6 +225,13 @@ export const translations = {
        épelée à voix haute revient fausse bien trop souvent, et une adresse
        fausse ne vaut pas mieux qu'aucune. */
     "voix.commercial.surplace": "Votre demande est bien enregistrée : je la transmets au service commercial, et un commercial la prendra en charge. Écrivez votre adresse électronique sur l'écran pour qu'il puisse vous répondre, ou passez à l'accueil.",
+    /* À L'ORAL, ON TOUCHE. Faire dépendre tout le scénario d'un mot d'une
+       syllabe transcrit de travers, c'est ce qui s'est produit le 02/10. */
+    "voix.commercial.demande": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Si vous souhaitez que je la transmette au service commercial, touchez Oui sur l'écran ; sinon, touchez Non.",
+    "voix.accord.oui": "Oui, transmettez",
+    "voix.accord.non": "Non, merci",
+    "voix.commercial.refus": "Entendu, je ne transmets rien. Je reste à votre disposition.",
+    "voix.commercial.suite": "Très bien. Écrivez sur l'écran l'adresse à laquelle vous joindre, puis validez — je transmets tout au service commercial.",
     "voix.commercial.adistance": "Votre demande est bien enregistrée : je la transmets au service commercial, et un commercial la prendra en charge. Écrivez votre adresse électronique sur l'écran pour qu'il puisse vous répondre.",
     "voix.contact.invite": "Votre adresse électronique, pour que le commercial vous réponde",
     "voix.contact.exemple": "nom@entreprise.com",
@@ -224,7 +242,7 @@ export const translations = {
     "voix.clavier.effacer": "Effacer le dernier caractère",
     "voix.clavier.fermer": "Masquer le clavier",
     "voix.clavier.ouvrir": "Afficher le clavier",
-    "voix.commercial.contact": "C'est noté. Votre demande part au service commercial avec cette adresse, et vous recevrez un message de confirmation.",
+    "voix.commercial.contact": "C'est fait. Votre demande est partie au service commercial avec cette adresse, et vous recevrez un message de confirmation.",
     "voix.commercial.echec": "Je n'ai pas pu prévenir le service commercial. Vous pouvez les joindre au 66 17 66 41.",
     "voix.corriger": "Ce n'est pas ce que j'ai dit",
     "voix.couper": "Couper le micro",
@@ -275,11 +293,32 @@ export const translations = {
        fait, et on le dit au passe — le courriel est deja parti quand la phrase
        s'affiche. */
     "chat.commercial.surplace": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Votre demande est bien enregistrée et transmise au service commercial, qui la prendra en charge. Laissez-moi votre adresse électronique pour qu'un commercial vous réponde, ou présentez-vous à l'accueil.",
+    /* QUAND ISAAC VIENT DE LE DIRE LUI-MÊME. Sa réponse annonçait déjà la
+       transmission : la répéter mot pour mot donne deux messages qui se
+       marchent dessus. Il ne reste qu'une chose à ajouter — où laisser son
+       adresse. */
+    /* ON NE TRANSMET RIEN SANS UN OUI. « C'est fait » suppose un accord ;
+       Isaac le demande donc, et d'une façon à laquelle on répond debout,
+       sans réfléchir. */
+    "chat.commercial.demande": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Souhaitez-vous que je transmette votre demande au service commercial ? Répondez par oui ou non.",
+    "chat.commercial.refus": "Entendu, je ne transmets rien. Je reste à votre disposition si vous changez d'avis ou si vous avez une autre question.",
+    /* ÉTAPE 3 DU SCÉNARIO : on demande, on ne conclut pas. « C'est fait »
+       appartient à l'étape 5, une fois l'adresse reçue. Annoncer la fin au
+       milieu donnait deux conclusions pour une seule demande. */
+    "chat.commercial.suite": "Très bien. Écrivez l'adresse à laquelle vous joindre dans le champ ci-dessous, puis envoyez — je transmets tout au service commercial.",
     "chat.commercial.adistance": "Cette demande dépend de votre situation : seul un commercial peut la chiffrer. Votre demande est bien enregistrée et transmise au service commercial, qui la prendra en charge. Laissez-moi votre adresse électronique pour qu'un commercial vous réponde.",
-    "chat.commercial.contact": "C'est noté. Votre demande part au service commercial avec cette adresse, et vous recevrez un message de confirmation.",
+    /* L'ADRESSE EST MAL ÉCRITE. Dans ce contexte, « je n'ai pas saisi votre
+       demande » est à côté : Isaac n'attendait pas une demande. */
+    "chat.commercial.invalide": "Je n'ai pas reconnu d'adresse électronique là-dedans. Écrivez-la en entier, avec l'arobase et le nom de domaine — par exemple prenom@entreprise.com.",
+    "chat.commercial.sansAdresse": "Entendu, je n'insiste pas. Votre demande est déjà partie au service commercial ; si vous changez d'avis, écrivez-moi votre adresse à tout moment.",
+    /* ÉTAPE 5 : la seule conclusion du scénario. */
+    "chat.commercial.contact": "C'est fait. Votre demande est partie au service commercial avec cette adresse, et vous recevrez un message de confirmation.",
     /* « Plus tard » ne doit pas etre definitif : la demande est deja partie,
        il ne manque qu'un moyen d'y repondre. */
     "chat.commercial.rouvrir": "Laisser mon adresse au service commercial",
+    /* Quand Isaac attend une adresse, le champ de la conversation le dit —
+       il n'y a pas de second champ. */
+    "chat.commercial.placeholder": "Écrivez ici l'adresse à laquelle vous joindre...",
 
     "camera.unavailable": "La caméra est inaccessible depuis ce navigateur. Merci de vous présenter à l'accueil.",
     "photo.activate": "Activer la caméra",
@@ -480,19 +519,26 @@ export const translations = {
     "voix.salutation": "Hello, I am Isaac, the ST Digital front desk assistant. How may I help you?",
     "voix.etat.arret": "",
     "voix.etat.ecoute": "ISAAC IS LISTENING",
+    "voix.ecoute.consigne": "Speak up and articulate clearly",
+    "voix.parle.consigne": "You can speak as soon as he has finished",
     "voix.etat.parle": "ISAAC IS ANSWERING",
     "voix.etat.reflechit": "ISAAC IS SEARCHING",
     "voix.etat.pret": "Press to speak",
     "voix.terminer": "End",
     "voix.appuyez": "PRESS TO SPEAK",
     "voix.attentecourt": "This can take a minute.",
-    "voix.attente": "This can take a minute on this kiosk. {s} s",
+    "voix.attente": "One moment, please. I am preparing your answer. {s} s",
     "voix.bouton.parler": "Speak",
     "voix.bouton.fini": "I have finished speaking",
     "voix.aide": "Press to speak, press again when you have finished. Isaac answers aloud.",
     "voix.etat.pause": "MICROPHONE OFF",
     "voix.pause.explication": "The conversation is kept. Press “Start speaking again” whenever you want to continue.",
     "voix.commercial.surplace": "Your request is recorded: I am passing it to the sales team, and a sales representative will take it from here. Type your email address on the screen so they can reply to you, or go to the front desk.",
+    "voix.commercial.demande": "This depends on your own setup: only a sales representative can price it. If you would like me to pass it on to the sales team, tap Yes on the screen; otherwise tap No.",
+    "voix.accord.oui": "Yes, pass it on",
+    "voix.accord.non": "No, thank you",
+    "voix.commercial.refus": "Understood, I am not passing anything on. I remain at your disposal.",
+    "voix.commercial.suite": "Very well. Type the address where we can reach you on the screen and confirm — I will pass everything on to the sales team.",
     "voix.commercial.adistance": "Your request is recorded: I am passing it to the sales team, and a sales representative will take it from here. Type your email address on the screen so they can reply to you.",
     "voix.contact.invite": "Your email address, so the sales team can reply",
     "voix.contact.exemple": "name@company.com",
@@ -503,7 +549,7 @@ export const translations = {
     "voix.clavier.effacer": "Delete the last character",
     "voix.clavier.fermer": "Hide the keyboard",
     "voix.clavier.ouvrir": "Show the keyboard",
-    "voix.commercial.contact": "Noted. Your request goes to the sales team with that address, and you will receive a confirmation message.",
+    "voix.commercial.contact": "Done. Your request has gone to the sales team with that address, and you will receive a confirmation message.",
     "voix.commercial.echec": "I could not reach the sales team. You can call them on 66 17 66 41.",
     "voix.corriger": "That is not what I said",
     "voix.couper": "Turn the microphone off",
@@ -548,9 +594,15 @@ export const translations = {
     "chat.session.rester": "I am still here",
     "chat.session.finie": "Conversation cleared. The kiosk is ready for the next person.",
     "chat.commercial.surplace": "This depends on your own setup: only a sales representative can price it. Your request is recorded and passed to the sales team, who will take it from here. Leave me your email address so a sales representative can reply, or go to the front desk.",
+    "chat.commercial.demande": "This depends on your own setup: only a sales representative can price it. Would you like me to pass your request on to the sales team? Please answer yes or no.",
+    "chat.commercial.refus": "Understood, I am not passing anything on. I remain at your disposal if you change your mind or have another question.",
+    "chat.commercial.suite": "Very well. Type the address where we can reach you in the field below and send it — I will pass everything on to the sales team.",
     "chat.commercial.adistance": "This depends on your own setup: only a sales representative can price it. Your request is recorded and passed to the sales team, who will take it from here. Leave me your email address so a sales representative can reply.",
-    "chat.commercial.contact": "Noted. Your request goes to the sales team with that address, and you will receive a confirmation message.",
+    "chat.commercial.invalide": "I did not recognise an email address in that. Please write it in full, with the at sign and the domain name — for example firstname@company.com.",
+    "chat.commercial.sansAdresse": "Understood, I will not insist. Your request has already gone to the sales team; if you change your mind, type your address at any time.",
+    "chat.commercial.contact": "Done. Your request has gone to the sales team with that address, and you will receive a confirmation message.",
     "chat.commercial.rouvrir": "Leave my address for the sales team",
+    "chat.commercial.placeholder": "Type here the address where we can reach you...",
 
     "camera.unavailable": "The camera is unavailable in this browser. Please come to the reception desk.",
     "photo.activate": "Turn on the camera",

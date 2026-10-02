@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { askIsaac, prevenirService } from "./services/aiService";
 import { creerEnregistreur, synthetiser, transcrire } from "./services/audioService";
-import { comblerAttente, libereAttente, prepareAttente } from "./services/attenteParlee";
+import { comblerAttente, comblerContexte, libereAttente, prepareAttente } from "./services/attenteParlee";
 import { surPlace } from "./services/presence";
-import { contactDit, relaisCommercial } from "./services/relaisHumain";
+import { accordDonne, contactDit, intentionApparente, relaisCommercial } from "./services/relaisHumain";
 import { creerRelaisDiffere } from "./services/relaisDiffere";
 
 /* Conversation parlee, sans fenetre et sans fil de texte.
@@ -105,6 +105,11 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
   /* La demande commerciale deja transmise, s'il y en a une. Elle sert a deux
      choses : ne pas prevenir le service a chaque phrase d'un meme echange, et
      savoir a quelle demande rattacher un numero donne ensuite. */
+  /* La demande pour laquelle Isaac attend un oui ou un non, a voix haute. */
+  const accordRef = useRef(null);
+  /* La meme chose, mais visible par l'ecran : c'est elle qui fait
+     apparaitre les deux boutons. */
+  const [accordDemande, setAccordDemande] = useState(null);
   const besoinTransmisRef = useRef(null);
   /* Le courriel au service commercial attend l'adresse avant de partir. Voir
      relaisDiffere.js : il partait jusqu'ici AVANT qu'Isaac ait pu demander ou
@@ -132,11 +137,15 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
   relaisRef.current = relais;
 
   /* --- parler ------------------------------------------------------------ */
-  const dire = useCallback(async (texte) => {
+  /* `desQuePret` est appele au retour de la synthese, avant la lecture : le
+     service est libre a cet instant, et il reste toute la duree de la phrase
+     pour fabriquer autre chose sans faire attendre personne. */
+  const dire = useCallback(async (texte, desQuePret) => {
     if (!texte || !vivantRef.current) return;
     setEtat(ETATS.PARLE);
     try {
       const url = await synthetiser(texte, { langue });
+      if (desQuePret) desQuePret();
       if (!url || !vivantRef.current) return;
       await new Promise((resolve) => {
         const audio = new Audio(url);
@@ -205,6 +214,22 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
   /* --- ecouter, et rendre la parole au silence --------------------------- */
   const ecouter = useCallback(async () => {
     if (!vivantRef.current) return;
+    /* ON LIBERE L'ENREGISTREUR PRECEDENT AVANT D'EN OUVRIR UN AUTRE.
+
+       « Ce n'est pas ce que j'ai dit » invalide le tour et rappelle cette
+       fonction ; sans cette ligne, la reference vers l'ancien enregistreur
+       etait simplement ecrasee et son flux micro restait ouvert. Quelques
+       corrections de suite, et plusieurs flux coexistent sur le meme
+       peripherique : l'ouverture suivante ne rend plus la main, l'ecran reste
+       sur « Isaac vous ecoute » et aucun bouton ne semble repondre — parce
+       qu'aucun etat ne change plus.
+
+       Une diode de micro qui reste allumee sur une borne d'accueil est de
+       toute facon inacceptable. */
+    if (enregistreurRef.current) {
+      try { enregistreurRef.current.liberer(); } catch (e) {}
+      enregistreurRef.current = null;
+    }
     const monTour = tourRef.current + 1;
     tourRef.current = monTour;
     const courant = () => vivantRef.current && tourRef.current === monTour;
@@ -314,7 +339,12 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
          dire « d'accord » ni « je vois ». Voir l'en-tete de attenteParlee.js —
          la regle tient surtout dans le cas qui compte, celui ou quelqu'un
          signale un incident. */
-      const comblement = comblerAttente(attenteRef.current, courant);
+      /* `.clips` ET PAS L'OBJET ENTIER. `prepareAttente` rend
+         { clips, selonContexte } ; `comblerAttente` attend le tableau. Passer
+         l'objet le faisait renoncer des sa premiere ligne — un objet n'a pas
+         de `length` — et aucun son d'attente n'a jamais ete joue. */
+      const comblement = comblerAttente(
+        (attenteRef.current && attenteRef.current.clips) || [], courant);
       comblementRef.current = comblement;
 
       let question;
@@ -348,6 +378,63 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
       malEntenduRef.current = 0;
       setEntendu(question);
 
+      /* LE SCENARIO EST UNE MACHINE A ETATS, PAS UNE SUITE DE QUESTIONS.
+
+         Quand Isaac vient de poser une question fermee, le mot qui suit est
+         la REPONSE a cette question — pas une demande nouvelle. On la lit
+         ici, avant tout appel au modele, exactement comme a l'ecrit.
+
+         Sans cela, dire « oui » coutait une generation complete : douze
+         secondes pour un texte qui etait ensuite remplace. */
+      const accordOral = accordRef.current ? accordDonne(question) : null;
+      if (accordOral !== null) {
+        const phrasesOral = relaisRef.current || {};
+        if (accordOral === true) {
+          const demandeOral = accordRef.current;
+          accordRef.current = null;
+          setAccordDemande(null);
+          besoinTransmisRef.current = demandeOral;
+          courrielRef.current.ouvrir(demandeOral, {
+            service: "commercial", surPlace: surPlace(), mode: "vocal",
+          });
+          contactDemandeRef.current = demandeOral;
+          setContactDemande(demandeOral);
+          comblement.couper();
+          comblementRef.current = null;
+          setAttenteDepuis(null);
+          if (phrasesOral.transmisSuite) {
+            setReponse(phrasesOral.transmisSuite);
+            await dire(phrasesOral.transmisSuite);
+          }
+          /* Le champ est ouvert : on laisse le visiteur ecrire plutot que de
+             rouvrir le micro par-dessus. */
+          if (courant()) { setNiveau(0); setEtat(ETATS.PAUSE); }
+          return;
+        }
+        accordRef.current = null;
+        setAccordDemande(null);
+        comblement.couper();
+        comblementRef.current = null;
+        setAttenteDepuis(null);
+        if (phrasesOral.transmisRefus) {
+          setReponse(phrasesOral.transmisRefus);
+          await dire(phrasesOral.transmisRefus);
+        }
+        if (courant()) ecouter();
+        return;
+      }
+      /* ET MAINTENANT, UNE PHRASE QUI A DU SENS.
+
+         La question est transcrite : Isaac sait enfin de quoi on lui parle,
+         et il peut le dire — « je verifie cette information », « je prends
+         note, c'est important ». C'est le plus long des silences, celui
+         pendant lequel le modele ecrit, et c'est celui qu'on entendait le
+         plus. `comblerContexte` etait ecrite pour cela depuis le 01/10 et
+         n'etait appelee nulle part. */
+      const suite = comblerContexte(
+        attenteRef.current, intentionApparente(question), courant);
+      comblementRef.current = suite;
+
       /* "vocal" : le workflow ajoute alors une consigne de brievete, parce que
          cette reponse sera lue a voix haute et qu'on ne survole pas une parole. */
       const controleur = new AbortController();
@@ -378,35 +465,36 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
       const ici = surPlace();
       const contact = contactDit(question);
 
-      if (besoinTransmisRef.current && contact) {
+      const accord = accordRef.current ? accordDonne(question) : null;
+
+      if (accordRef.current && accord === true) {
+        /* Le visiteur a dit oui : c'est maintenant que la demande part. */
+        const demande = accordRef.current;
+        accordRef.current = null;
+        besoinTransmisRef.current = demande;
+        courrielRef.current.ouvrir(demande, {
+          service: "commercial", surPlace: ici, mode: "vocal",
+        });
+        contactDemandeRef.current = demande;
+        setContactDemande(demande);
+        if (phrases.transmisSuite) aDire = phrases.transmisSuite;
+      } else if (accordRef.current && accord === false) {
+        accordRef.current = null;
+        if (phrases.transmisRefus) aDire = phrases.transmisRefus;
+      } else if (besoinTransmisRef.current && contact) {
         /* Il vient de laisser de quoi le rappeler, a voix haute : l'adresse
            rejoint la demande qui attendait, et UN seul courriel part. */
         courrielRef.current.avecContact(contact);
         if (phrases.contactRecu) aDire = dit + " " + phrases.contactRecu;
-      } else if (!besoinTransmisRef.current && relaisCommercial(question, dit)) {
-        besoinTransmisRef.current = question;
-        /* On n'ATTEND RIEN pour parler. Le visiteur est debout ; lui faire
-           patienter une requete de plus pour une action qui ne le concerne
-           pas serait payer deux fois la lenteur de la borne.
-
-           Le courriel, lui, patiente : une minute, le temps qu'on demande ou
-           joindre la personne et qu'elle reponde. C'est la seule facon qu'il
-           parte avec une adresse — il partait jusqu'ici avant meme que la
-           question soit posee. Son echec eventuel ne se dit donc plus ici :
-           il se dira au moment ou l'adresse est recue, qui est le seul moment
-           ou le visiteur attend quelque chose de nous. */
-        courrielRef.current.ouvrir(question, {
-          service: "commercial", surPlace: ici, mode: "vocal",
-        });
-        /* On ouvre le champ de saisie plutot que d'attendre une adresse
-           dictee. Une adresse epelee a voix haute revient fausse bien trop
-           souvent, et une adresse fausse ne vaut pas mieux qu'aucune : le
-           commercial se retrouve avec un besoin qu'il ne peut rattacher a
-           personne. */
-        contactDemandeRef.current = question;
-        setContactDemande(question);
-        const suite = ici ? phrases.transmisSurPlace : phrases.transmisADistance;
-        if (suite) aDire = dit + " " + suite;
+      } else if (!besoinTransmisRef.current && !accordRef.current
+                 && relaisCommercial(question, dit)) {
+        /* ON DEMANDE AVANT DE TRANSMETTRE. « C'est fait » suppose un accord,
+           et personne n'avait rien dit. La question est fermee — oui ou non —
+           parce qu'a la voix on ne fait pas peser une decision ouverte sur
+           quelqu'un qui est debout. */
+        accordRef.current = question;
+        setAccordDemande(question);
+        if (phrases.transmisDemande) aDire = dit + " " + phrases.transmisDemande;
       }
 
       setReponse(aDire);
@@ -417,7 +505,11 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
          milieu s'entend comme une panne. En pratique il s'est deja tu — il a
          cesse des la transcription — mais une recherche servie par la table
          revient en deux dixiemes de seconde, et la phrase peut courir encore. */
+      /* Les deux bruits se taisent avant la reponse : deux voix qui se
+         recouvrent s'entendent comme un bogue. */
+      suite.arreter();
       await comblement.fini;
+      await suite.fini;
       comblementRef.current = null;
 
       await dire(aDire);
@@ -425,6 +517,9 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
       /* Le champ est ouvert : on laisse le visiteur ecrire. Rouvrir le micro
          par-dessus rendrait la borne bavarde au moment precis ou elle attend
          quelque chose de precis. */
+      /* On attend un appui sur Oui ou Non : le micro reste ferme. Ecouter
+         pendant qu'on repond du doigt ferait entendre le hall a la borne. */
+      if (accordRef.current) { setNiveau(0); setEtat(ETATS.PAUSE); return; }
       if (contactDemandeRef.current) { setNiveau(0); setEtat(ETATS.PAUSE); return; }
       ecouter();
     } catch (e) {
@@ -495,6 +590,52 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
 
   /* « Plus tard » n'annule rien : la demande est deja partie. Le visiteur
      refuse seulement d'etre rappele, ce qui est son droit. */
+  /* ROUVRIR LE CHAMP APRES UN « PLUS TARD ». La demande est deja partie ;
+     il ne manque qu'un moyen de repondre, et on doit pouvoir le donner
+     quand on veut. Sans cela, un visiteur qui remet a plus tard ne peut
+     plus jamais laisser son adresse — defaut signale le 01/10 a 12h32,
+     repare a l'ecrit et oublie a l'oral. */
+  const rouvrirContact = useCallback(() => {
+    const demande = besoinTransmisRef.current || accordRef.current;
+    if (!demande) return;
+    contactDemandeRef.current = demande;
+    setContactDemande(demande);
+  }, []);
+
+  /* LES DEUX BOUTONS. Ils refont, hors d'un tour de parole, ce que le
+     raccourci vocal fait a l'interieur d'un tour. Les deux coexistent :
+     on peut appuyer, ou dire oui — mais on n'a plus BESOIN de le dire. */
+  const accepterAccord = useCallback(async () => {
+    const demande = accordRef.current;
+    if (!demande) return;
+    accordRef.current = null;
+    setAccordDemande(null);
+    besoinTransmisRef.current = demande;
+    courrielRef.current.ouvrir(demande, {
+      service: "commercial", surPlace: surPlace(), mode: "vocal",
+    });
+    contactDemandeRef.current = demande;
+    setContactDemande(demande);
+    const phrases = relaisRef.current || {};
+    if (phrases.transmisSuite) {
+      setReponse(phrases.transmisSuite);
+      await dire(phrases.transmisSuite);
+    }
+    if (vivantRef.current) { setNiveau(0); setEtat(ETATS.PAUSE); }
+  }, [dire]);
+
+  const refuserAccord = useCallback(async () => {
+    if (!accordRef.current) return;
+    accordRef.current = null;
+    setAccordDemande(null);
+    const phrases = relaisRef.current || {};
+    if (phrases.transmisRefus) {
+      setReponse(phrases.transmisRefus);
+      await dire(phrases.transmisRefus);
+    }
+    if (vivantRef.current) ecouter();
+  }, [dire, ecouter]);
+
   const passerContact = useCallback(() => {
     contactDemandeRef.current = null;
     setContactDemande(null);
@@ -503,28 +644,48 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
 
   /* --- ouverture et fermeture -------------------------------------------- */
   const demarrer = useCallback(async () => {
+    /* UN SEUL APPUI. Le bouton reste visible tant que l'etat n'a pas change,
+       et l'etat ne changeait qu'au retour de la synthese : un second appui,
+       facile sur un ecran tactile, lancait une seconde salutation par-dessus
+       la premiere. C'est la deuxieme voix entendue le 01/10. */
+    if (vivantRef.current) return;
     vivantRef.current = true;
+    /* L'etat passe AVANT toute requete : le bouton disparait a l'appui, et
+       l'ecran repond tout de suite meme si la voix met une seconde a venir. */
+    setEtat(ETATS.PARLE);
     malEntenduRef.current = 0;
     setEntendu("");
     setReponse("");
     setErreur("");
     historiqueRef.current = [];
     besoinTransmisRef.current = null;
+    accordRef.current = null;
+    setAccordDemande(null);
     courrielRef.current.cloturer();
     contactDemandeRef.current = null;
     setContactDemande(null);
 
-    /* Les clips sont fabriques PENDANT la salutation : du temps deja paye.
-       On ne l'attend pas — si la synthese traine, la conversation commence
-       sans eux et le premier tour sera simplement silencieux, comme avant. */
+    /* LA SALUTATION PASSE DEVANT. Les clips d'attente partaient d'abord, et
+       le service de synthese traite une requete a la fois : la salutation
+       faisait la queue derriere quatre clips, d'ou les quelques secondes de
+       silence apres « Parler a Isaac » qui n'existaient pas avant.
+
+       Ils sont maintenant prepares APRES, pendant qu'Isaac parle — du temps
+       deja paye, ce qui etait l'intention d'origine. On ne les attend pas :
+       si la synthese traine, le premier tour sera simplement silencieux. */
     libereAttente(attenteRef.current);
     attenteRef.current = null;
-    prepareAttente(langue).then((prepare) => {
+    const clipsApres = () => prepareAttente(langue).then((prepare) => {
       if (vivantRef.current) attenteRef.current = prepare;
       else libereAttente(prepare);
     });
 
-    await dire(salutation);
+    /* Les clips se fabriquent PENDANT que la salutation est dite : la
+       synthese est libre des qu'elle a rendu le son de la salutation, et le
+       visiteur n'attend rien. Les lancer apres la lecture, comme je l'avais
+       fait, les rendait prets trop tard pour le premier tour — et le premier
+       tour se passait en silence. */
+    await dire(salutation, clipsApres);
     if (vivantRef.current) ecouter();
   }, [dire, ecouter, salutation, langue]);
 
@@ -623,5 +784,10 @@ export default function useConversationParlee({ salutation, langue = "fr", relai
 
   return { etat, etatOrbe, entendu, reponse, erreur, niveau, niveaux, attenteDepuis,
            contactDemande, envoyerContact, passerContact,
-           demarrer, reprendre, corriger, couper, arreter, actif: etat !== ETATS.ARRET };
+           demarrer, reprendre, corriger, couper, arreter, rouvrirContact,
+           accordDemande, accepterAccord, refuserAccord,
+           /* Une adresse peut encore etre laissee : la demande est partie,
+              mais personne ne sait ou repondre. */
+           contactPossible: !!besoinTransmisRef.current,
+           actif: etat !== ETATS.ARRET };
 }

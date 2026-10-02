@@ -474,3 +474,60 @@
   .clavier { padding: 7px; gap: 5px; }
   .clavier-rangee { gap: 5px; }
 }
+
+/* ---------------------------------------------- accord : oui ou non
+
+   A l'oral, le oui et le non se TOUCHENT. Un mot d'une syllabe est ce que
+   la reconnaissance rate le plus, et c'est celui dont depend tout le
+   scenario commercial. Mesure du 02/10 : « non » dit a voix haute a ete mal
+   transcrit, et Isaac a repondu une phrase qui n'etait dans aucun de ses
+   scenarios.
+
+   Les deux boutons ont la MEME taille. Refuser doit etre aussi facile
+   qu'accepter : rendre le refus plus petit reviendrait a forcer la main a
+   quelqu'un qui est debout devant une borne. */
+.voix-accord {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 16px 0 4px;
+}
+
+.voix-accord button {
+  min-height: 52px;
+  min-width: 170px;
+  padding: 0 26px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: .95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .18s ease, filter .18s ease, border-color .18s ease;
+}
+
+.voix-accord button:active { transform: scale(.97); }
+
+.voix-accord-oui {
+  border: 0;
+  background: linear-gradient(135deg, #2E7AB5, #1A4D7A);
+  color: #ffffff;
+}
+.voix-accord-oui:hover { filter: brightness(1.12); }
+
+.voix-accord-non {
+  border: 1px solid rgba(146, 186, 214, .4);
+  background: transparent;
+  color: #C8DCF0;
+}
+.voix-accord-non:hover { border-color: rgba(159, 208, 234, .75); color: #E8F2F8; }
+
+/* La consigne d'elocution, pendant l'ecoute. Discrete : c'est une aide, pas
+   une injonction, et elle ne doit pas concurrencer la phrase entendue. */
+.voix-consigne {
+  margin: 6px 0 0;
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--text-muted, #93AFC4);
+  text-align: center;
+}

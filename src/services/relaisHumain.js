@@ -157,6 +157,46 @@ export function annonceRelaisCommercial(reponse) {
   return ANNONCES_DE_RELAIS.some((motif) => motif.test(reponse || ""));
 }
 
+/* OUI, NON, OU RIEN DE CLAIR.
+
+   Rend true, false, ou null quand la phrase ne tranche pas. Le null compte
+   autant que les deux autres : devant une reponse qu'on n'a pas comprise,
+   on ne transmet pas et on ne refuse pas — on laisse la phrase suivre son
+   chemin normal, et le visiteur repose sa question comme il l'entend.
+
+   Les deux motifs sont ancres au DEBUT : « non merci, mais combien ca
+   coute ? » commence par un refus et n'en est pas un. Un visiteur qui
+   developpe repart vers le modele, ce qui est le bon endroit. */
+const OUI = /^\s*(oui|ouais|yes|yep|yeah|ok|okay|d'?accord|daccord|volontiers|avec plaisir|je veux bien|allez-?y|allez y|vas-?y|bien s[uû]r|carr[ée]ment|s'?il vous pla[iî]t|please|sure|go ahead|yes please)\b[\s.!,]*$/i;
+const NON = /^\s*(non|no|nope|pas besoin|pas la peine|non merci|no thanks|not now|plus tard|later|laissez tomber|ce n'?est pas la peine)\b[\s.!,]*$/i;
+
+/* EST-CE UNE TENTATIVE D'ADRESSE, OU UNE AUTRE QUESTION ?
+
+   On ne le sait pas avec certitude, et on n'en a pas besoin : il suffit
+   de distinguer ce qui RESSEMBLE a une adresse ratee d'une vraie question
+   posee pendant que le champ est ouvert.
+
+   Une tentative d'adresse est courte, sans point d'interrogation et sans
+   mot interrogatif. Une question en a presque toujours au moins un. En cas
+   de doute, on laisse passer : renvoyer quelqu'un corriger une adresse
+   alors qu'il posait une question est pire que l'inverse. */
+const INTERROGE = /\?|\b(qui|que|quoi|quel|quelle|quels|quelles|o[uù]|quand|comment|combien|pourquoi|est-ce|puis-je|pouvez|avez|faites|proposez|what|where|when|how|why|who|can|could|do you|are you)\b/i;
+
+export function tentativeAdresse(texte) {
+  const t = String(texte || "").trim();
+  if (!t) return false;
+  if (INTERROGE.test(t)) return false;
+  return t.split(/\s+/).filter(Boolean).length <= 6;
+}
+
+export function accordDonne(texte) {
+  const t = String(texte || "").trim();
+  if (!t) return null;
+  if (OUI.test(t)) return true;
+  if (NON.test(t)) return false;
+  return null;
+}
+
 export function relaisCommercial(question, reponse) {
   if (besoinCommercial(question)) return true;
   if (annonceRelaisCommercial(reponse)) return true;

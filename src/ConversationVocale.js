@@ -27,6 +27,9 @@ export default function ConversationVocale({ onFermer }) {
     relais: {
       transmisSurPlace: t("voix.commercial.surplace"),
       transmisADistance: t("voix.commercial.adistance"),
+      transmisSuite: t("voix.commercial.suite"),
+      transmisDemande: t("voix.commercial.demande"),
+      transmisRefus: t("voix.commercial.refus"),
       contactRecu: t("voix.commercial.contact"),
       transmisEchec: t("voix.commercial.echec"),
     },
@@ -69,11 +72,40 @@ export default function ConversationVocale({ onFermer }) {
         {/* Ce qui a ete entendu et ce qui a ete repondu restent lisibles : le
             visiteur verifie qu'il a ete compris, sans que cela devienne un fil
             de discussion. Ce sont des reperes, pas des messages. */}
+        {/* Une phrase par etat, et chacune dit ce qui est utile a ce
+            moment-la : articuler avant de parler, ne pas couvrir sa voix
+            pendant qu'il repond. Pendant la recherche, c'est le compteur
+            au-dessus qui parle. */}
+        {(vocal.etat === "ecoute" || vocal.etat === "parle") && (
+          <p className="voix-consigne">
+            {t(vocal.etat === "ecoute" ? "voix.ecoute.consigne" : "voix.parle.consigne")}
+          </p>
+        )}
         {vocal.entendu && <p className="voix-transcrit">{vocal.entendu}</p>}
         {vocal.reponse && <p className="voix-reponse">{vocal.reponse}</p>}
         {vocal.erreur && <p className="voix-erreur" role="alert">{vocal.erreur}</p>}
         {vocal.contactDemande && (
           <ChampContact onEnvoyer={vocal.envoyerContact} onPlusTard={vocal.passerContact} />
+        )}
+        {/* OUI ET NON SE TOUCHENT, ILS NE SE DISENT PLUS. Un mot d'une
+            syllabe est ce que la reconnaissance rate le plus, et c'est
+            celui dont depend toute la suite. */}
+        {vocal.accordDemande && (
+          <div className="voix-accord">
+            <button type="button" className="voix-accord-oui" onClick={vocal.accepterAccord}>
+              {t("voix.accord.oui")}
+            </button>
+            <button type="button" className="voix-accord-non" onClick={vocal.refuserAccord}>
+              {t("voix.accord.non")}
+            </button>
+          </div>
+        )}
+        {/* Plus tard n'est pas un refus definitif : la demande est deja
+            partie, il ne manque qu'un moyen de repondre. */}
+        {!vocal.contactDemande && vocal.contactPossible && (
+          <button type="button" className="contact-rouvrir" onClick={vocal.rouvrirContact}>
+            {t("chat.commercial.rouvrir")}
+          </button>
         )}
         {vocal.etat === "pause" && !vocal.erreur && !vocal.contactDemande && (
           <p className="voix-attente">{t("voix.pause.explication")}</p>

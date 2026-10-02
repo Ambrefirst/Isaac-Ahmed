@@ -80,11 +80,25 @@ const CORRECTIONS = [
   [/\b(?:une|un)\s+coques?\b/gi, "Nkok"],
   [/\bn['’ ]?kok\b/gi, "Nkok"],
   [/\bd[ée]testateur\b/gi, "datacenter"],
+  /* TOUTE LA FAMILLE EN UN MOTIF. « data sainte-tour », « data sante »,
+     « data sainte » tout court : trois graphies de la meme erreur, et la
+     troisieme manquait — relevee le 02/10 apres la bascule en `small`, sur
+     le mot le plus prononce de la borne. Aucune de ces suites n'est une
+     expression francaise, le motif ne peut donc rien abimer. */
+  /* `[éé]*` ET PAS `[ée]?` : « é » s'écrit de deux façons en Unicode —
+     un seul caractère, ou « e » suivi d'un accent combinant. La seconde forme
+  /* Trois graphies pour la meme erreur, et il en faut trois motifs : la
+     classe accentuee ne se retape pas sans risque — « é » s'ecrit de deux
+     facons en Unicode, et une classe qui ne contient que l'une des deux
+     laisse l'accent orphelin derriere le mot corrige. Celle du milieu est
+     la graphie que `small` a produite le 02/10, sur le mot le plus
+     prononce de la borne. */
   [/\bdata\s+sain?te?[- ]?tour\b/gi, "datacenter"],
+  [/\bdata\s+sant[ée]/gi, "datacenter"],
+  [/\bdata\s+sain?te?\b/gi, "datacenter"],
   /* Pas de \b final : en JavaScript, « é » n'est pas un caractère de mot, et la
      frontière attendue après lui n'existe donc jamais. Le motif ne trouvait
      rien, en silence. */
-  [/\bdata\s+sant[ée]/gi, "datacenter"],
   [/\bgrand\s+bass?[ea]m?\b/gi, "Grand-Bassam"],
   /* « Aubame » → « Obame » et « Nguma » → « Nguema » ont été retirés le
      01/10, pour la même raison que les prénoms de l'amorce : ces deux noms ne
